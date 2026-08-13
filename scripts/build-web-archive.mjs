@@ -1,4 +1,5 @@
 import { mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
+import { execFileSync } from "node:child_process";
 import { basename, dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -6,7 +7,19 @@ const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const distDir = join(root, "dist");
 const basePath = "/davinci-escape-room/";
 const archiveRoute = "web-archive";
-const cacheVersion = `davinci-web-archive-${Date.now()}`;
+const pwaVersion = readPwaVersion();
+const cacheVersion = `davinci-web-archive-${pwaVersion}`;
+
+function readPwaVersion() {
+  try {
+    return execFileSync("git", ["rev-parse", "--short=12", "HEAD"], {
+      cwd: root,
+      encoding: "utf8",
+    }).trim();
+  } catch {
+    return `local-${Date.now()}`;
+  }
+}
 
 async function listFiles(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -110,6 +123,21 @@ async function writeArchiveRoute(indexHtml) {
   await writeFile(join(archiveDir, "index.html"), indexHtml);
 }
 
+async function writePwaVersionFile() {
+  await writeFile(
+    join(distDir, "pwa-version.json"),
+    `${JSON.stringify(
+      {
+        version: pwaVersion,
+        cacheName: cacheVersion,
+        generatedAt: new Date().toISOString(),
+      },
+      null,
+      2,
+    )}\n`,
+  );
+}
+
 async function writeArchiveBundle() {
   const bundleDir = join(distDir, "download");
   await mkdir(bundleDir, { recursive: true });
@@ -209,8 +237,10 @@ function crc32(buffer) {
 const indexPath = join(distDir, "index.html");
 const indexHtml = await readFile(indexPath, "utf8");
 await writeArchiveRoute(indexHtml);
+await writePwaVersionFile();
 await writeServiceWorker(await listFiles(distDir));
 const bundlePath = await writeArchiveBundle();
 
+console.log(`PWA version ${pwaVersion}`);
 console.log(`Web archive route generated at ${basePath}${archiveRoute}/`);
 console.log(`Archive bundle generated at ${basePath}download/${basename(bundlePath)}`);

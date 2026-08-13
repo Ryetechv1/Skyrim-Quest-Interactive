@@ -41,6 +41,7 @@ https://Ryetechv1.github.io/davinci-escape-room/web-archive/
 ```
 
 The web archive route is a normal GitHub Pages route with an installable manifest and a service worker. After a first successful online load through an allowed browser, the app shell and local assets can reload from the browser cache.
+The PWA/service-worker version is derived from the deployed git commit SHA, so every pushed public commit refreshes the archive cache.
 
 Downloadable static archive package:
 
