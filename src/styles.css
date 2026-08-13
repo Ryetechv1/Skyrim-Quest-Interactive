@@ -384,6 +384,12 @@ button:disabled {
   place-items: center;
   min-height: 0;
   padding: 10px 28px;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(233, 204, 145, 0.72), rgba(244, 224, 179, 0.38) 46%, rgba(134, 69, 27, 0.28)),
+    radial-gradient(circle at 50% 45%, rgba(255, 236, 185, 0.46), transparent 58%),
+    url("./assets/references/cipher-map-background.jpg") center / cover;
+  background-blend-mode: multiply, screen, normal;
 }
 
 .folio-note {
@@ -506,19 +512,23 @@ button:disabled {
   z-index: 2;
   box-shadow:
     0 22px 44px rgba(42, 30, 16, 0.38),
-    inset 0 0 0 2px rgba(22, 17, 12, 0.86),
-    inset 0 0 0 10px rgba(244, 222, 177, 0.45),
-    inset 0 0 0 14px rgba(22, 17, 12, 0.78),
-    inset 0 0 0 74px rgba(233, 212, 169, 0.14),
-    inset 0 0 0 80px rgba(22, 17, 12, 0.76),
-    inset 0 0 0 132px rgba(238, 216, 173, 0.18),
-    inset 0 0 0 138px rgba(22, 17, 12, 0.68),
-    inset 0 0 0 190px rgba(244, 224, 183, 0.18),
-    inset 0 0 0 196px rgba(22, 17, 12, 0.64);
+    inset 0 0 0 2px rgba(16, 12, 8, 0.9),
+    inset 0 0 0 9px rgba(216, 183, 118, 0.34),
+    inset 0 0 0 14px rgba(31, 24, 15, 0.84),
+    inset 0 0 0 54px rgba(64, 52, 36, 0.42),
+    inset 0 0 0 74px rgba(157, 118, 60, 0.18),
+    inset 0 0 0 82px rgba(24, 19, 13, 0.76),
+    inset 0 0 0 128px rgba(98, 82, 56, 0.34),
+    inset 0 0 0 139px rgba(29, 23, 15, 0.7),
+    inset 0 0 0 184px rgba(144, 105, 50, 0.22),
+    inset 0 0 0 197px rgba(21, 16, 10, 0.68);
   background:
-    radial-gradient(circle at center, rgba(218, 46, 30, 0.16) 0 2px, transparent 3px),
+    radial-gradient(circle at center, rgba(211, 47, 29, 0.22) 0 2px, transparent 3px),
+    radial-gradient(circle at 50% 50%, rgba(239, 219, 165, 0.42) 0 17%, rgba(154, 123, 76, 0.22) 18% 32%, rgba(83, 69, 48, 0.24) 33% 48%, rgba(177, 135, 66, 0.18) 49% 64%, rgba(43, 33, 21, 0.44) 65% 100%),
+    url("./assets/references/cipher-wheel-texture.jpg") center / cover,
     repeating-conic-gradient(from -3deg, rgba(35, 25, 14, 0.16) 0 2deg, transparent 2deg 13.84deg),
-    radial-gradient(circle, #e8d4aa 0 18%, #d1b782 52%, #c19c65 100%);
+    radial-gradient(circle, #ead9ad 0 14%, #c9aa68 24%, #8f744a 39%, #6b5b3e 52%, #9c7137 66%, #3c3021 82%, #211a12 100%);
+  background-blend-mode: normal, multiply, overlay, multiply, normal;
 }
 
 .cipher-ring {
