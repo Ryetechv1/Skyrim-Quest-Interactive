@@ -2,6 +2,14 @@ import { ALPHABET, GLYPH_RING, SYMBOL_RING } from "../wheel";
 import type { RingName, RingOffsets } from "../types";
 
 const LOWERCASE_GUIDE = "abcdefghijklmnopqrstuvwxyz".split("");
+const ALIGNMENT_MARKERS = [
+  { glyph: "▚", angle: -90, top: true },
+  { glyph: "▛", angle: -30 },
+  { glyph: "▜", angle: 30 },
+  { glyph: "▞", angle: 90 },
+  { glyph: "▟", angle: 150 },
+  { glyph: "▙", angle: 210 },
+];
 
 type CipherWheelProps = {
   offsets: RingOffsets;
@@ -67,14 +75,30 @@ function LowercaseGuide() {
   );
 }
 
+function AlignmentMarkers() {
+  return (
+    <div className="alignment-markers" aria-hidden="true">
+      {ALIGNMENT_MARKERS.map((marker) => (
+        <span
+          className={marker.top ? "alignment-marker top-v-marker" : "alignment-marker slot-marker"}
+          key={`${marker.glyph}-${marker.angle}`}
+          style={{
+            transform: `rotate(${marker.angle}deg) translate(248px) rotate(${-marker.angle}deg)`,
+          }}
+        >
+          <span className="slot-block">{marker.glyph}</span>
+          {marker.top ? <span className="slot-v" /> : <span className="alignment-slot" />}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export function CipherWheel({ offsets, rotateRing }: CipherWheelProps) {
   return (
     <div className="cipher-wheel-shell">
       <LowercaseGuide />
-      <div className="alignment-needle needle-top" />
-      <div className="alignment-needle needle-right" />
-      <div className="alignment-needle needle-bottom" />
-      <div className="alignment-needle needle-left" />
+      <AlignmentMarkers />
       <div className="cipher-wheel" aria-label="Three layer cipher wheel">
         <Ring
           name="outer"
