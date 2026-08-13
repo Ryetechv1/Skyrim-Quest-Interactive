@@ -39,7 +39,7 @@ function toPublicPath(filePath) {
 
 async function writeServiceWorker(files) {
   const cacheableFiles = files
-    .filter((filePath) => !filePath.endsWith("sw.js"))
+    .filter((filePath) => !filePath.endsWith("sw.js") && !filePath.toLowerCase().endsWith(".pdf"))
     .map(toPublicPath)
     .sort();
 
@@ -143,7 +143,9 @@ async function writeArchiveBundle() {
   await mkdir(bundleDir, { recursive: true });
 
   const bundlePath = join(bundleDir, "davinci-web-archive.zip");
-  const files = (await listFiles(distDir)).filter((filePath) => filePath !== bundlePath);
+  const files = (await listFiles(distDir)).filter(
+    (filePath) => filePath !== bundlePath && !filePath.toLowerCase().endsWith(".pdf"),
+  );
   const localParts = [];
   const centralParts = [];
   let offset = 0;

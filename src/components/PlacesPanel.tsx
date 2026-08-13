@@ -1,7 +1,8 @@
 import { FormEvent, useState } from "react";
 import { ExternalLink, Landmark, Search } from "lucide-react";
 
-type PlaceSourceId = "uesp" | "fandom";
+type PlaceSourceId = "prima" | "strategy" | "uesp" | "fandom";
+type PlaceSourceKind = "wiki" | "pdf";
 
 type PlaceLink = {
   label: string;
@@ -10,20 +11,54 @@ type PlaceLink = {
 
 type PlaceSource = {
   id: PlaceSourceId;
+  kind: PlaceSourceKind;
   label: string;
   root: string;
   defaultPage: string;
   placeholder: string;
+  openLabel: string;
   quickLinks: PlaceLink[];
 };
 
 const placeSources: PlaceSource[] = [
   {
+    id: "prima",
+    kind: "pdf",
+    label: "Prima PDF",
+    root: `${import.meta.env.BASE_URL}guides/`,
+    defaultPage: "Skyrim Legendary Edition Prima Official Game Guide.pdf",
+    placeholder: "Prima page index, quests, maps...",
+    openLabel: "Open Prima PDF",
+    quickLinks: [
+      { label: "Cover", page: "Skyrim Legendary Edition Prima Official Game Guide.pdf" },
+      { label: "Index", page: "Skyrim Legendary Edition Prima Official Game Guide.pdf#page=6" },
+      { label: "Main Quest", page: "Skyrim Legendary Edition Prima Official Game Guide.pdf#page=86" },
+      { label: "Cities", page: "Skyrim Legendary Edition Prima Official Game Guide.pdf#page=276" },
+    ],
+  },
+  {
+    id: "strategy",
+    kind: "pdf",
+    label: "Guide PDF",
+    root: `${import.meta.env.BASE_URL}guides/`,
+    defaultPage: "Elder_Scrolls_Skyrim_Official_Strategy_Guide.pdf",
+    placeholder: "Strategy guide page index...",
+    openLabel: "Open Guide PDF",
+    quickLinks: [
+      { label: "Cover", page: "Elder_Scrolls_Skyrim_Official_Strategy_Guide.pdf" },
+      { label: "Contents", page: "Elder_Scrolls_Skyrim_Official_Strategy_Guide.pdf#page=5" },
+      { label: "Quests", page: "Elder_Scrolls_Skyrim_Official_Strategy_Guide.pdf#page=76" },
+      { label: "Maps", page: "Elder_Scrolls_Skyrim_Official_Strategy_Guide.pdf#page=512" },
+    ],
+  },
+  {
     id: "uesp",
+    kind: "wiki",
     label: "UESP",
     root: "https://en.uesp.net/wiki/",
     defaultPage: "Skyrim:Places",
     placeholder: "Whiterun, Blackreach, Riverwood...",
+    openLabel: "Open UESP Page",
     quickLinks: [
       { label: "Places", page: "Skyrim:Places" },
       { label: "Cities", page: "Skyrim:Cities" },
@@ -37,10 +72,12 @@ const placeSources: PlaceSource[] = [
   },
   {
     id: "fandom",
+    kind: "wiki",
     label: "Fandom",
     root: "https://elderscrolls.fandom.com/wiki/",
     defaultPage: "The_Elder_Scrolls_Wiki",
     placeholder: "Whiterun, Dragonborn, Locations...",
+    openLabel: "Open Fandom Page",
     quickLinks: [
       { label: "Wiki Home", page: "The_Elder_Scrolls_Wiki" },
       { label: "Skyrim", page: "The_Elder_Scrolls_V:_Skyrim" },
@@ -60,13 +97,21 @@ const sourceById = placeSources.reduce<Record<PlaceSourceId, PlaceSource>>(
 );
 
 function wikiPageUrl(source: PlaceSource, page: string) {
-  return `${source.root}${encodeURI(page.trim().replace(/\s+/g, "_"))}`;
+  const [pagePath, hash] = page.trim().split("#");
+  const normalizedPath = source.kind === "pdf" ? pagePath : pagePath.replace(/\s+/g, "_");
+  return `${source.root}${encodeURI(normalizedPath)}${hash ? `#${hash}` : ""}`;
 }
 
 function searchPage(source: PlaceSource, query: string) {
   const cleaned = query.trim();
   if (!cleaned) {
     return source.defaultPage;
+  }
+
+  if (source.kind === "pdf") {
+    return /^\d+$/.test(cleaned)
+      ? `${source.defaultPage}#page=${cleaned}`
+      : `${source.defaultPage}#search=${encodeURIComponent(cleaned)}`;
   }
 
   if (source.id === "uesp") {
@@ -77,10 +122,10 @@ function searchPage(source: PlaceSource, query: string) {
 }
 
 export function PlacesPanel() {
-  const [sourceId, setSourceId] = useState<PlaceSourceId>("uesp");
+  const [sourceId, setSourceId] = useState<PlaceSourceId>("prima");
   const [query, setQuery] = useState("");
   const source = sourceById[sourceId];
-  const [targetPage, setTargetPage] = useState(sourceById.uesp.defaultPage);
+  const [targetPage, setTargetPage] = useState(sourceById.prima.defaultPage);
   const targetUrl = wikiPageUrl(source, targetPage);
 
   function handleSourceChange(nextSource: PlaceSource) {
@@ -98,8 +143,8 @@ export function PlacesPanel() {
     <section className="places-panel" aria-label="Skyrim places browser">
       <header className="places-header">
         <div>
-          <h3>Skyrim Places Index</h3>
-          <p>Live wiki lookup for towns, ruins, holds, dungeons, and field notes.</p>
+          <h3>Skyrim Archive Index</h3>
+          <p>Live guide, wiki, map, and field-note lookup.</p>
         </div>
         <Landmark size={22} />
       </header>
@@ -147,7 +192,7 @@ export function PlacesPanel() {
 
       <a className="places-open" href={targetUrl} target="_blank" rel="noreferrer">
         <ExternalLink size={15} />
-        Open {source.label} Page
+        {source.openLabel}
       </a>
     </section>
   );

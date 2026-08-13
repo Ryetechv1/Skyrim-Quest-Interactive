@@ -55,6 +55,15 @@ https://Ryetechv1.github.io/davinci-escape-room/download/davinci-web-archive.zip
 npm run build
 ```
 
+## Local Guide PDFs
+
+The Places tab can iframe two local guide PDFs from `public/guides/`:
+
+- `Skyrim Legendary Edition Prima Official Game Guide.pdf`
+- `Elder_Scrolls_Skyrim_Official_Strategy_Guide.pdf`
+
+These PDF files are intentionally ignored by git because they are large guide assets. Keep licensed copies in `public/guides/` for local viewing, or host them separately and update the source paths before publishing them.
+
 ## Notes
 
 The puzzle archive is a local escape-room simulation. Its encryption and decryption happen in the browser with the Web Crypto API.

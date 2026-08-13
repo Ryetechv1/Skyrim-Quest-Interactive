@@ -6,3 +6,4 @@ qa-*.png
 qa-results.txt
 vite.config.d.ts
 vite.config.js
+public/guides/*.pdf

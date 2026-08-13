@@ -559,7 +559,15 @@ export default function App() {
   }
 
   return (
-    <main className={isWebArchiveMode ? "app-shell archive-publish" : "app-shell"}>
+    <main
+      className={[
+        "app-shell",
+        isWebArchiveMode ? "archive-publish" : "",
+        activeTab === "places" ? "places-layout" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
       {isWebArchiveMode ? (
         <div className="archive-publish-ribbon" role="status">
           <span>Web Archive Publish - offline cache ready after first full load</span>
