@@ -2,13 +2,18 @@ import { ALPHABET, GLYPH_RING, SYMBOL_RING } from "../wheel";
 import type { RingName, RingOffsets } from "../types";
 
 const LOWERCASE_GUIDE = "abcdefghijklmnopqrstuvwxyz".split("");
+
+function lowercaseAngle(letter: string) {
+  return LOWERCASE_GUIDE.indexOf(letter) * (360 / LOWERCASE_GUIDE.length) - 90;
+}
+
 const ALIGNMENT_MARKERS = [
   { glyph: "▚", angle: -90 },
-  { glyph: "▛", angle: -30 },
-  { glyph: "▜", angle: 30 },
+  { glyph: "▛", angle: lowercaseAngle("e") },
+  { glyph: "▜", angle: lowercaseAngle("j") },
   { glyph: "▞", angle: 90 },
-  { glyph: "▟", angle: 150 },
-  { glyph: "▙", angle: 210 },
+  { glyph: "▟", angle: lowercaseAngle("r") },
+  { glyph: "▙", angle: lowercaseAngle("w") },
 ];
 
 type CipherWheelProps = {
