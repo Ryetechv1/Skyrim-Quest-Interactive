@@ -34,6 +34,7 @@ import type {
   ChangeRequest,
   ChangeRequestPayload,
   ChatMessage,
+  EncryptedFolder,
   NoteDraft,
   RingName,
   RingOffsets,
@@ -59,9 +60,11 @@ const STORAGE_KEYS = {
   changeRequests: "davinci.archivists.changeRequests",
   chatMessages: "davinci.archivists.chatMessages",
   publishedFiles: "davinci.archivists.publishedFiles",
+  encryptedFolders: "davinci.archivists.encryptedFolders",
 };
 
 const COLLABORATION_CHANNEL = "davinci-archivist-collaboration";
+const VAULT_ROOT = "Archive: MASK_OF_DESPAIR.mega";
 const isWebArchiveMode = window.location.pathname.includes("/web-archive/");
 
 type CollaborationMessage =
@@ -76,6 +79,10 @@ type CollaborationMessage =
   | {
       type: "published-files";
       payload: SealedFile[];
+    }
+  | {
+      type: "encrypted-folders";
+      payload: EncryptedFolder[];
     };
 
 function event(kind: TerminalEvent["kind"], text: string): TerminalEvent {
@@ -130,11 +137,61 @@ function archiveProgress(files: SealedFile[]) {
   return Math.round((opened / files.length) * 100);
 }
 
+function normalizeFolderInput(rawPath: string) {
+  const trimmed = rawPath.trim().replace(/\\/g, "/");
+  const withoutRoot = trimmed
+    .replace(/^Archive:\s*MASK_OF_DESPAIR\.mega\/?/i, "")
+    .replace(/^\/+/, "");
+  const segments = withoutRoot
+    .split("/")
+    .map((segment) =>
+      segment
+        .trim()
+        .replace(/\s+/g, "_")
+        .replace(/[^A-Za-z0-9_. -]/g, "")
+        .replace(/[. ]+$/g, ""),
+    )
+    .filter(Boolean);
+
+  return segments.join("/");
+}
+
+function absoluteFolderPath(relativePath: string) {
+  return `${VAULT_ROOT}/${relativePath}`;
+}
+
+function collectKnownFolderPaths(files: SealedFile[], folders: EncryptedFolder[]) {
+  const known = new Set<string>();
+
+  files.forEach((file) => {
+    const [, ...segments] = file.path.split("/");
+    let current = VAULT_ROOT;
+    segments.filter(Boolean).forEach((segment) => {
+      current = `${current}/${segment}`;
+      known.add(current.toLowerCase());
+    });
+  });
+
+  folders.forEach((folder) => {
+    const [, ...segments] = folder.path.split("/");
+    let current = VAULT_ROOT;
+    segments.filter(Boolean).forEach((segment) => {
+      current = `${current}/${segment}`;
+      known.add(current.toLowerCase());
+    });
+  });
+
+  return known;
+}
+
 export default function App() {
   const [offsets, setOffsets] = useState<RingOffsets>(initialOffsets);
   const [sealedFiles, setSealedFiles] = useState<SealedFile[]>([]);
   const [publishedFiles, setPublishedFiles] = useState<SealedFile[]>(() =>
     readStoredJson<SealedFile[]>(STORAGE_KEYS.publishedFiles, []),
+  );
+  const [encryptedFolders, setEncryptedFolders] = useState<EncryptedFolder[]>(() =>
+    readStoredJson<EncryptedFolder[]>(STORAGE_KEYS.encryptedFolders, []),
   );
   const [selectedFileId, setSelectedFileId] = useState(vaultFiles[0].id);
   const [passphrase, setPassphrase] = useState("R3LIQU4RY-72");
@@ -200,6 +257,10 @@ export default function App() {
       if (message.type === "published-files") {
         setPublishedFiles(message.payload);
         setSealedFiles((files) => [...files.filter((file) => !file.id.startsWith("published-")), ...message.payload]);
+        return;
+      }
+      if (message.type === "encrypted-folders") {
+        setEncryptedFolders(message.payload);
       }
     }
 
@@ -221,6 +282,9 @@ export default function App() {
           ...files.filter((file) => !file.id.startsWith("published-")),
           ...nextPublishedFiles,
         ]);
+      }
+      if (eventMessage.key === STORAGE_KEYS.encryptedFolders) {
+        setEncryptedFolders(readStoredJson<EncryptedFolder[]>(STORAGE_KEYS.encryptedFolders, []));
       }
     }
 
@@ -369,6 +433,41 @@ export default function App() {
     setActiveTab("vault");
     pushEvent("ok", `${file.name} published by ${publisher}.`);
     appendChatMessage("Reliquary", "system", `${publisher} published ${file.name}.`);
+  }
+
+  function createEncryptedFolder(rawPath: string) {
+    if (authSession?.role !== "admin") {
+      pushEvent("error", "Only Archivist_Z can create encrypted folder branches.");
+      return;
+    }
+
+    const relativePath = normalizeFolderInput(rawPath);
+    if (!relativePath) {
+      pushEvent("error", "Encrypted folder branch requires a folder path.");
+      return;
+    }
+
+    const path = absoluteFolderPath(relativePath);
+    const knownFolders = collectKnownFolderPaths(sealedFiles, encryptedFolders);
+    if (knownFolders.has(path.toLowerCase())) {
+      pushEvent("warn", `${relativePath} already exists in the Vault branch ledger.`);
+      return;
+    }
+
+    const folder: EncryptedFolder = {
+      id: makeId("folder"),
+      path,
+      createdBy: authSession.username,
+      createdAt: new Date().toISOString(),
+    };
+    const nextFolders = [...encryptedFolders, folder].sort((first, second) => first.path.localeCompare(second.path));
+    setEncryptedFolders(nextFolders);
+    writeStoredJson(STORAGE_KEYS.encryptedFolders, nextFolders);
+    sendCollaborationMessage({ type: "encrypted-folders", payload: nextFolders });
+    setDraft((current) => ({ ...current, folder: relativePath }));
+    setActiveTab("vault");
+    pushEvent("ok", `${relativePath} encrypted folder branch created by ${authSession.username}.`);
+    appendChatMessage("Reliquary", "system", `${authSession.username} created encrypted folder branch ${relativePath}.`);
   }
 
   function rotateRing(ring: RingName, delta: number) {
@@ -681,6 +780,7 @@ export default function App() {
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           files={sealedFiles}
+          folders={encryptedFolders}
           selectedFileId={selectedFileId}
           setSelectedFileId={setSelectedFileId}
           terminalEvents={terminalEvents}
@@ -700,9 +800,17 @@ export default function App() {
             }
             appendChatMessage(authSession.username, authSession.role, body);
           }}
+          onCreateEncryptedFolder={createEncryptedFolder}
         />
         {activeTab !== "places" ? (
-          <NoteForge session={authSession} draft={draft} setDraft={setDraft} onSeal={sealCustomNote} busy={busy} />
+          <NoteForge
+            session={authSession}
+            draft={draft}
+            folders={encryptedFolders}
+            setDraft={setDraft}
+            onSeal={sealCustomNote}
+            busy={busy}
+          />
         ) : null}
       </aside>
 

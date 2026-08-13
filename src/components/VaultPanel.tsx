@@ -3,15 +3,25 @@ import {
   ChevronRight,
   FileText,
   Folder,
+  FolderPlus,
   FolderLock,
   KeyRound,
   Lock,
   TerminalSquare,
   Unlock,
 } from "lucide-react";
-import type { CSSProperties } from "react";
+import type { CSSProperties, FormEvent } from "react";
+import { useState } from "react";
 import { manuscriptTabs } from "../data";
-import type { AuthSession, ChangeRequest, ChangeRequestPayload, ChatMessage, SealedFile, TerminalEvent } from "../types";
+import type {
+  AuthSession,
+  ChangeRequest,
+  ChangeRequestPayload,
+  ChatMessage,
+  EncryptedFolder,
+  SealedFile,
+  TerminalEvent,
+} from "../types";
 import { ArchivistPanel } from "./ArchivistPanel";
 import { GuidePanel } from "./GuidePanel";
 import { MegaPanel } from "./MegaPanel";
@@ -22,6 +32,7 @@ type VaultPanelProps = {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   files: SealedFile[];
+  folders: EncryptedFolder[];
   selectedFileId: string;
   setSelectedFileId: (id: string) => void;
   terminalEvents: TerminalEvent[];
@@ -33,6 +44,7 @@ type VaultPanelProps = {
   onRejectRequest: (requestId: string) => void;
   onRequestChange: (title: string, summary: string, payload: ChangeRequestPayload) => void;
   onSendChatMessage: (body: string) => void;
+  onCreateEncryptedFolder: (folderPath: string) => void;
 };
 
 type TreeFolder = {
@@ -41,17 +53,29 @@ type TreeFolder = {
   files: SealedFile[];
 };
 
-function makeTree(files: SealedFile[]) {
+function ensureTreePath(root: TreeFolder, path: string) {
+  const [, ...segments] = path.split("/");
+  const folderSegments = segments.map((segment) => segment.trim()).filter(Boolean);
+  let cursor = root;
+
+  folderSegments.forEach((segment) => {
+    cursor.children[segment] ??= { name: segment, children: {}, files: [] };
+    cursor = cursor.children[segment];
+  });
+
+  return cursor;
+}
+
+function makeTree(files: SealedFile[], folders: EncryptedFolder[]) {
   const root: TreeFolder = { name: "Archive: MASK_OF_DESPAIR.mega", children: {}, files: [] };
+
+  folders.forEach((folder) => {
+    ensureTreePath(root, folder.path);
+  });
 
   files.forEach((file) => {
     const [, ...segments] = file.path.split("/");
-    const folderSegments = segments.length ? segments : ["00_Inbox"];
-    let cursor = root;
-    folderSegments.forEach((segment) => {
-      cursor.children[segment] ??= { name: segment, children: {}, files: [] };
-      cursor = cursor.children[segment];
-    });
+    const cursor = ensureTreePath(root, segments.length ? file.path : "Archive: MASK_OF_DESPAIR.mega/00_Inbox");
     cursor.files.push(file);
   });
 
@@ -69,7 +93,7 @@ function TreeView({
   setSelectedFileId: (id: string) => void;
   depth?: number;
 }) {
-  const folders = Object.values(folder.children);
+  const folders = Object.values(folder.children).sort((first, second) => first.name.localeCompare(second.name));
 
   return (
     <div className="tree-node">
@@ -121,6 +145,7 @@ export function VaultPanel({
   activeTab,
   setActiveTab,
   files,
+  folders,
   selectedFileId,
   setSelectedFileId,
   terminalEvents,
@@ -132,9 +157,21 @@ export function VaultPanel({
   onRejectRequest,
   onRequestChange,
   onSendChatMessage,
+  onCreateEncryptedFolder,
 }: VaultPanelProps) {
+  const [folderDraft, setFolderDraft] = useState("");
   const selectedFile = files.find((file) => file.id === selectedFileId);
-  const tree = makeTree(files);
+  const tree = makeTree(files, folders);
+  const canCreateFolder = session?.role === "admin";
+
+  function handleCreateFolder(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!folderDraft.trim()) {
+      return;
+    }
+    onCreateEncryptedFolder(folderDraft);
+    setFolderDraft("");
+  }
 
   return (
     <section className="vault-panel">
@@ -189,7 +226,26 @@ export function VaultPanel({
               <strong>R3LIQU4RY-72</strong>
             </div>
             <div className="tree-wrap">
-              <h3>Encrypted Folders</h3>
+              <div className="tree-heading">
+                <h3>Encrypted Folders</h3>
+                <span>{folders.length} admin branch{folders.length === 1 ? "" : "es"}</span>
+              </div>
+              <form className="folder-branch-forge" onSubmit={handleCreateFolder}>
+                <label>
+                  <FolderPlus size={15} />
+                  <span>Branch</span>
+                  <input
+                    value={folderDraft}
+                    onChange={(event) => setFolderDraft(event.target.value)}
+                    placeholder="05_New_Vault/01_Encrypted_Branch"
+                    disabled={!canCreateFolder}
+                  />
+                </label>
+                <button type="submit" disabled={!canCreateFolder || !folderDraft.trim()}>
+                  <FolderPlus size={15} />
+                  Create
+                </button>
+              </form>
               <TreeView folder={tree} selectedFileId={selectedFileId} setSelectedFileId={setSelectedFileId} />
             </div>
           </>

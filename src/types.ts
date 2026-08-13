@@ -48,6 +48,13 @@ export type SealedFile = VaultFile & {
   decryptedText?: string;
 };
 
+export type EncryptedFolder = {
+  id: string;
+  path: string;
+  createdBy: string;
+  createdAt: string;
+};
+
 export type TerminalEvent = {
   id: string;
   kind: "ok" | "warn" | "error" | "info";

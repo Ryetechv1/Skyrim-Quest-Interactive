@@ -1,15 +1,28 @@
 import { FilePlus2, LockKeyhole, PenLine } from "lucide-react";
-import type { AuthSession, NoteDraft } from "../types";
+import type { AuthSession, EncryptedFolder, NoteDraft } from "../types";
+
+const VAULT_ROOT = "Archive: MASK_OF_DESPAIR.mega/";
+const DEFAULT_FOLDER_OPTIONS = [
+  "01_Research",
+  "02_Artifacts/03_Keys",
+  "03_Forbidden_Library/02_Constellations",
+  "04_Archives_Obscura",
+];
 
 type NoteForgeProps = {
   session: AuthSession | null;
   draft: NoteDraft;
+  folders: EncryptedFolder[];
   setDraft: (draft: NoteDraft) => void;
   onSeal: () => void;
   busy: boolean;
 };
 
-export function NoteForge({ session, draft, setDraft, onSeal, busy }: NoteForgeProps) {
+function folderOptionFromPath(path: string) {
+  return path.startsWith(VAULT_ROOT) ? path.slice(VAULT_ROOT.length) : path;
+}
+
+export function NoteForge({ session, draft, folders, setDraft, onSeal, busy }: NoteForgeProps) {
   const actionLabel =
     session?.role === "guest" ? "Seal Sandbox Note" : session?.role === "moderator" ? "Request Publish" : "Publish Note";
   const helperText =
@@ -18,6 +31,9 @@ export function NoteForge({ session, draft, setDraft, onSeal, busy }: NoteForgeP
       : session?.role === "moderator"
         ? "Moderator notes become admin approval requests."
         : "Admin notes publish directly into the local archive ledger.";
+  const folderOptions = Array.from(
+    new Set([...DEFAULT_FOLDER_OPTIONS, ...folders.map((folder) => folderOptionFromPath(folder.path))]),
+  ).filter(Boolean);
 
   return (
     <section className="note-forge" aria-label="Encrypted note forge">
@@ -47,10 +63,9 @@ export function NoteForge({ session, draft, setDraft, onSeal, busy }: NoteForgeP
         <PenLine size={15} />
         Folder
         <select value={draft.folder} onChange={(event) => setDraft({ ...draft, folder: event.target.value })}>
-          <option>01_Research</option>
-          <option>02_Artifacts/03_Keys</option>
-          <option>03_Forbidden_Library/02_Constellations</option>
-          <option>04_Archives_Obscura</option>
+          {folderOptions.map((folder) => (
+            <option key={folder}>{folder}</option>
+          ))}
         </select>
       </label>
       <textarea

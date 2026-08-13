@@ -1111,6 +1111,76 @@ button:disabled {
   overflow: auto;
 }
 
+.tree-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.tree-heading span {
+  color: #d2b579;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.folder-branch-forge {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  margin: 10px 0 12px;
+  padding: 8px;
+  border: 1px solid rgba(198, 155, 84, 0.24);
+  background:
+    linear-gradient(90deg, rgba(101, 31, 23, 0.16), transparent 64%),
+    rgba(12, 9, 7, 0.46);
+}
+
+.folder-branch-forge label {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 16px 50px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  color: #eed49e;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.folder-branch-forge input {
+  min-width: 0;
+  border: 1px solid rgba(232, 207, 158, 0.26);
+  border-radius: 3px;
+  background: rgba(10, 8, 6, 0.68);
+  color: #f3deb1;
+  padding: 8px 9px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.folder-branch-forge input:disabled {
+  opacity: 0.55;
+}
+
+.folder-branch-forge button {
+  min-width: 82px;
+  padding: 8px 10px;
+  border: 1px solid rgba(198, 155, 84, 0.48);
+  border-radius: 3px;
+  background: rgba(87, 27, 20, 0.52);
+  color: #ffefbd;
+  font-family: var(--font-display);
+  font-size: 12px;
+}
+
+.folder-branch-forge button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
 .tree-node {
   display: grid;
   gap: 3px;
@@ -2919,6 +2989,16 @@ button:disabled {
 
   .vault-tabs button span {
     display: none;
+  }
+
+  .tree-heading,
+  .folder-branch-forge,
+  .folder-branch-forge label {
+    grid-template-columns: 1fr;
+  }
+
+  .folder-branch-forge button {
+    width: 100%;
   }
 
   .places-panel {
