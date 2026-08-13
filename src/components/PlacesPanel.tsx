@@ -1,7 +1,8 @@
-import { FormEvent, useState } from "react";
-import { ExternalLink, Landmark, Search } from "lucide-react";
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
+import { ExternalLink, Landmark, Search, Upload } from "lucide-react";
 
 type PlaceSourceId = "prima" | "strategy" | "uesp" | "fandom";
+type PdfSourceId = Extract<PlaceSourceId, "prima" | "strategy">;
 type PlaceSourceKind = "wiki" | "pdf";
 
 type PlaceLink = {
@@ -96,10 +97,26 @@ const sourceById = placeSources.reduce<Record<PlaceSourceId, PlaceSource>>(
   {} as Record<PlaceSourceId, PlaceSource>,
 );
 
+function isPdfSourceId(sourceId: PlaceSourceId): sourceId is PdfSourceId {
+  return sourceId === "prima" || sourceId === "strategy";
+}
+
+function pageHash(page: string) {
+  const hashIndex = page.indexOf("#");
+  return hashIndex >= 0 ? page.slice(hashIndex) : "";
+}
+
 function wikiPageUrl(source: PlaceSource, page: string) {
-  const [pagePath, hash] = page.trim().split("#");
-  const normalizedPath = source.kind === "pdf" ? pagePath : pagePath.replace(/\s+/g, "_");
-  return `${source.root}${encodeURI(normalizedPath)}${hash ? `#${hash}` : ""}`;
+  const trimmedPage = page.trim();
+  const hashIndex = trimmedPage.indexOf("#");
+  const pagePath = hashIndex >= 0 ? trimmedPage.slice(0, hashIndex) : trimmedPage;
+  const hash = hashIndex >= 0 ? trimmedPage.slice(hashIndex) : "";
+  const normalizedPath = pagePath.replace(/\s+/g, "_");
+  return `${source.root}${encodeURI(normalizedPath)}${hash}`;
+}
+
+function pdfFrameUrl(page: string, objectUrl?: string) {
+  return objectUrl ? `${objectUrl}${pageHash(page)}` : "";
 }
 
 function searchPage(source: PlaceSource, query: string) {
@@ -126,7 +143,28 @@ export function PlacesPanel() {
   const [query, setQuery] = useState("");
   const source = sourceById[sourceId];
   const [targetPage, setTargetPage] = useState(sourceById.prima.defaultPage);
-  const targetUrl = wikiPageUrl(source, targetPage);
+  const [pdfObjectUrls, setPdfObjectUrls] = useState<Partial<Record<PdfSourceId, string>>>({});
+  const [pdfFileNames, setPdfFileNames] = useState<Partial<Record<PdfSourceId, string>>>({});
+  const pdfObjectUrlsRef = useRef(pdfObjectUrls);
+  const activePdfUrl = isPdfSourceId(source.id) ? pdfObjectUrls[source.id] : undefined;
+  const activePdfName = isPdfSourceId(source.id) ? pdfFileNames[source.id] : undefined;
+  const targetUrl = source.kind === "pdf" ? pdfFrameUrl(targetPage, activePdfUrl) : wikiPageUrl(source, targetPage);
+  const pdfInputId = `places-pdf-${source.id}`;
+
+  useEffect(() => {
+    pdfObjectUrlsRef.current = pdfObjectUrls;
+  }, [pdfObjectUrls]);
+
+  useEffect(
+    () => () => {
+      Object.values(pdfObjectUrlsRef.current).forEach((objectUrl) => {
+        if (objectUrl) {
+          URL.revokeObjectURL(objectUrl);
+        }
+      });
+    },
+    [],
+  );
 
   function handleSourceChange(nextSource: PlaceSource) {
     setSourceId(nextSource.id);
@@ -137,6 +175,26 @@ export function PlacesPanel() {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setTargetPage(searchPage(source, query));
+  }
+
+  function handlePdfFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.currentTarget.files?.[0];
+    const pdfSourceId = source.id;
+    if (!file || !isPdfSourceId(pdfSourceId)) {
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    setPdfObjectUrls((currentUrls) => {
+      const previousObjectUrl = currentUrls[pdfSourceId];
+      if (previousObjectUrl) {
+        URL.revokeObjectURL(previousObjectUrl);
+      }
+      return { ...currentUrls, [pdfSourceId]: objectUrl };
+    });
+    setPdfFileNames((currentNames) => ({ ...currentNames, [pdfSourceId]: file.name }));
+    setTargetPage(`${source.defaultPage}${pageHash(targetPage)}`);
+    event.currentTarget.value = "";
   }
 
   return (
@@ -187,13 +245,44 @@ export function PlacesPanel() {
       </div>
 
       <div className="places-frame-window">
-        <iframe title={`${source.label} Skyrim places`} src={targetUrl} referrerPolicy="no-referrer-when-downgrade" />
+        {source.kind === "pdf" ? (
+          <input id={pdfInputId} className="pdf-file-input" type="file" accept="application/pdf,.pdf" onChange={handlePdfFileChange} />
+        ) : null}
+        {targetUrl ? (
+          <>
+            <iframe title={`${source.label} Skyrim places`} src={targetUrl} referrerPolicy="no-referrer-when-downgrade" />
+            {source.kind === "pdf" ? (
+              <label className="pdf-replace-button" htmlFor={pdfInputId}>
+                <Upload size={14} />
+                Replace PDF
+              </label>
+            ) : null}
+          </>
+        ) : (
+          <div className="pdf-loader-panel">
+            <div>
+              <span>{source.label}</span>
+              <strong>{activePdfName ?? "Local PDF required"}</strong>
+            </div>
+            <label className="pdf-loader-button" htmlFor={pdfInputId}>
+              <Upload size={16} />
+              Load PDF
+            </label>
+          </div>
+        )}
       </div>
 
-      <a className="places-open" href={targetUrl} target="_blank" rel="noreferrer">
-        <ExternalLink size={15} />
-        {source.openLabel}
-      </a>
+      {targetUrl ? (
+        <a className="places-open" href={targetUrl} target="_blank" rel="noreferrer">
+          <ExternalLink size={15} />
+          {source.openLabel}
+        </a>
+      ) : (
+        <button className="places-open" type="button" disabled>
+          <ExternalLink size={15} />
+          {source.openLabel}
+        </button>
+      )}
     </section>
   );
 }
