@@ -25,6 +25,7 @@ import {
   decodedFragment,
   isWheelSolved,
   progressTowardSolution,
+  RING_LENGTHS,
   SOLUTION_OFFSETS,
   wheelChecksum,
 } from "./wheel";
@@ -372,13 +373,13 @@ export default function App() {
   function rotateRing(ring: RingName, delta: number) {
     setOffsets((current) => ({
       ...current,
-      [ring]: (current[ring] + delta + 26) % 26,
+      [ring]: (current[ring] + delta + RING_LENGTHS[ring]) % RING_LENGTHS[ring],
     }));
   }
 
   function autoAlign() {
     setOffsets(SOLUTION_OFFSETS);
-    pushEvent("ok", "Wheel aligned to H / ✺ / ᚨ. Red needles stabilized.");
+    pushEvent("ok", "Wheel aligned to H / 4 / ᚨ. Red needles stabilized.");
   }
 
   function resetWheel() {

@@ -60,7 +60,7 @@ export const inventory: InventoryItem[] = [
   {
     id: "astrolabe",
     name: "Astrolabe",
-    detail: "Calibrates the middle symbol ring.",
+    detail: "Calibrates the middle numeral ring.",
     icon: Compass,
     acquired: true,
   },
@@ -127,7 +127,7 @@ export const vaultFiles: VaultFile[] = [
     locked: true,
     clue: "The investigator code in the dossier opens this key.",
     plainText:
-      "TRIAD KEY FRAGMENT A\n\nThis key was divided into three: truth, shadow, and memory. Align the outer alphabet to H, the middle symbol ring to the fourteenth seal, and the inner glyph to the third rune.\n\nRecovered passphrase: VERITAS",
+      "TRIAD KEY FRAGMENT A\n\nThis key was divided into three: truth, shadow, and memory. Align the outer Daedric alphabet to H, the middle numeral ring to the fourth mark, and the inner glyph to the third rune.\n\nRecovered passphrase: VERITAS",
   },
   {
     id: "mask-index",
@@ -166,7 +166,7 @@ export const vaultFiles: VaultFile[] = [
     locked: true,
     clue: "The leviathan note completes the Latin phrase.",
     plainText:
-      "CONSTELLATION MAP\n\nA brass meridian splits the sky into twenty-six stations. The final seal opens when the three wheel rings read H, ✺, and ᚨ at the red needle.\n\nRecovered final password: ARCHIVIST-72",
+      "CONSTELLATION MAP\n\nA brass meridian splits the sky into twenty-six stations. The final seal opens when the three wheel rings read H, 4, and ᚨ at the red needle.\n\nRecovered final password: ARCHIVIST-72",
   },
   {
     id: "final-answer",

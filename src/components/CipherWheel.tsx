@@ -1,6 +1,8 @@
 import { ALPHABET, GLYPH_RING, SYMBOL_RING } from "../wheel";
 import type { RingName, RingOffsets } from "../types";
 
+const LOWERCASE_GUIDE = "abcdefghijklmnopqrstuvwxyz".split("");
+
 type CipherWheelProps = {
   offsets: RingOffsets;
   rotateRing: (ring: RingName, delta: number) => void;
@@ -41,9 +43,34 @@ function Ring({ name, items, radius, offset, className, rotateRing }: RingProps)
   );
 }
 
+function LowercaseGuide() {
+  const step = 360 / LOWERCASE_GUIDE.length;
+
+  return (
+    <div className="lowercase-guide" aria-label="Static lowercase alphabet guide">
+      {LOWERCASE_GUIDE.map((letter, index) => {
+        const angle = index * step - 90;
+
+        return (
+          <span
+            className="lowercase-cell"
+            key={letter}
+            style={{
+              transform: `rotate(${angle}deg) translate(292px) rotate(${-angle}deg)`,
+            }}
+          >
+            {letter}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 export function CipherWheel({ offsets, rotateRing }: CipherWheelProps) {
   return (
     <div className="cipher-wheel-shell">
+      <LowercaseGuide />
       <div className="alignment-needle needle-top" />
       <div className="alignment-needle needle-right" />
       <div className="alignment-needle needle-bottom" />
@@ -52,7 +79,7 @@ export function CipherWheel({ offsets, rotateRing }: CipherWheelProps) {
         <Ring
           name="outer"
           items={ALPHABET}
-          radius={210}
+          radius={216}
           offset={offsets.outer}
           className="outer-ring"
           rotateRing={rotateRing}
@@ -80,8 +107,8 @@ export function CipherWheel({ offsets, rotateRing }: CipherWheelProps) {
         </div>
       </div>
       <div className="wheel-caption">
-        <span>Outer: Alphabet</span>
-        <span>Middle: Symbols</span>
+        <span>Outer: Daedric A-Z</span>
+        <span>Middle: 1-9</span>
         <span>Inner: Glyphs</span>
       </div>
     </div>

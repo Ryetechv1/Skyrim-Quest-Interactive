@@ -5,7 +5,7 @@ An antique Leonardo da Vinci inspired escape-room web app with a three-layer cip
 ## Features
 
 - Responsive desktop and mobile React/Vite app
-- Three-layer cipher wheel with alphabet, symbol, and glyph rings
+- Three-layer cipher wheel with a Daedric A-Z outer ring, 1-9 numeral ring, and inner glyph ring
 - MEGA-style archive tree with encrypted files and folder paths
 - Browser Web Crypto AES-GCM encryption/decryption flow
 - Password chain: `R3LIQU4RY-72 -> VERITAS -> OCCULTA -> REVELATUR -> ARCHIVIST-72`
