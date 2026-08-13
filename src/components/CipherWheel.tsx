@@ -3,7 +3,7 @@ import type { RingName, RingOffsets } from "../types";
 
 const LOWERCASE_GUIDE = "abcdefghijklmnopqrstuvwxyz".split("");
 const ALIGNMENT_MARKERS = [
-  { glyph: "▚", angle: -90, top: true },
+  { glyph: "▚", angle: -90 },
   { glyph: "▛", angle: -30 },
   { glyph: "▜", angle: 30 },
   { glyph: "▞", angle: 90 },
@@ -80,14 +80,14 @@ function AlignmentMarkers() {
     <div className="alignment-markers" aria-hidden="true">
       {ALIGNMENT_MARKERS.map((marker) => (
         <span
-          className={marker.top ? "alignment-marker top-v-marker" : "alignment-marker slot-marker"}
+          className="alignment-marker"
           key={`${marker.glyph}-${marker.angle}`}
           style={{
-            transform: `rotate(${marker.angle}deg) translate(248px) rotate(${-marker.angle}deg)`,
+            transform: `rotate(${marker.angle}deg) translate(238px) rotate(${-marker.angle}deg)`,
           }}
         >
           <span className="slot-block">{marker.glyph}</span>
-          {marker.top ? <span className="slot-v" /> : <span className="alignment-slot" />}
+          <span className="slot-v" />
         </span>
       ))}
     </div>
