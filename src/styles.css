@@ -646,7 +646,6 @@ button:disabled {
   height: 100px;
   display: grid;
   place-items: start center;
-  color: var(--red);
   font-family: var(--font-mono);
   font-size: 19px;
   font-weight: 800;
@@ -660,11 +659,22 @@ button:disabled {
   height: 24px;
   display: grid;
   place-items: center;
+}
+
+.red-v .slot-block {
   color: rgba(174, 40, 27, 0.96);
   filter: drop-shadow(0 1px 0 rgba(245, 219, 174, 0.44));
 }
 
-.slot-v {
+.white-radial .slot-block {
+  color: rgba(242, 230, 204, 0.86);
+  filter:
+    drop-shadow(0 1px 0 rgba(36, 24, 13, 0.46))
+    drop-shadow(0 0 6px rgba(255, 244, 218, 0.14));
+}
+
+.slot-v,
+.slot-radial {
   position: relative;
   width: 68px;
   height: 58px;
@@ -672,18 +682,24 @@ button:disabled {
 }
 
 .slot-v::before,
-.slot-v::after {
+.slot-v::after,
+.slot-radial::before,
+.slot-radial::after {
   content: "";
   position: absolute;
   top: 0;
   width: 2px;
   height: 64px;
   border-radius: 2px;
+  transform-origin: top center;
+}
+
+.slot-v::before,
+.slot-v::after {
   background: linear-gradient(180deg, rgba(184, 39, 26, 0.95), rgba(122, 31, 22, 0.38) 78%, transparent);
   box-shadow:
     0 0 0 1px rgba(247, 218, 169, 0.12),
     0 0 9px rgba(169, 45, 30, 0.28);
-  transform-origin: top center;
 }
 
 .slot-v::before {
@@ -694,6 +710,26 @@ button:disabled {
 .slot-v::after {
   right: 18px;
   transform: rotate(18deg);
+}
+
+.slot-radial::before,
+.slot-radial::after {
+  top: 7px;
+  height: 58px;
+  background: linear-gradient(180deg, rgba(255, 248, 231, 0.88), rgba(255, 248, 231, 0.34) 76%, transparent);
+  box-shadow:
+    0 0 0 1px rgba(32, 24, 15, 0.1),
+    0 0 8px rgba(255, 242, 214, 0.16);
+}
+
+.slot-radial::before {
+  left: 26px;
+  transform: rotate(var(--ray-rotation));
+}
+
+.slot-radial::after {
+  right: 26px;
+  transform: rotate(var(--ray-rotation));
 }
 
 .wheel-caption {

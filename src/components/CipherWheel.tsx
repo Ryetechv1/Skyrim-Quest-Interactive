@@ -1,14 +1,15 @@
+import type { CSSProperties } from "react";
 import { ALPHABET, GLYPH_RING, SYMBOL_RING } from "../wheel";
 import type { RingName, RingOffsets } from "../types";
 
 const LOWERCASE_GUIDE = "abcdefghijklmnopqrstuvwxyz".split("");
 const ALIGNMENT_MARKERS = [
-  { glyph: "▚", angle: -90 },
-  { glyph: "▛", angle: -30 },
-  { glyph: "▜", angle: 30 },
-  { glyph: "▞", angle: 90 },
-  { glyph: "▟", angle: 150 },
-  { glyph: "▙", angle: 210 },
+  { glyph: "▚", angle: -90, kind: "red-v" },
+  { glyph: "▛", angle: -30, kind: "white-radial" },
+  { glyph: "▜", angle: 30, kind: "white-radial" },
+  { glyph: "▞", angle: 90, kind: "white-radial" },
+  { glyph: "▟", angle: 150, kind: "white-radial" },
+  { glyph: "▙", angle: 210, kind: "white-radial" },
 ];
 
 type CipherWheelProps = {
@@ -80,14 +81,15 @@ function AlignmentMarkers() {
     <div className="alignment-markers" aria-hidden="true">
       {ALIGNMENT_MARKERS.map((marker) => (
         <span
-          className="alignment-marker"
+          className={`alignment-marker ${marker.kind}`}
           key={`${marker.glyph}-${marker.angle}`}
           style={{
             transform: `rotate(${marker.angle}deg) translate(238px) rotate(${-marker.angle}deg)`,
-          }}
+            "--ray-rotation": `${marker.angle + 90}deg`,
+          } as CSSProperties}
         >
           <span className="slot-block">{marker.glyph}</span>
-          <span className="slot-v" />
+          <span className={marker.kind === "red-v" ? "slot-v" : "slot-radial"} />
         </span>
       ))}
     </div>
