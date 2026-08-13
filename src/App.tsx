@@ -17,6 +17,7 @@ import { CipherWheel } from "./components/CipherWheel";
 import { DossierPanel } from "./components/DossierPanel";
 import { VaultPanel } from "./components/VaultPanel";
 import { NoteForge } from "./components/NoteForge";
+import { AccessGate } from "./components/AccessGate";
 import { dossierSteps, inventory, vaultFiles } from "./data";
 import { openText, sealText, sealVaultFiles } from "./crypto";
 import {
@@ -64,6 +65,7 @@ export default function App() {
   const [passphrase, setPassphrase] = useState("R3LIQU4RY-72");
   const [showPassphrase, setShowPassphrase] = useState(false);
   const [activeTab, setActiveTab] = useState("vault");
+  const [accessGranted, setAccessGranted] = useState(false);
   const [draft, setDraft] = useState<NoteDraft>(defaultDraft);
   const [busy, setBusy] = useState(false);
   const [terminalEvents, setTerminalEvents] = useState<TerminalEvent[]>([
@@ -339,6 +341,15 @@ export default function App() {
       <button type="button" className="floating-add" onClick={() => setActiveTab("notes")} aria-label="Open note forge">
         <Plus size={20} />
       </button>
+
+      {!accessGranted ? (
+        <AccessGate
+          onUnlock={() => {
+            setAccessGranted(true);
+            pushEvent("ok", "GUI password access accepted: YOU MAY NOW ENTER");
+          }}
+        />
+      ) : null}
     </main>
   );
 }

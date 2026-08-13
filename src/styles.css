@@ -1116,6 +1116,195 @@ button:disabled {
   display: none;
 }
 
+.access-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(123, 37, 26, 0.18), transparent 42%),
+    rgba(8, 6, 4, 0.82);
+  backdrop-filter: blur(5px);
+}
+
+.access-window {
+  width: min(760px, 100%);
+  position: relative;
+  padding: 30px;
+  border: 1px solid rgba(232, 205, 148, 0.72);
+  border-radius: 6px;
+  outline: 2px solid rgba(28, 19, 10, 0.82);
+  outline-offset: -8px;
+  box-shadow:
+    0 32px 90px rgba(0, 0, 0, 0.58),
+    inset 0 0 0 1px rgba(255, 239, 196, 0.22);
+  background:
+    linear-gradient(rgba(223, 200, 153, 0.92), rgba(196, 162, 105, 0.94)),
+    url("/assets/references/photo-8.jpg") center / cover;
+  color: var(--ink);
+}
+
+.access-window::before,
+.access-window::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.access-window::before {
+  inset: 16px;
+  border: 1px solid rgba(32, 22, 12, 0.5);
+}
+
+.access-window::after {
+  inset: 24px;
+  border: 1px dashed rgba(169, 45, 30, 0.34);
+}
+
+.access-sigil {
+  width: 62px;
+  height: 62px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 14px;
+  border: 1px solid rgba(38, 26, 14, 0.72);
+  border-radius: 50%;
+  color: var(--red);
+  background:
+    repeating-conic-gradient(rgba(169, 45, 30, 0.24) 0 12deg, transparent 12deg 24deg),
+    rgba(246, 225, 178, 0.42);
+  box-shadow: inset 0 0 0 8px rgba(30, 21, 12, 0.08);
+}
+
+.access-window header {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  margin: 0 auto 22px;
+  max-width: 650px;
+}
+
+.access-window h2 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: clamp(32px, 5vw, 52px);
+  line-height: 0.95;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.access-window p {
+  margin: 14px auto 0;
+  color: #4c2519;
+  font-family: var(--font-serif);
+  font-size: clamp(16px, 2.2vw, 22px);
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+.access-code {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 13px 18px;
+  padding: 18px;
+  border: 1px solid rgba(37, 25, 13, 0.6);
+  background: rgba(37, 25, 13, 0.16);
+}
+
+.access-word {
+  display: inline-flex;
+  align-items: center;
+}
+
+.access-token {
+  display: inline-flex;
+  align-items: center;
+}
+
+.access-token input {
+  width: 3.2ch;
+  height: 44px;
+  padding: 0 4px;
+  border: 1px solid rgba(37, 25, 13, 0.72);
+  border-radius: 3px;
+  background: rgba(248, 226, 181, 0.74);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 19px;
+  font-weight: 700;
+  text-align: center;
+  box-shadow: inset 0 0 0 2px rgba(255, 241, 202, 0.18);
+}
+
+.access-token input[maxlength="2"] {
+  width: 4.1ch;
+}
+
+.access-dash {
+  display: inline-grid;
+  place-items: center;
+  min-width: 16px;
+  color: var(--red);
+  font-family: var(--font-serif);
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.access-actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.access-actions button {
+  min-height: 38px;
+  border: 1px solid rgba(37, 25, 13, 0.56);
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  color: #f4deb0;
+  background: rgba(29, 20, 12, 0.9);
+  font-family: var(--font-serif);
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.access-actions .access-submit {
+  border-color: rgba(164, 49, 34, 0.8);
+  background: linear-gradient(180deg, rgba(145, 42, 30, 0.95), rgba(74, 23, 16, 0.98));
+}
+
+.access-error {
+  position: relative;
+  z-index: 1;
+  min-height: 22px;
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--red);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-align: center;
+  opacity: 0;
+}
+
+.access-error.visible {
+  opacity: 1;
+}
+
 @keyframes blink {
   0%,
   45% {
@@ -1300,6 +1489,35 @@ button:disabled {
     color: #f5ddaa;
     background: #6a2018;
     box-shadow: 0 12px 34px rgba(0, 0, 0, 0.42);
+  }
+
+  .access-overlay {
+    padding: 10px;
+    align-items: start;
+    overflow: auto;
+  }
+
+  .access-window {
+    padding: 24px 14px 20px;
+  }
+
+  .access-code {
+    gap: 10px 12px;
+    padding: 12px 8px;
+  }
+
+  .access-token input {
+    height: 38px;
+    font-size: 16px;
+  }
+
+  .access-dash {
+    min-width: 12px;
+    font-size: 20px;
+  }
+
+  .access-actions {
+    flex-direction: column;
   }
 }
 
