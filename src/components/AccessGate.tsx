@@ -38,6 +38,8 @@ export function AccessGate({ onGuestAccess, onArchivistAccess }: AccessGateProps
   const [username, setUsername] = useState("Archivist_Z");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [bypassOpen, setBypassOpen] = useState(false);
+  const [bypassCode, setBypassCode] = useState("");
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
 
   const submittedCode = useMemo(() => values.map((group) => group.join("-")).join(" "), [values]);
@@ -108,6 +110,18 @@ export function AccessGate({ onGuestAccess, onArchivistAccess }: AccessGateProps
     }
 
     setError("Access phrase rejected. The clock has not found Monday morning.");
+  }
+
+  function handleBypassSubmit() {
+    if (bypassCode.trim().toUpperCase() !== "X1") {
+      setError("Bypass code rejected. The side door remains sealed.");
+      return;
+    }
+
+    setArchivistDoorOpen(true);
+    setBypassOpen(false);
+    setBypassCode("");
+    setError("");
   }
 
   function handleArchivistSubmit(event: FormEvent) {
@@ -221,6 +235,37 @@ export function AccessGate({ onGuestAccess, onArchivistAccess }: AccessGateProps
           </div>
         )}
 
+        {!archivistDoorOpen && bypassOpen ? (
+          <div className="bypass-panel" aria-label="Code bypass">
+            <label>
+              <KeyRound size={15} />
+              Code Bypass
+              <input
+                value={bypassCode}
+                onChange={(event) => {
+                  setBypassCode(event.target.value.toUpperCase().slice(0, 2));
+                  setError("");
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    handleBypassSubmit();
+                  }
+                }}
+                autoComplete="off"
+                inputMode="text"
+                maxLength={2}
+                placeholder="X1"
+                aria-label="Code bypass entry"
+              />
+            </label>
+            <button type="button" onClick={handleBypassSubmit}>
+              <Unlock size={16} />
+              Open Login
+            </button>
+          </div>
+        ) : null}
+
         <div className="access-actions">
           {!archivistDoorOpen ? (
             <button type="button" onClick={clearCode}>
@@ -239,6 +284,18 @@ export function AccessGate({ onGuestAccess, onArchivistAccess }: AccessGateProps
               Riddle
             </button>
           )}
+          {!archivistDoorOpen ? (
+            <button
+              type="button"
+              onClick={() => {
+                setBypassOpen((open) => !open);
+                setError("");
+              }}
+            >
+              <KeyRound size={16} />
+              Bypass
+            </button>
+          ) : null}
           <button type="button" onClick={onGuestAccess}>
             <UserRound size={16} />
             Guest View
