@@ -84,3 +84,56 @@ export type MegaLog = {
   kind: TerminalEvent["kind"];
   text: string;
 };
+
+export type AccessRole = "guest" | "admin" | "moderator";
+
+export type AuthSession = {
+  id: string;
+  username: string;
+  role: AccessRole;
+  title: string;
+  startedAt: string;
+};
+
+export type ArchivistCredential = {
+  username: "Archivist_Z" | "Archivist_Y" | "Archivist_X";
+  password: string;
+  role: Exclude<AccessRole, "guest">;
+  title: string;
+};
+
+export type ChangeRequestPayload =
+  | {
+      type: "seal-note";
+      draft: NoteDraft;
+    }
+  | {
+      type: "mega-action";
+      action: string;
+      targetName?: string;
+      details: string;
+    }
+  | {
+      type: "manual";
+    };
+
+export type ChangeRequest = {
+  id: string;
+  title: string;
+  summary: string;
+  requester: string;
+  requesterRole: AccessRole;
+  status: "pending" | "approved" | "rejected";
+  createdAt: string;
+  resolvedAt?: string;
+  resolver?: string;
+  payload: ChangeRequestPayload;
+};
+
+export type ChatMessage = {
+  id: string;
+  author: string;
+  role: AccessRole | "system";
+  body: string;
+  createdAt: string;
+};

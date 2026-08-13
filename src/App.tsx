@@ -18,6 +18,7 @@ import { DossierPanel } from "./components/DossierPanel";
 import { VaultPanel } from "./components/VaultPanel";
 import { NoteForge } from "./components/NoteForge";
 import { AccessGate } from "./components/AccessGate";
+import { authenticateArchivist, createGuestSession, roleLabel } from "./auth";
 import { dossierSteps, inventory, vaultFiles } from "./data";
 import { openText, sealText, sealVaultFiles } from "./crypto";
 import {
@@ -27,7 +28,17 @@ import {
   SOLUTION_OFFSETS,
   wheelChecksum,
 } from "./wheel";
-import type { NoteDraft, RingName, RingOffsets, SealedFile, TerminalEvent } from "./types";
+import type {
+  AuthSession,
+  ChangeRequest,
+  ChangeRequestPayload,
+  ChatMessage,
+  NoteDraft,
+  RingName,
+  RingOffsets,
+  SealedFile,
+  TerminalEvent,
+} from "./types";
 
 const initialOffsets: RingOffsets = {
   outer: 19,
@@ -42,12 +53,71 @@ const defaultDraft: NoteDraft = {
   body: "Field note: the next investigator should test every key locally before trusting the archive.",
 };
 
+const STORAGE_KEYS = {
+  authSession: "davinci.auth.session",
+  changeRequests: "davinci.archivists.changeRequests",
+  chatMessages: "davinci.archivists.chatMessages",
+  publishedFiles: "davinci.archivists.publishedFiles",
+};
+
+const COLLABORATION_CHANNEL = "davinci-archivist-collaboration";
+
+type CollaborationMessage =
+  | {
+      type: "requests";
+      payload: ChangeRequest[];
+    }
+  | {
+      type: "chat";
+      payload: ChatMessage[];
+    }
+  | {
+      type: "published-files";
+      payload: SealedFile[];
+    };
+
 function event(kind: TerminalEvent["kind"], text: string): TerminalEvent {
   return {
     id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
     kind,
     text,
   };
+}
+
+function makeId(prefix: string) {
+  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function readStoredJson<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function readSessionJson<T>(key: string, fallback: T): T {
+  try {
+    const raw = sessionStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeStoredJson<T>(key: string, value: T) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+function sendCollaborationMessage(message: CollaborationMessage) {
+  if (!("BroadcastChannel" in window)) {
+    return;
+  }
+
+  const channel = new BroadcastChannel(COLLABORATION_CHANNEL);
+  channel.postMessage(message);
+  channel.close();
 }
 
 function archiveProgress(files: SealedFile[]) {
@@ -61,13 +131,32 @@ function archiveProgress(files: SealedFile[]) {
 export default function App() {
   const [offsets, setOffsets] = useState<RingOffsets>(initialOffsets);
   const [sealedFiles, setSealedFiles] = useState<SealedFile[]>([]);
+  const [publishedFiles, setPublishedFiles] = useState<SealedFile[]>(() =>
+    readStoredJson<SealedFile[]>(STORAGE_KEYS.publishedFiles, []),
+  );
   const [selectedFileId, setSelectedFileId] = useState(vaultFiles[0].id);
   const [passphrase, setPassphrase] = useState("R3LIQU4RY-72");
   const [showPassphrase, setShowPassphrase] = useState(false);
   const [activeTab, setActiveTab] = useState("vault");
-  const [accessGranted, setAccessGranted] = useState(false);
+  const [authSession, setAuthSession] = useState<AuthSession | null>(() =>
+    readSessionJson<AuthSession | null>(STORAGE_KEYS.authSession, null),
+  );
   const [draft, setDraft] = useState<NoteDraft>(defaultDraft);
   const [busy, setBusy] = useState(false);
+  const [changeRequests, setChangeRequests] = useState<ChangeRequest[]>(() =>
+    readStoredJson<ChangeRequest[]>(STORAGE_KEYS.changeRequests, []),
+  );
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() =>
+    readStoredJson<ChatMessage[]>(STORAGE_KEYS.chatMessages, [
+      {
+        id: "system-welcome",
+        author: "Reliquary",
+        role: "system",
+        body: "Live Archivist comments and approval updates appear here for this browser workspace.",
+        createdAt: new Date().toISOString(),
+      },
+    ]),
+  );
   const [terminalEvents, setTerminalEvents] = useState<TerminalEvent[]>([
     event("info", "Connecting to MEGA Vault..."),
     event("ok", "Handshake: OK"),
@@ -81,7 +170,7 @@ export default function App() {
       if (!mounted) {
         return;
       }
-      setSealedFiles(files);
+      setSealedFiles([...files, ...readStoredJson<SealedFile[]>(STORAGE_KEYS.publishedFiles, [])]);
       setTerminalEvents((events) => [
         ...events,
         event("ok", "Archive: MASK_OF_DESPAIR.mega indexed"),
@@ -91,6 +180,53 @@ export default function App() {
 
     return () => {
       mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const channel = "BroadcastChannel" in window ? new BroadcastChannel(COLLABORATION_CHANNEL) : null;
+
+    function applyMessage(message: CollaborationMessage) {
+      if (message.type === "requests") {
+        setChangeRequests(message.payload);
+        return;
+      }
+      if (message.type === "chat") {
+        setChatMessages(message.payload);
+        return;
+      }
+      if (message.type === "published-files") {
+        setPublishedFiles(message.payload);
+        setSealedFiles((files) => [...files.filter((file) => !file.id.startsWith("published-")), ...message.payload]);
+      }
+    }
+
+    channel?.addEventListener("message", (eventMessage: MessageEvent<CollaborationMessage>) => {
+      applyMessage(eventMessage.data);
+    });
+
+    function handleStorage(eventMessage: StorageEvent) {
+      if (eventMessage.key === STORAGE_KEYS.changeRequests) {
+        setChangeRequests(readStoredJson<ChangeRequest[]>(STORAGE_KEYS.changeRequests, []));
+      }
+      if (eventMessage.key === STORAGE_KEYS.chatMessages) {
+        setChatMessages(readStoredJson<ChatMessage[]>(STORAGE_KEYS.chatMessages, []));
+      }
+      if (eventMessage.key === STORAGE_KEYS.publishedFiles) {
+        const nextPublishedFiles = readStoredJson<SealedFile[]>(STORAGE_KEYS.publishedFiles, []);
+        setPublishedFiles(nextPublishedFiles);
+        setSealedFiles((files) => [
+          ...files.filter((file) => !file.id.startsWith("published-")),
+          ...nextPublishedFiles,
+        ]);
+      }
+    }
+
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      channel?.close();
+      window.removeEventListener("storage", handleStorage);
     };
   }, []);
 
@@ -113,6 +249,124 @@ export default function App() {
 
   function pushEvent(kind: TerminalEvent["kind"], text: string) {
     setTerminalEvents((events) => [...events.slice(-12), event(kind, text)]);
+  }
+
+  function appendChatMessage(author: string, role: ChatMessage["role"], body: string) {
+    const message: ChatMessage = {
+      id: makeId("chat"),
+      author,
+      role,
+      body,
+      createdAt: new Date().toISOString(),
+    };
+    setChatMessages((current) => {
+      const next = [...current.slice(-80), message];
+      writeStoredJson(STORAGE_KEYS.chatMessages, next);
+      sendCollaborationMessage({ type: "chat", payload: next });
+      return next;
+    });
+  }
+
+  function setSession(session: AuthSession) {
+    setAuthSession(session);
+    sessionStorage.setItem(STORAGE_KEYS.authSession, JSON.stringify(session));
+  }
+
+  function signOut() {
+    const wasGuest = authSession?.role === "guest";
+    sessionStorage.removeItem(STORAGE_KEYS.authSession);
+    setAuthSession(null);
+    if (wasGuest) {
+      setSealedFiles((files) => files.filter((file) => !file.id.startsWith("guest-")));
+      setOffsets(initialOffsets);
+      setPassphrase("R3LIQU4RY-72");
+      setDraft(defaultDraft);
+    }
+    pushEvent("warn", "Session closed. Guest sandbox state has been discarded.");
+  }
+
+  function handleGuestAccess() {
+    const session = createGuestSession();
+    setSession(session);
+    pushEvent("warn", "GUEST VIEW opened. Experiments are local and reset with the browser session.");
+  }
+
+  function handleArchivistAccess(username: string, password: string) {
+    const session = authenticateArchivist(username, password);
+    if (!session) {
+      return null;
+    }
+
+    setSession(session);
+    pushEvent("ok", `${roleLabel(session.role)} login accepted: ${session.username}`);
+    appendChatMessage("Reliquary", "system", `${session.username} entered the archive as ${roleLabel(session.role)}.`);
+    return session;
+  }
+
+  function updateChangeRequests(next: ChangeRequest[]) {
+    setChangeRequests(next);
+    writeStoredJson(STORAGE_KEYS.changeRequests, next);
+    sendCollaborationMessage({ type: "requests", payload: next });
+  }
+
+  function requestChange(title: string, summary: string, payload: ChangeRequestPayload) {
+    if (!authSession) {
+      return;
+    }
+
+    if (authSession.role === "guest") {
+      pushEvent("error", "GUEST VIEW cannot submit publish requests.");
+      return;
+    }
+
+    const request: ChangeRequest = {
+      id: makeId("request"),
+      title,
+      summary,
+      requester: authSession.username,
+      requesterRole: authSession.role,
+      status: "pending",
+      createdAt: new Date().toISOString(),
+      payload,
+    };
+    updateChangeRequests([request, ...changeRequests]);
+    pushEvent("warn", `${authSession.username} filed change request: ${title}`);
+    appendChatMessage("Reliquary", "system", `${authSession.username} requested approval: ${title}.`);
+  }
+
+  async function makeSealedNote(draftToSeal: NoteDraft, idPrefix: string): Promise<SealedFile> {
+    const normalizedTitle = draftToSeal.title.endsWith(".enc") ? draftToSeal.title : `${draftToSeal.title}.enc`;
+    const sealed = await sealText(draftToSeal.body, draftToSeal.passphrase.trim());
+
+    return {
+      id: `${idPrefix}-${Date.now()}`,
+      name: normalizedTitle,
+      type: "file",
+      path: `Archive: MASK_OF_DESPAIR.mega/${draftToSeal.folder}`,
+      keyLabel: idPrefix === "guest" ? "Guest Sandbox Password" : "Published Password",
+      password: "",
+      plainText: "",
+      clue:
+        idPrefix === "guest"
+          ? "A temporary Guest View experiment. This entry is not published and resets with the session."
+          : "A published Archivist note sealed through the approval workflow.",
+      size: `${Math.max(1, Math.ceil(draftToSeal.body.length / 128))}.${draftToSeal.body.length % 10} KB`,
+      locked: true,
+      ...sealed,
+    };
+  }
+
+  async function publishDraft(draftToSeal: NoteDraft, publisher: string) {
+    const file = await makeSealedNote(draftToSeal, "published");
+    const nextPublishedFiles = [...publishedFiles, file];
+    setPublishedFiles(nextPublishedFiles);
+    writeStoredJson(STORAGE_KEYS.publishedFiles, nextPublishedFiles);
+    sendCollaborationMessage({ type: "published-files", payload: nextPublishedFiles });
+    setSealedFiles((files) => [...files, file]);
+    setSelectedFileId(file.id);
+    setActiveTab("vault");
+    pushEvent("ok", `${file.name} published by ${publisher}.`);
+    appendChatMessage("Reliquary", "system", `${publisher} published ${file.name}.`);
   }
 
   function rotateRing(ring: RingName, delta: number) {
@@ -183,31 +437,107 @@ export default function App() {
       return;
     }
 
-    setBusy(true);
-    const normalizedTitle = draft.title.endsWith(".enc") ? draft.title : `${draft.title}.enc`;
-    const sealed = await sealText(draft.body, draft.passphrase.trim());
-    const file: SealedFile = {
-      id: `custom-${Date.now()}`,
-      name: normalizedTitle,
-      type: "file",
-      path: `Archive: MASK_OF_DESPAIR.mega/${draft.folder}`,
-      keyLabel: "Custom Password",
-      password: draft.passphrase.trim(),
-      plainText: draft.body,
-      clue: "A note sealed during this investigation.",
-      size: `${Math.max(1, Math.ceil(draft.body.length / 128))}.${draft.body.length % 10} KB`,
-      locked: true,
-      ...sealed,
-    };
+    if (!authSession) {
+      pushEvent("error", "Sign in as Guest View or an Archivist before sealing notes.");
+      return;
+    }
 
-    setSealedFiles((files) => [...files, file]);
-    setSelectedFileId(file.id);
-    setActiveTab("vault");
-    pushEvent("ok", `${file.name} sealed into ${draft.folder}`);
-    setBusy(false);
+    if (authSession.role === "moderator") {
+      requestChange(
+        `Publish ${draft.title.endsWith(".enc") ? draft.title : `${draft.title}.enc`}`,
+        `Seal a moderator note into ${draft.folder}.`,
+        {
+          type: "seal-note",
+          draft: { ...draft },
+        },
+      );
+      return;
+    }
+
+    setBusy(true);
+    try {
+      if (authSession.role === "guest") {
+        const file = await makeSealedNote(draft, "guest");
+        setSealedFiles((files) => [...files, file]);
+        setSelectedFileId(file.id);
+        setActiveTab("vault");
+        pushEvent("warn", `${file.name} sealed in Guest sandbox only. It will reset after this browser session.`);
+      } else {
+        await publishDraft(draft, authSession.username);
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function approveChangeRequest(requestId: string) {
+    if (authSession?.role !== "admin") {
+      pushEvent("error", "Only Archivist_Z can approve change requests.");
+      return;
+    }
+
+    const request = changeRequests.find((item) => item.id === requestId);
+    if (!request || request.status !== "pending") {
+      return;
+    }
+
+    setBusy(true);
+    try {
+      if (request.payload.type === "seal-note") {
+        await publishDraft(request.payload.draft, request.requester);
+      } else {
+        pushEvent("ok", `${request.title} approved. Admin acceptance recorded for execution.`);
+      }
+
+      const nextRequests = changeRequests.map((item) =>
+        item.id === requestId
+          ? {
+              ...item,
+              status: "approved" as const,
+              resolvedAt: new Date().toISOString(),
+              resolver: authSession.username,
+            }
+          : item,
+      );
+      updateChangeRequests(nextRequests);
+      appendChatMessage("Reliquary", "system", `${authSession.username} approved ${request.title}.`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function rejectChangeRequest(requestId: string) {
+    if (authSession?.role !== "admin") {
+      pushEvent("error", "Only Archivist_Z can reject change requests.");
+      return;
+    }
+
+    const request = changeRequests.find((item) => item.id === requestId);
+    if (!request || request.status !== "pending") {
+      return;
+    }
+
+    const nextRequests = changeRequests.map((item) =>
+      item.id === requestId
+        ? {
+            ...item,
+            status: "rejected" as const,
+            resolvedAt: new Date().toISOString(),
+            resolver: authSession.username,
+          }
+        : item,
+    );
+    updateChangeRequests(nextRequests);
+    pushEvent("warn", `${request.title} rejected by ${authSession.username}.`);
+    appendChatMessage("Reliquary", "system", `${authSession.username} rejected ${request.title}.`);
   }
 
   function downloadMegaArchive() {
+    if (authSession?.role === "guest") {
+      pushEvent("error", "GUEST VIEW cannot export or write files. Browse and experiment in-session only.");
+      return;
+    }
+
     const archive = {
       archive: "MASK_OF_DESPAIR.mega",
       exportedAt: new Date().toISOString(),
@@ -229,6 +559,8 @@ export default function App() {
   return (
     <main className="app-shell">
       <DossierPanel
+        session={authSession}
+        onSignOut={signOut}
         steps={dossierSteps}
         inventory={inventory.map((item) => ({
           ...item,
@@ -236,7 +568,8 @@ export default function App() {
             item.acquired ||
             (item.id === "seal-ring" && knownKeys.includes("VERITAS")) ||
             (item.id === "folding-key" && knownKeys.includes("OCCULTA")) ||
-            (item.id === "wax" && sealedFiles.some((file) => file.id.startsWith("custom-"))),
+            (item.id === "wax" &&
+              sealedFiles.some((file) => file.id.startsWith("guest-") || file.id.startsWith("published-"))),
         }))}
         solvedCount={solvedCount}
         fragmentCount={knownKeys.length}
@@ -326,6 +659,7 @@ export default function App() {
 
       <aside className="vault-column" aria-label="MEGA Vault">
         <VaultPanel
+          session={authSession}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           files={sealedFiles}
@@ -334,20 +668,34 @@ export default function App() {
           terminalEvents={terminalEvents}
           knownKeys={knownKeys}
           busy={busy}
+          changeRequests={changeRequests}
+          chatMessages={chatMessages}
+          onApproveRequest={(requestId) => {
+            void approveChangeRequest(requestId);
+          }}
+          onRejectRequest={rejectChangeRequest}
+          onRequestChange={requestChange}
+          onSendChatMessage={(body) => {
+            if (!authSession || authSession.role === "guest") {
+              pushEvent("error", "GUEST VIEW can read archive feedback but cannot post Archivist comments.");
+              return;
+            }
+            appendChatMessage(authSession.username, authSession.role, body);
+          }}
         />
-        <NoteForge draft={draft} setDraft={setDraft} onSeal={sealCustomNote} busy={busy} />
+        <NoteForge session={authSession} draft={draft} setDraft={setDraft} onSeal={sealCustomNote} busy={busy} />
       </aside>
 
-      <button type="button" className="floating-add" onClick={() => setActiveTab("notes")} aria-label="Open note forge">
-        <Plus size={20} />
-      </button>
+      {activeTab !== "archivists" ? (
+        <button type="button" className="floating-add" onClick={() => setActiveTab("notes")} aria-label="Open note forge">
+          <Plus size={20} />
+        </button>
+      ) : null}
 
-      {!accessGranted ? (
+      {!authSession ? (
         <AccessGate
-          onUnlock={() => {
-            setAccessGranted(true);
-            pushEvent("ok", "GUI password access accepted: YOU MAY NOW ENTER");
-          }}
+          onGuestAccess={handleGuestAccess}
+          onArchivistAccess={handleArchivistAccess}
         />
       ) : null}
     </main>

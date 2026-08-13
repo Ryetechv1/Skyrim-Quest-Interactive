@@ -27,7 +27,12 @@ import {
   uploadMegaFile,
   type MegaSession,
 } from "../megaClient";
-import type { MegaAccountInfo, MegaLog, MegaNode } from "../types";
+import type { AuthSession, ChangeRequestPayload, MegaAccountInfo, MegaLog, MegaNode } from "../types";
+
+type MegaPanelProps = {
+  session: AuthSession | null;
+  onRequestChange: (title: string, summary: string, payload: ChangeRequestPayload) => void;
+};
 
 function log(kind: MegaLog["kind"], text: string): MegaLog {
   return {
@@ -103,7 +108,7 @@ function MegaTree({
   );
 }
 
-export function MegaPanel() {
+export function MegaPanel({ session: appSession, onRequestChange }: MegaPanelProps) {
   const [session, setSession] = useState<MegaSession | null>(null);
   const [root, setRoot] = useState<MegaNode | null>(null);
   const [selectedNodeId, setSelectedNodeId] = useState("root");
@@ -129,6 +134,9 @@ export function MegaPanel() {
   const folders = useMemo(() => flattenFolders(root), [root]);
   const selectedNode = useMemo(() => findNode(root, selectedNodeId), [root, selectedNodeId]);
   const selectedFolderId = selectedNode?.directory ? selectedNode.id : selectedNode?.path ? folders[0]?.id : root?.id;
+  const canWriteMega = appSession?.role === "admin";
+  const canRequestMegaChange = appSession?.role === "moderator";
+  const isGuest = appSession?.role === "guest";
 
   function pushLog(kind: MegaLog["kind"], text: string) {
     setLogs((current) => [...current.slice(-8), log(kind, text)]);
@@ -157,6 +165,30 @@ export function MegaPanel() {
     } finally {
       setBusy(false);
     }
+  }
+
+  function requestMegaAction(action: string, details: string, targetName?: string) {
+    onRequestChange(`${action}${targetName ? `: ${targetName}` : ""}`, details, {
+      type: "mega-action",
+      action,
+      targetName,
+      details,
+    });
+    pushLog("warn", `${action} was sent to Archivist_Z for approval.`);
+  }
+
+  function guardMegaWrite(action: string, details: string, targetName: string | undefined, task: () => Promise<void>) {
+    if (canWriteMega) {
+      void runMegaTask(details, task);
+      return;
+    }
+
+    if (canRequestMegaChange) {
+      requestMegaAction(action, details, targetName);
+      return;
+    }
+
+    pushLog("error", "GUEST VIEW cannot change MEGA files, folders, links, or downloads.");
   }
 
   async function handleLogin(event: FormEvent) {
@@ -198,6 +230,13 @@ export function MegaPanel() {
         </div>
         <Cloud size={22} />
       </header>
+      <div className={`mega-permission ${appSession?.role ?? "guest"}`}>
+        {canWriteMega
+          ? "Admin MEGA control active."
+          : canRequestMegaChange
+            ? "Moderator MEGA actions become publish/accept change requests."
+            : "GUEST VIEW can browse connected trees, but file-system actions are blocked."}
+      </div>
 
       {!session ? (
         <form className="mega-login" onSubmit={handleLogin}>
@@ -227,7 +266,10 @@ export function MegaPanel() {
             {busy ? <Loader2 size={16} className="spin" /> : <Shield size={16} />}
             Connect MEGA
           </button>
-          <p className="mega-privacy">Credentials are used in-memory only and are not stored by this app.</p>
+          <p className="mega-privacy">
+            Credentials are used in-memory only and are not stored by this app.
+            {isGuest ? " Guest sessions cannot write to MEGA." : ""}
+          </p>
         </form>
       ) : (
         <>
@@ -285,7 +327,7 @@ export function MegaPanel() {
               type="button"
               disabled={busy || !selectedUpload || !selectedFolderId}
               onClick={() =>
-                void runMegaTask(`${selectedUpload?.name} uploaded to MEGA.`, async () => {
+                guardMegaWrite("Upload MEGA file", `${selectedUpload?.name} uploaded to MEGA.`, selectedUpload?.name, async () => {
                   if (!session || !selectedUpload || !selectedFolderId) return;
                   await uploadMegaFile(session, selectedFolderId, selectedUpload);
                   setSelectedUpload(null);
@@ -301,7 +343,7 @@ export function MegaPanel() {
               type="button"
               disabled={busy || !folderName.trim() || !selectedFolderId}
               onClick={() =>
-                void runMegaTask(`${folderName} created in MEGA.`, async () => {
+                guardMegaWrite("Create MEGA folder", `${folderName} created in MEGA.`, folderName, async () => {
                   if (!session || !selectedFolderId) return;
                   await createMegaFolder(session, selectedFolderId, folderName);
                   await refreshCurrent(session);
@@ -316,7 +358,7 @@ export function MegaPanel() {
               type="button"
               disabled={busy || !selectedNode || !renameValue.trim()}
               onClick={() =>
-                void runMegaTask("MEGA node renamed.", async () => {
+                guardMegaWrite("Rename MEGA node", "MEGA node renamed.", selectedNode?.name, async () => {
                   if (!session || !selectedNode) return;
                   await renameMegaNode(session, selectedNode.id, renameValue);
                   await refreshCurrent(session);
@@ -329,7 +371,7 @@ export function MegaPanel() {
               type="button"
               disabled={busy || !selectedNode || selectedNode.directory}
               onClick={() =>
-                void runMegaTask("MEGA file downloaded.", async () => {
+                guardMegaWrite("Download MEGA file", "MEGA file downloaded.", selectedNode?.name, async () => {
                   if (!session || !selectedNode) return;
                   await downloadMegaFile(session, selectedNode.id);
                 })
@@ -342,7 +384,7 @@ export function MegaPanel() {
               type="button"
               disabled={busy || !selectedNode}
               onClick={() =>
-                void runMegaTask("MEGA share link created.", async () => {
+                guardMegaWrite("Create MEGA share link", "MEGA share link created.", selectedNode?.name, async () => {
                   if (!session || !selectedNode) return;
                   const url = await shareMegaNode(session, selectedNode.id);
                   setShareLink(url);
@@ -358,7 +400,7 @@ export function MegaPanel() {
               className="mega-danger"
               disabled={busy || !selectedNode || selectedNode.id === root?.id}
               onClick={() =>
-                void runMegaTask("MEGA node moved to trash.", async () => {
+                guardMegaWrite("Trash MEGA node", "MEGA node moved to trash.", selectedNode?.name, async () => {
                   if (!session || !selectedNode) return;
                   await deleteMegaNode(session, selectedNode.id);
                   await refreshCurrent(session);

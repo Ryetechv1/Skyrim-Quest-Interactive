@@ -1,8 +1,11 @@
-import { Check, Diamond, Lock, UserRound } from "lucide-react";
+import { Check, Diamond, Lock, LogOut, UserRound } from "lucide-react";
+import { roleLabel } from "../auth";
 import { REFERENCE_IMAGES } from "../data";
-import type { DossierStep, InventoryItem } from "../types";
+import type { AuthSession, DossierStep, InventoryItem } from "../types";
 
 type DossierPanelProps = {
+  session: AuthSession | null;
+  onSignOut: () => void;
   steps: DossierStep[];
   inventory: InventoryItem[];
   solvedCount: number;
@@ -20,7 +23,15 @@ function statusIcon(status: DossierStep["status"]) {
   return <Diamond size={13} />;
 }
 
-export function DossierPanel({ steps, inventory, solvedCount, fragmentCount, progress }: DossierPanelProps) {
+export function DossierPanel({
+  session,
+  onSignOut,
+  steps,
+  inventory,
+  solvedCount,
+  fragmentCount,
+  progress,
+}: DossierPanelProps) {
   return (
     <aside className="dossier-panel" aria-label="Dossier and inventory">
       <header className="brand-header">
@@ -28,9 +39,15 @@ export function DossierPanel({ steps, inventory, solvedCount, fragmentCount, pro
         <p>The Reliquary of Knowledge</p>
         <div className="investigator">
           <UserRound size={15} />
-          <span>Investigator</span>
-          <strong>Archivist-72</strong>
+          <span>{session ? roleLabel(session.role) : "Locked"}</span>
+          <strong>{session?.username ?? "No Session"}</strong>
         </div>
+        {session ? (
+          <button type="button" className="session-exit" onClick={onSignOut}>
+            <LogOut size={14} />
+            Sign Out
+          </button>
+        ) : null}
       </header>
 
       <section className="dossier-section" aria-labelledby="dossier-heading">

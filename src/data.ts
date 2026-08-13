@@ -2,6 +2,7 @@ import {
   BookOpen,
   CircleDot,
   Cloud,
+  ContactRound,
   Compass,
   Eye,
   FileKey,
@@ -270,6 +271,7 @@ export const vaultTree: VaultFolder = {
 export const manuscriptTabs = [
   { id: "vault", label: "Vault", icon: FileKey },
   { id: "mega", label: "MEGA", icon: Cloud },
+  { id: "archivists", label: "Users", icon: ContactRound },
   { id: "keys", label: "Keys", icon: KeyRound },
   { id: "notes", label: "Notes", icon: BookOpen },
   { id: "cipher", label: "Cipher", icon: Compass },

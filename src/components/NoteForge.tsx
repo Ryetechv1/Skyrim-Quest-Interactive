@@ -1,19 +1,29 @@
 import { FilePlus2, LockKeyhole, PenLine } from "lucide-react";
-import type { NoteDraft } from "../types";
+import type { AuthSession, NoteDraft } from "../types";
 
 type NoteForgeProps = {
+  session: AuthSession | null;
   draft: NoteDraft;
   setDraft: (draft: NoteDraft) => void;
   onSeal: () => void;
   busy: boolean;
 };
 
-export function NoteForge({ draft, setDraft, onSeal, busy }: NoteForgeProps) {
+export function NoteForge({ session, draft, setDraft, onSeal, busy }: NoteForgeProps) {
+  const actionLabel =
+    session?.role === "guest" ? "Seal Sandbox Note" : session?.role === "moderator" ? "Request Publish" : "Publish Note";
+  const helperText =
+    session?.role === "guest"
+      ? "Guest notes are temporary and reset with the browser session."
+      : session?.role === "moderator"
+        ? "Moderator notes become admin approval requests."
+        : "Admin notes publish directly into the local archive ledger.";
+
   return (
     <section className="note-forge" aria-label="Encrypted note forge">
       <header>
         <h2>Folder & Key Forge</h2>
-        <p>Seal a new encrypted note into the MEGA archive.</p>
+        <p>{helperText}</p>
       </header>
       <label>
         <FilePlus2 size={15} />
@@ -48,9 +58,9 @@ export function NoteForge({ draft, setDraft, onSeal, busy }: NoteForgeProps) {
         onChange={(event) => setDraft({ ...draft, body: event.target.value })}
         rows={4}
       />
-      <button type="button" onClick={onSeal} disabled={busy}>
+      <button type="button" onClick={onSeal} disabled={busy || !session}>
         <LockKeyhole size={16} />
-        Seal New Note
+        {actionLabel}
       </button>
     </section>
   );

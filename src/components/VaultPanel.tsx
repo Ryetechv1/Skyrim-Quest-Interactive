@@ -11,10 +11,12 @@ import {
 } from "lucide-react";
 import type { CSSProperties } from "react";
 import { manuscriptTabs } from "../data";
-import type { SealedFile, TerminalEvent } from "../types";
+import type { AuthSession, ChangeRequest, ChangeRequestPayload, ChatMessage, SealedFile, TerminalEvent } from "../types";
+import { ArchivistPanel } from "./ArchivistPanel";
 import { MegaPanel } from "./MegaPanel";
 
 type VaultPanelProps = {
+  session: AuthSession | null;
   activeTab: string;
   setActiveTab: (tab: string) => void;
   files: SealedFile[];
@@ -23,6 +25,12 @@ type VaultPanelProps = {
   terminalEvents: TerminalEvent[];
   knownKeys: string[];
   busy: boolean;
+  changeRequests: ChangeRequest[];
+  chatMessages: ChatMessage[];
+  onApproveRequest: (requestId: string) => void;
+  onRejectRequest: (requestId: string) => void;
+  onRequestChange: (title: string, summary: string, payload: ChangeRequestPayload) => void;
+  onSendChatMessage: (body: string) => void;
 };
 
 type TreeFolder = {
@@ -107,6 +115,7 @@ function TreeView({
 }
 
 export function VaultPanel({
+  session,
   activeTab,
   setActiveTab,
   files,
@@ -115,6 +124,12 @@ export function VaultPanel({
   terminalEvents,
   knownKeys,
   busy,
+  changeRequests,
+  chatMessages,
+  onApproveRequest,
+  onRejectRequest,
+  onRequestChange,
+  onSendChatMessage,
 }: VaultPanelProps) {
   const selectedFile = files.find((file) => file.id === selectedFileId);
   const tree = makeTree(files);
@@ -150,7 +165,17 @@ export function VaultPanel({
 
       <div className="vault-surface">
         {activeTab === "mega" ? (
-          <MegaPanel />
+          <MegaPanel session={session} onRequestChange={onRequestChange} />
+        ) : activeTab === "archivists" ? (
+          <ArchivistPanel
+            session={session}
+            changeRequests={changeRequests}
+            chatMessages={chatMessages}
+            onApproveRequest={onApproveRequest}
+            onRejectRequest={onRejectRequest}
+            onRequestChange={onRequestChange}
+            onSendChatMessage={onSendChatMessage}
+          />
         ) : activeTab === "vault" ? (
           <>
             <div className="vault-meta">
@@ -180,7 +205,7 @@ export function VaultPanel({
           </div>
         )}
 
-        {activeTab !== "mega" ? (
+        {activeTab !== "mega" && activeTab !== "archivists" ? (
           <>
             <article className="file-preview">
               <header>
