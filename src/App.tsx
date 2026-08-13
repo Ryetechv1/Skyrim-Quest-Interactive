@@ -658,7 +658,7 @@ export default function App() {
         </section>
       </section>
 
-      <aside className="vault-column" aria-label="MEGA Vault">
+      <aside className={activeTab === "places" ? "vault-column places-mode" : "vault-column"} aria-label="MEGA Vault">
         <VaultPanel
           session={authSession}
           activeTab={activeTab}
@@ -684,7 +684,9 @@ export default function App() {
             appendChatMessage(authSession.username, authSession.role, body);
           }}
         />
-        <NoteForge session={authSession} draft={draft} setDraft={setDraft} onSeal={sealCustomNote} busy={busy} />
+        {activeTab !== "places" ? (
+          <NoteForge session={authSession} draft={draft} setDraft={setDraft} onSeal={sealCustomNote} busy={busy} />
+        ) : null}
       </aside>
 
       {activeTab !== "archivists" ? (

@@ -275,4 +275,5 @@ export const manuscriptTabs = [
   { id: "keys", label: "Keys", icon: KeyRound },
   { id: "notes", label: "Notes", icon: BookOpen },
   { id: "cipher", label: "Cipher", icon: Compass },
+  { id: "places", label: "Places", icon: Landmark },
 ];

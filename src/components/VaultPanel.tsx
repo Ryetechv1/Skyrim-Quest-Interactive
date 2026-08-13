@@ -14,6 +14,7 @@ import { manuscriptTabs } from "../data";
 import type { AuthSession, ChangeRequest, ChangeRequestPayload, ChatMessage, SealedFile, TerminalEvent } from "../types";
 import { ArchivistPanel } from "./ArchivistPanel";
 import { MegaPanel } from "./MegaPanel";
+import { PlacesPanel } from "./PlacesPanel";
 
 type VaultPanelProps = {
   session: AuthSession | null;
@@ -176,6 +177,8 @@ export function VaultPanel({
             onRequestChange={onRequestChange}
             onSendChatMessage={onSendChatMessage}
           />
+        ) : activeTab === "places" ? (
+          <PlacesPanel />
         ) : activeTab === "vault" ? (
           <>
             <div className="vault-meta">
@@ -205,7 +208,7 @@ export function VaultPanel({
           </div>
         )}
 
-        {activeTab !== "mega" && activeTab !== "archivists" ? (
+        {activeTab !== "mega" && activeTab !== "archivists" && activeTab !== "places" ? (
           <>
             <article className="file-preview">
               <header>
