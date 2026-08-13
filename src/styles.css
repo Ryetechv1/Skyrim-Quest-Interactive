@@ -1480,92 +1480,6 @@ button:disabled {
   background: #ead9af;
 }
 
-.fandom-browser {
-  height: 100%;
-  min-height: 430px;
-  overflow: auto;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: 12px;
-  padding: 13px;
-  color: #f2dcaa;
-  background:
-    radial-gradient(circle at 22% 16%, rgba(126, 32, 26, 0.22), transparent 30%),
-    linear-gradient(155deg, rgba(42, 31, 18, 0.94), rgba(13, 10, 8, 0.96)),
-    url("./assets/references/photo-4.jpg") center / cover;
-  background-blend-mode: normal, multiply, luminosity;
-}
-
-.fandom-article {
-  min-width: 0;
-  padding: 12px;
-  border: 1px solid rgba(233, 208, 158, 0.24);
-  background:
-    linear-gradient(135deg, rgba(235, 211, 162, 0.08), rgba(127, 28, 22, 0.14)),
-    rgba(10, 8, 6, 0.74);
-  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.38);
-}
-
-.fandom-article span {
-  color: #c59b53;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.fandom-article h4 {
-  margin: 7px 0 8px;
-  color: #fff0c6;
-  font-family: var(--font-serif);
-  font-size: 20px;
-  line-height: 1.1;
-  overflow-wrap: anywhere;
-}
-
-.fandom-article p {
-  margin: 0;
-  color: #e7cea0;
-  font-size: 12px;
-  line-height: 1.55;
-}
-
-.fandom-results {
-  min-height: 0;
-  overflow: auto;
-  display: grid;
-  align-content: start;
-  gap: 8px;
-  padding-right: 2px;
-}
-
-.fandom-results button {
-  min-width: 0;
-  display: grid;
-  gap: 4px;
-  padding: 9px 10px;
-  border: 1px solid rgba(211, 177, 105, 0.34);
-  border-radius: 4px;
-  text-align: left;
-  color: #eed7a6;
-  background:
-    linear-gradient(90deg, rgba(127, 28, 22, 0.18), transparent 64%),
-    rgba(0, 0, 0, 0.38);
-}
-
-.fandom-results button strong {
-  font-family: var(--font-serif);
-  font-size: 14px;
-  overflow-wrap: anywhere;
-}
-
-.fandom-results button span {
-  color: #bfa26e;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  text-transform: uppercase;
-}
-
 .places-open {
   min-height: 34px;
   padding: 7px 10px;
@@ -2845,8 +2759,7 @@ button:disabled {
   }
 
   .places-frame-window,
-  .places-frame-window iframe,
-  .fandom-browser {
+  .places-frame-window iframe {
     min-height: 330px;
   }
 

@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import { ExternalLink, Landmark, Search } from "lucide-react";
 
 type PlaceSourceId = "uesp" | "fandom";
@@ -15,18 +15,6 @@ type PlaceSource = {
   defaultPage: string;
   placeholder: string;
   quickLinks: PlaceLink[];
-};
-
-type FandomSearchResult = {
-  title: string;
-  pageid: number;
-  wordcount: number;
-  timestamp: string;
-};
-
-type FandomArticle = {
-  title: string;
-  body: string;
 };
 
 const placeSources: PlaceSource[] = [
@@ -88,111 +76,12 @@ function searchPage(source: PlaceSource, query: string) {
   return cleaned;
 }
 
-function decodeHtml(value: string) {
-  const parser = new DOMParser();
-  return parser.parseFromString(value, "text/html").documentElement.textContent?.trim() ?? value;
-}
-
-function textFromHtml(value: string) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(value, "text/html");
-  doc.querySelectorAll("sup, table, style, script, .reference, .references").forEach((node) => node.remove());
-  return decodeHtml(doc.body.textContent ?? "").replace(/\s+/g, " ").trim();
-}
-
-function fandomApiUrl(params: Record<string, string>) {
-  const url = new URL("https://elderscrolls.fandom.com/api.php");
-  Object.entries({
-    format: "json",
-    origin: "*",
-    ...params,
-  }).forEach(([key, value]) => url.searchParams.set(key, value));
-  return url.toString();
-}
-
-async function loadFandomSearch(query: string): Promise<FandomSearchResult[]> {
-  const response = await fetch(
-    fandomApiUrl({
-      action: "query",
-      list: "search",
-      srsearch: query || sourceById.fandom.defaultPage,
-      srlimit: "8",
-    }),
-  );
-  if (!response.ok) {
-    throw new Error("Fandom search failed");
-  }
-  const payload = (await response.json()) as { query?: { search?: FandomSearchResult[] } };
-  return payload.query?.search ?? [];
-}
-
-async function loadFandomArticle(page: string): Promise<FandomArticle> {
-  const response = await fetch(
-    fandomApiUrl({
-      action: "parse",
-      page,
-      prop: "text|displaytitle",
-      section: "0",
-    }),
-  );
-  if (!response.ok) {
-    throw new Error("Fandom article failed");
-  }
-
-  const payload = (await response.json()) as {
-    parse?: {
-      title?: string;
-      displaytitle?: string;
-      text?: { "*": string };
-    };
-  };
-  const title = decodeHtml(payload.parse?.displaytitle ?? payload.parse?.title ?? page);
-  const body = textFromHtml(payload.parse?.text?.["*"] ?? "").slice(0, 1200);
-  return { title, body };
-}
-
 export function PlacesPanel() {
   const [sourceId, setSourceId] = useState<PlaceSourceId>("uesp");
   const [query, setQuery] = useState("");
   const source = sourceById[sourceId];
   const [targetPage, setTargetPage] = useState(sourceById.uesp.defaultPage);
-  const [fandomResults, setFandomResults] = useState<FandomSearchResult[]>([]);
-  const [fandomArticle, setFandomArticle] = useState<FandomArticle | null>(null);
-  const [fandomStatus, setFandomStatus] = useState<"idle" | "loading" | "error">("idle");
   const targetUrl = wikiPageUrl(source, targetPage);
-
-  useEffect(() => {
-    if (sourceId !== "fandom") {
-      return;
-    }
-
-    let active = true;
-    setFandomStatus("loading");
-    Promise.all([
-      loadFandomSearch(targetPage.replace(/_/g, " ")),
-      loadFandomArticle(targetPage),
-    ])
-      .then(([results, article]) => {
-        if (!active) {
-          return;
-        }
-        setFandomResults(results);
-        setFandomArticle(article);
-        setFandomStatus("idle");
-      })
-      .catch(() => {
-        if (!active) {
-          return;
-        }
-        setFandomResults([]);
-        setFandomArticle(null);
-        setFandomStatus("error");
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [sourceId, targetPage]);
 
   function handleSourceChange(nextSource: PlaceSource) {
     setSourceId(nextSource.id);
@@ -253,31 +142,7 @@ export function PlacesPanel() {
       </div>
 
       <div className="places-frame-window">
-        {sourceId === "uesp" ? (
-          <iframe title={`${source.label} Skyrim places`} src={targetUrl} referrerPolicy="no-referrer-when-downgrade" />
-        ) : (
-          <div className="fandom-browser" aria-live="polite">
-            <section className="fandom-article">
-              <span>{fandomStatus === "loading" ? "Indexing Fandom archive..." : "Elder Scrolls Fandom"}</span>
-              <h4>{fandomArticle?.title ?? targetPage.replace(/_/g, " ")}</h4>
-              <p>
-                {fandomStatus === "error"
-                  ? "Fandom archive lookup failed. External page link remains available."
-                  : fandomArticle?.body || "Select a Fandom result or run a search to load a field entry."}
-              </p>
-            </section>
-            <div className="fandom-results" aria-label="Fandom search results">
-              {fandomResults.map((result) => (
-                <button type="button" key={result.pageid} onClick={() => setTargetPage(result.title)}>
-                  <strong>{result.title}</strong>
-                  <span>
-                    {result.wordcount.toLocaleString()} words - {new Date(result.timestamp).getFullYear()}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        <iframe title={`${source.label} Skyrim places`} src={targetUrl} referrerPolicy="no-referrer-when-downgrade" />
       </div>
 
       <a className="places-open" href={targetUrl} target="_blank" rel="noreferrer">
