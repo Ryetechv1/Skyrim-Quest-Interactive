@@ -8,3 +8,22 @@ createRoot(document.getElementById("root")!).render(
     <App />
   </StrictMode>,
 );
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    const serviceWorkerUrl = `${import.meta.env.BASE_URL}sw.js`;
+
+    navigator.serviceWorker
+      .register(serviceWorkerUrl)
+      .then(async () => {
+        if (!navigator.serviceWorker.controller) {
+          await new Promise<void>((resolve) => {
+            navigator.serviceWorker.addEventListener("controllerchange", () => resolve(), { once: true });
+          });
+        }
+      })
+      .catch((error: unknown) => {
+        console.warn("Web archive service worker registration failed.", error);
+      });
+  });
+}

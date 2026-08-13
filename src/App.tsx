@@ -62,6 +62,7 @@ const STORAGE_KEYS = {
 };
 
 const COLLABORATION_CHANNEL = "davinci-archivist-collaboration";
+const isWebArchiveMode = window.location.pathname.includes("/web-archive/");
 
 type CollaborationMessage =
   | {
@@ -558,7 +559,15 @@ export default function App() {
   }
 
   return (
-    <main className="app-shell">
+    <main className={isWebArchiveMode ? "app-shell archive-publish" : "app-shell"}>
+      {isWebArchiveMode ? (
+        <div className="archive-publish-ribbon" role="status">
+          <span>Web Archive Publish - offline cache ready after first full load</span>
+          <a href="/davinci-escape-room/download/davinci-web-archive.zip" download>
+            Download Archive
+          </a>
+        </div>
+      ) : null}
       <DossierPanel
         session={authSession}
         onSignOut={signOut}

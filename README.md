@@ -34,6 +34,20 @@ GitHub Pages deploys from `main` to:
 https://Ryetechv1.github.io/davinci-escape-room/
 ```
 
+Separate web archive publish:
+
+```text
+https://Ryetechv1.github.io/davinci-escape-room/web-archive/
+```
+
+The web archive route is a normal GitHub Pages route with an installable manifest and a service worker. After a first successful online load through an allowed browser, the app shell and local assets can reload from the browser cache.
+
+Downloadable static archive package:
+
+```text
+https://Ryetechv1.github.io/davinci-escape-room/download/davinci-web-archive.zip
+```
+
 ## Build
 
 ```bash
