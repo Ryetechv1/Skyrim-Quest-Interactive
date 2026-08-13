@@ -209,12 +209,12 @@ export function AccessGate({ onGuestAccess, onArchivistAccess }: AccessGateProps
                 </button>
               </span>
             </label>
-            <div className="credential-ledger" aria-label="Archivist credential ledger">
+            <div className="credential-ledger masked" aria-label="Archivist credential ledger">
               {ARCHIVIST_CREDENTIALS.map((credential) => (
                 <div key={credential.username}>
                   <strong>{credential.username}</strong>
                   <span>{credential.title}</span>
-                  <code>{credential.password}</code>
+                  <code>ADMIN ONLY</code>
                 </div>
               ))}
             </div>

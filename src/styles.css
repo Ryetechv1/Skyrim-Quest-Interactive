@@ -1565,6 +1565,15 @@ button:disabled {
   background: rgba(198, 155, 84, 0.12);
 }
 
+.credential-table.masked code,
+.credential-ledger.masked code {
+  color: #b9945b;
+  letter-spacing: 0.08em;
+  background:
+    repeating-linear-gradient(90deg, rgba(198, 155, 84, 0.13) 0 5px, rgba(22, 15, 9, 0.22) 5px 9px),
+    rgba(0, 0, 0, 0.16);
+}
+
 .request-desk,
 .live-comments {
   display: grid;

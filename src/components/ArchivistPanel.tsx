@@ -55,6 +55,7 @@ export function ArchivistPanel({
   const canModerate = session?.role === "admin";
   const canRequest = session?.role === "moderator";
   const canChat = session?.role === "admin" || session?.role === "moderator";
+  const canViewCredentialPasswords = session?.role === "admin";
 
   function submitRequest(event: FormEvent) {
     event.preventDefault();
@@ -105,18 +106,18 @@ export function ArchivistPanel({
         </div>
       </div>
 
-      <div className="credential-table" aria-label="Archivist accounts">
-        {ARCHIVIST_CREDENTIALS.map((credential) => {
-          const canReadCredential = session?.role === "admin" || session?.username === credential.username;
-          return (
-            <div key={credential.username}>
-              <UserRound size={15} />
-              <strong>{credential.username}</strong>
-              <span>{credential.title}</span>
-              <code>{canReadCredential ? credential.password : "RIDDLE WALL"}</code>
-            </div>
-          );
-        })}
+      <div
+        className={canViewCredentialPasswords ? "credential-table revealed" : "credential-table masked"}
+        aria-label="Archivist accounts"
+      >
+        {ARCHIVIST_CREDENTIALS.map((credential) => (
+          <div key={credential.username}>
+            <UserRound size={15} />
+            <strong>{credential.username}</strong>
+            <span>{credential.title}</span>
+            <code>{canViewCredentialPasswords ? credential.password : "ADMIN ONLY"}</code>
+          </div>
+        ))}
       </div>
 
       <section className="request-desk" aria-label="Publish and accept change requests">
