@@ -1053,6 +1053,311 @@ button:disabled {
   animation: blink 1s steps(2, end) infinite;
 }
 
+.mega-panel {
+  display: grid;
+  gap: 10px;
+  padding: 12px 16px 16px;
+}
+
+.mega-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.mega-header h3 {
+  margin: 0;
+  color: #f0d9a8;
+  font-family: var(--font-serif);
+  font-size: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.mega-header p,
+.mega-privacy {
+  margin: 5px 0 0;
+  color: #d9c08c;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.mega-header svg {
+  color: var(--brass);
+}
+
+.mega-login,
+.mega-account,
+.mega-actions-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.mega-login label {
+  display: grid;
+  gap: 5px;
+  color: #ecd5a2;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.mega-login input,
+.mega-actions-grid input {
+  min-width: 0;
+  height: 36px;
+  border: 1px solid rgba(232, 207, 158, 0.28);
+  border-radius: 3px;
+  background: rgba(10, 8, 6, 0.68);
+  color: #f3deb1;
+  padding: 0 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.mega-login button,
+.mega-account button,
+.mega-actions-grid button,
+.mega-file-picker,
+.mega-share button {
+  min-height: 36px;
+  border: 1px solid rgba(211, 177, 105, 0.44);
+  border-radius: 4px;
+  color: #f5dfad;
+  background: rgba(31, 23, 13, 0.78);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 7px 10px;
+  font-family: var(--font-serif);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.mega-login button {
+  border-color: rgba(190, 60, 43, 0.72);
+  background: linear-gradient(180deg, rgba(132, 37, 28, 0.95), rgba(72, 20, 14, 0.96));
+}
+
+.mega-account {
+  grid-template-columns: 1fr 1fr auto auto;
+  align-items: stretch;
+}
+
+.mega-account div {
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid rgba(233, 208, 158, 0.16);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.mega-account span {
+  display: block;
+  color: #d8bd83;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.mega-account strong {
+  display: block;
+  overflow: hidden;
+  color: #fff0c7;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mega-browser {
+  min-height: 260px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(150px, 0.8fr);
+  gap: 8px;
+}
+
+.mega-tree,
+.mega-detail {
+  min-height: 0;
+  max-height: 312px;
+  overflow: auto;
+  border: 1px solid rgba(233, 208, 158, 0.16);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.mega-tree {
+  padding: 6px;
+}
+
+.mega-tree-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 4px 6px 4px calc(6px + var(--depth) * 14px);
+  border: 1px solid transparent;
+  color: #e8cf9c;
+  background: transparent;
+  text-align: left;
+}
+
+.mega-tree-row.selected {
+  border-color: rgba(198, 155, 84, 0.48);
+  background: rgba(198, 155, 84, 0.14);
+  color: #fff1ca;
+}
+
+.mega-tree-row span {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mega-tree-row em {
+  color: #cdb481;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-style: normal;
+}
+
+.mega-detail {
+  padding: 10px;
+}
+
+.mega-detail h4 {
+  margin: 0;
+  color: #f0d9a8;
+  font-family: var(--font-serif);
+  font-size: 18px;
+}
+
+.mega-detail p {
+  margin: 8px 0 10px;
+  color: #d8bd83;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.mega-detail dl {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+
+.mega-detail dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: #e7cf9c;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.mega-detail dt {
+  color: #c9a86e;
+}
+
+.mega-detail dd {
+  margin: 0;
+}
+
+.mega-actions-grid {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.mega-actions-grid .mega-danger {
+  border-color: rgba(190, 60, 43, 0.68);
+  color: #ffd1c7;
+}
+
+.mega-file-picker {
+  min-width: 0;
+  justify-content: flex-start;
+  overflow: hidden;
+  position: relative;
+}
+
+.mega-file-picker span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mega-file-picker input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+.mega-share {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid rgba(133, 184, 121, 0.28);
+  background: rgba(133, 184, 121, 0.08);
+}
+
+.mega-share span {
+  overflow: hidden;
+  color: #9ee091;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mega-log {
+  display: grid;
+  gap: 4px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(232, 207, 158, 0.16);
+}
+
+.mega-log p {
+  margin: 0;
+  display: flex;
+  gap: 7px;
+  color: #dfcca0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.mega-log p span {
+  color: var(--green);
+}
+
+.mega-log p.ok {
+  color: #96cf89;
+}
+
+.mega-log p.warn {
+  color: #e0b766;
+}
+
+.mega-log p.error {
+  color: #ef765f;
+}
+
+.spin {
+  animation: rotate 800ms linear infinite;
+}
+
+@keyframes rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .note-forge {
   padding: 14px;
   background:
@@ -1464,6 +1769,17 @@ button:disabled {
 
   .vault-tabs button span {
     display: none;
+  }
+
+  .mega-account,
+  .mega-browser,
+  .mega-actions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mega-tree,
+  .mega-detail {
+    max-height: none;
   }
 
   .note-forge label {

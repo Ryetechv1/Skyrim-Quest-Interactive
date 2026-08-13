@@ -12,6 +12,7 @@ import {
 import type { CSSProperties } from "react";
 import { manuscriptTabs } from "../data";
 import type { SealedFile, TerminalEvent } from "../types";
+import { MegaPanel } from "./MegaPanel";
 
 type VaultPanelProps = {
   activeTab: string;
@@ -148,7 +149,9 @@ export function VaultPanel({
       </div>
 
       <div className="vault-surface">
-        {activeTab === "vault" ? (
+        {activeTab === "mega" ? (
+          <MegaPanel />
+        ) : activeTab === "vault" ? (
           <>
             <div className="vault-meta">
               <span>Vault Key</span>
@@ -177,42 +180,46 @@ export function VaultPanel({
           </div>
         )}
 
-        <article className="file-preview">
-          <header>
-            <span>File Preview</span>
-            <strong>{selectedFile?.path.split("/").slice(-2).join("/") ?? "Indexing..."}</strong>
-          </header>
-          {selectedFile ? (
-            <>
-              <div className="file-meta">
-                <span>File</span>
-                <strong>{selectedFile.name}</strong>
-                <em>{selectedFile.size}</em>
-              </div>
-              <p className="file-clue">{selectedFile.clue}</p>
-              <pre>
-                {selectedFile.decryptedText ??
-                  `${selectedFile.cipherText.slice(0, 72)}\n${selectedFile.cipherText.slice(72, 144)}\n\nAES-GCM sealed. Supply ${selectedFile.keyLabel}.`}
-              </pre>
-            </>
-          ) : (
-            <p className="file-clue">Archive encryption pass is still initializing.</p>
-          )}
-        </article>
+        {activeTab !== "mega" ? (
+          <>
+            <article className="file-preview">
+              <header>
+                <span>File Preview</span>
+                <strong>{selectedFile?.path.split("/").slice(-2).join("/") ?? "Indexing..."}</strong>
+              </header>
+              {selectedFile ? (
+                <>
+                  <div className="file-meta">
+                    <span>File</span>
+                    <strong>{selectedFile.name}</strong>
+                    <em>{selectedFile.size}</em>
+                  </div>
+                  <p className="file-clue">{selectedFile.clue}</p>
+                  <pre>
+                    {selectedFile.decryptedText ??
+                      `${selectedFile.cipherText.slice(0, 72)}\n${selectedFile.cipherText.slice(72, 144)}\n\nAES-GCM sealed. Supply ${selectedFile.keyLabel}.`}
+                  </pre>
+                </>
+              ) : (
+                <p className="file-clue">Archive encryption pass is still initializing.</p>
+              )}
+            </article>
 
-        <section className="terminal-log" aria-label="Terminal log">
-          <h3>
-            <TerminalSquare size={16} />
-            Terminal Log
-          </h3>
-          {terminalEvents.map((terminalEvent) => (
-            <p className={terminalEvent.kind} key={terminalEvent.id}>
-              <span>&gt;</span>
-              {terminalEvent.text}
-            </p>
-          ))}
-          <i />
-        </section>
+            <section className="terminal-log" aria-label="Terminal log">
+              <h3>
+                <TerminalSquare size={16} />
+                Terminal Log
+              </h3>
+              {terminalEvents.map((terminalEvent) => (
+                <p className={terminalEvent.kind} key={terminalEvent.id}>
+                  <span>&gt;</span>
+                  {terminalEvent.text}
+                </p>
+              ))}
+              <i />
+            </section>
+          </>
+        ) : null}
       </div>
     </section>
   );

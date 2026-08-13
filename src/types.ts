@@ -60,3 +60,27 @@ export type NoteDraft = {
   passphrase: string;
   body: string;
 };
+
+export type MegaNode = {
+  id: string;
+  name: string;
+  path: string;
+  directory: boolean;
+  size: number;
+  createdAt?: number;
+  children: MegaNode[];
+};
+
+export type MegaAccountInfo = {
+  type: string;
+  spaceUsed: number;
+  spaceTotal: number;
+  downloadBandwidthUsed: number;
+  downloadBandwidthTotal: number;
+};
+
+export type MegaLog = {
+  id: string;
+  kind: TerminalEvent["kind"];
+  text: string;
+};

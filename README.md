@@ -11,6 +11,7 @@ An antique Leonardo da Vinci inspired escape-room web app with a three-layer cip
 - Password chain: `R3LIQU4RY-72 -> VERITAS -> OCCULTA -> REVELATUR -> ARCHIVIST-72`
 - Custom encrypted note forge
 - `.mega` JSON export of encrypted archive payload metadata
+- In-app MEGA cloud GUI for account login, browsing, upload, folder creation, rename, download, trash, and share links
 - Supplied manuscript/cipher images used as theme references and local assets
 
 ## Run Locally
@@ -38,4 +39,6 @@ npm run build
 
 ## Notes
 
-This is a local escape-room archive simulation. It does not connect to Mega.nz or any remote storage API. Encryption and decryption happen in the browser with the Web Crypto API.
+The puzzle archive is a local escape-room simulation. Its encryption and decryption happen in the browser with the Web Crypto API.
+
+The MEGA tab uses the unofficial `megajs` browser SDK. MEGA credentials are used in memory for the current browser session and are not stored by the app.
