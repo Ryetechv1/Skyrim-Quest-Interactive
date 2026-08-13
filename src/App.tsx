@@ -563,7 +563,7 @@ export default function App() {
       className={[
         "app-shell",
         isWebArchiveMode ? "archive-publish" : "",
-        activeTab === "places" ? "places-layout" : "",
+        activeTab === "places" || activeTab === "guides" ? "places-layout" : "",
       ]
         .filter(Boolean)
         .join(" ")}

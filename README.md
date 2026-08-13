@@ -55,9 +55,21 @@ https://Ryetechv1.github.io/davinci-escape-room/download/davinci-web-archive.zip
 npm run build
 ```
 
-## Locked Guide PDFs
+## Guide Archive
 
-The Places tab lets the ADMIN account import the two guide PDFs once into the browser's locked local archive:
+The Guides tab embeds the Archive.org reader for the Prima guide and keeps the local locked PDF shelf separate from Places:
+
+```html
+<iframe src="https://archive.org/embed/skyrim-legendary-edition-prima-official-game-guide-shortcut" width="560" height="384" frameborder="0" webkitallowfullscreen="true" mozallowfullscreen="true" allowfullscreen></iframe>
+```
+
+It also displays the matching shortcode:
+
+```text
+[archiveorg skyrim-legendary-edition-prima-official-game-guide-shortcut width=560 height=384 frameborder=0 webkitallowfullscreen=true mozallowfullscreen=true]
+```
+
+The ADMIN account can import the two guide PDFs once into the browser's locked local archive:
 
 - `Skyrim Legendary Edition Prima Official Game Guide.pdf`
 - `Elder_Scrolls_Skyrim_Official_Strategy_Guide.pdf`

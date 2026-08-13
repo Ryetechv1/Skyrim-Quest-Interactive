@@ -13,6 +13,7 @@ import type { CSSProperties } from "react";
 import { manuscriptTabs } from "../data";
 import type { AuthSession, ChangeRequest, ChangeRequestPayload, ChatMessage, SealedFile, TerminalEvent } from "../types";
 import { ArchivistPanel } from "./ArchivistPanel";
+import { GuidePanel } from "./GuidePanel";
 import { MegaPanel } from "./MegaPanel";
 import { PlacesPanel } from "./PlacesPanel";
 
@@ -178,7 +179,9 @@ export function VaultPanel({
             onSendChatMessage={onSendChatMessage}
           />
         ) : activeTab === "places" ? (
-          <PlacesPanel session={session} />
+          <PlacesPanel />
+        ) : activeTab === "guides" ? (
+          <GuidePanel session={session} />
         ) : activeTab === "vault" ? (
           <>
             <div className="vault-meta">
@@ -208,7 +211,7 @@ export function VaultPanel({
           </div>
         )}
 
-        {activeTab !== "mega" && activeTab !== "archivists" && activeTab !== "places" ? (
+        {activeTab !== "mega" && activeTab !== "archivists" && activeTab !== "places" && activeTab !== "guides" ? (
           <>
             <article className="file-preview">
               <header>
