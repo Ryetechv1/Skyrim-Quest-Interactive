@@ -22,6 +22,14 @@ npm run dev
 
 Open the Vite URL shown in the terminal. The local development build defaults to `http://127.0.0.1:5173` unless that port is already in use.
 
+## Public Site
+
+GitHub Pages deploys from `main` to:
+
+```text
+https://Ryetechv1.github.io/davinci-escape-room/
+```
+
 ## Build
 
 ```bash

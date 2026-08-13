@@ -4,6 +4,9 @@ import { KeyRound, LockKeyhole, RefreshCcw, Unlock } from "lucide-react";
 const ACCESS_MESSAGE =
   "Every letter has a place, but time moves forward by two days' space. When Sunday passes, the clock rewinds, and Monday morning is what you'll find.";
 
+const MIRROR_MESSAGE =
+  'Look in the glass where the backwards dwell, read from the end to break the spell. What time has taken and flipped around, in proper order must now be found. "RETNE WON YAM UOY"';
+
 const ACCESS_GROUPS = [
   ["1", "17", "23"],
   ["15", "3", "1"],
@@ -107,6 +110,7 @@ export function AccessGate({ onUnlock }: AccessGateProps) {
         </div>
         <header>
           <h2 id="access-title">Password Access</h2>
+          <p className="access-mirror-clue">{MIRROR_MESSAGE}</p>
           <p>{ACCESS_MESSAGE}</p>
         </header>
 

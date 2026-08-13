@@ -35,7 +35,7 @@ body {
   min-height: 100vh;
   background:
     linear-gradient(rgba(16, 13, 10, 0.78), rgba(16, 13, 10, 0.86)),
-    url("/assets/references/photo-4.jpg") center / cover fixed,
+    url("./assets/references/photo-4.jpg") center / cover fixed,
     #100d0a;
   color: var(--paper-light);
   font-family: var(--font-ui);
@@ -94,7 +94,7 @@ button:disabled {
   min-height: 0;
   background:
     linear-gradient(rgba(22, 17, 12, 0.9), rgba(22, 17, 12, 0.94)),
-    url("/assets/references/photo-1.jpg") center / cover;
+    url("./assets/references/photo-1.jpg") center / cover;
   outline: 2px solid rgba(10, 8, 5, 0.78);
   outline-offset: -7px;
   overflow: hidden auto;
@@ -297,7 +297,7 @@ button:disabled {
   overflow: hidden;
   background:
     linear-gradient(rgba(220, 197, 150, 0.88), rgba(205, 176, 124, 0.9)),
-    url("/assets/references/photo-5.jpg") center / cover;
+    url("./assets/references/photo-5.jpg") center / cover;
   color: var(--ink);
   outline: 2px solid rgba(42, 29, 16, 0.8);
   outline-offset: -8px;
@@ -750,7 +750,7 @@ button:disabled {
   grid-template-rows: auto auto minmax(0, 1fr);
   background:
     linear-gradient(rgba(19, 15, 11, 0.93), rgba(19, 15, 11, 0.96)),
-    url("/assets/references/photo-10.jpg") center / cover;
+    url("./assets/references/photo-10.jpg") center / cover;
   outline: 2px solid rgba(8, 6, 4, 0.82);
   outline-offset: -7px;
   overflow: hidden;
@@ -998,7 +998,7 @@ button:disabled {
   border: 1px solid rgba(235, 211, 164, 0.18);
   background:
     linear-gradient(rgba(220, 197, 150, 0.88), rgba(211, 183, 134, 0.88)),
-    url("/assets/references/photo-7.jpg") center / cover;
+    url("./assets/references/photo-7.jpg") center / cover;
   color: #2b1c10;
   white-space: pre-wrap;
   word-break: break-word;
@@ -1057,7 +1057,7 @@ button:disabled {
   padding: 14px;
   background:
     linear-gradient(rgba(26, 21, 16, 0.92), rgba(26, 21, 16, 0.95)),
-    url("/assets/references/photo-6.jpg") center / cover;
+    url("./assets/references/photo-6.jpg") center / cover;
 }
 
 .note-forge header {
@@ -1142,7 +1142,7 @@ button:disabled {
     inset 0 0 0 1px rgba(255, 239, 196, 0.22);
   background:
     linear-gradient(rgba(223, 200, 153, 0.92), rgba(196, 162, 105, 0.94)),
-    url("/assets/references/photo-8.jpg") center / cover;
+    url("./assets/references/photo-8.jpg") center / cover;
   color: var(--ink);
 }
 
@@ -1531,3 +1531,4 @@ button:disabled {
     transition-duration: 0.001ms !important;
   }
 }
+

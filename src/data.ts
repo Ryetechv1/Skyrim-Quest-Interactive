@@ -13,18 +13,28 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import type { DossierStep, InventoryItem, VaultFile, VaultFolder } from "./types";
+import photo1 from "./assets/references/photo-1.jpg";
+import photo10 from "./assets/references/photo-10.jpg";
+import photo2 from "./assets/references/photo-2.jpg";
+import photo3 from "./assets/references/photo-3.jpg";
+import photo4 from "./assets/references/photo-4.jpg";
+import photo5 from "./assets/references/photo-5.jpg";
+import photo6 from "./assets/references/photo-6.jpg";
+import photo7 from "./assets/references/photo-7.jpg";
+import photo8 from "./assets/references/photo-8.jpg";
+import photo9 from "./assets/references/photo-9.jpg";
 
 export const REFERENCE_IMAGES = [
-  "/assets/references/photo-1.jpg",
-  "/assets/references/photo-2.jpg",
-  "/assets/references/photo-3.jpg",
-  "/assets/references/photo-4.jpg",
-  "/assets/references/photo-5.jpg",
-  "/assets/references/photo-6.jpg",
-  "/assets/references/photo-7.jpg",
-  "/assets/references/photo-8.jpg",
-  "/assets/references/photo-9.jpg",
-  "/assets/references/photo-10.jpg",
+  photo1,
+  photo2,
+  photo3,
+  photo4,
+  photo5,
+  photo6,
+  photo7,
+  photo8,
+  photo9,
+  photo10,
 ];
 
 export const dossierSteps: DossierStep[] = [
