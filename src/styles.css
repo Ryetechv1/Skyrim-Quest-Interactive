@@ -1321,7 +1321,7 @@ button:disabled {
   min-height: 0;
   height: 100%;
   display: grid;
-  grid-template-rows: auto auto auto auto minmax(842px, 1fr) auto;
+  grid-template-rows: auto auto auto auto minmax(842px, 1fr) auto auto;
   gap: 10px;
   padding: 12px 16px 16px;
 }
@@ -1522,7 +1522,8 @@ button:disabled {
 }
 
 .pdf-loader-button,
-.pdf-replace-button {
+.pdf-loader-note,
+.pdf-lock-badge {
   justify-self: center;
   min-height: 40px;
   min-width: 180px;
@@ -1541,7 +1542,15 @@ button:disabled {
   font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
+}
+
+.pdf-loader-button {
   cursor: pointer;
+}
+
+.pdf-loader-note {
+  cursor: default;
+  opacity: 0.72;
 }
 
 .pdf-file-input {
@@ -1552,7 +1561,7 @@ button:disabled {
   pointer-events: none;
 }
 
-.pdf-replace-button {
+.pdf-lock-badge {
   position: absolute;
   right: 10px;
   bottom: 10px;
@@ -1563,6 +1572,26 @@ button:disabled {
     linear-gradient(145deg, rgba(44, 32, 18, 0.84), rgba(10, 8, 6, 0.9)),
     rgba(31, 23, 13, 0.9);
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.32);
+}
+
+.pdf-archive-status {
+  min-height: 32px;
+  padding: 6px 10px;
+  border: 1px solid rgba(211, 177, 105, 0.28);
+  border-radius: 4px;
+  color: #d8bd83;
+  background: rgba(10, 8, 6, 0.62);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.pdf-archive-status svg {
+  flex: 0 0 auto;
+  color: #f0c66c;
 }
 
 .places-open {
@@ -2847,7 +2876,7 @@ button:disabled {
   }
 
   .places-panel {
-    grid-template-rows: auto auto auto auto minmax(620px, 1fr) auto;
+    grid-template-rows: auto auto auto auto minmax(620px, 1fr) auto auto;
     min-height: 980px;
     padding-inline: 12px;
   }

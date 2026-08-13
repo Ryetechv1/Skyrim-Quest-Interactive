@@ -55,14 +55,14 @@ https://Ryetechv1.github.io/davinci-escape-room/download/davinci-web-archive.zip
 npm run build
 ```
 
-## Local Guide PDFs
+## Locked Guide PDFs
 
-The Places tab can load the two guide PDFs from the visitor's device through the in-frame PDF loader:
+The Places tab lets the ADMIN account import the two guide PDFs once into the browser's locked local archive:
 
 - `Skyrim Legendary Edition Prima Official Game Guide.pdf`
 - `Elder_Scrolls_Skyrim_Official_Strategy_Guide.pdf`
 
-These PDF files are intentionally ignored by git because they are large guide assets and should not be committed to the public Pages repo. Keep licensed copies on your device for local/session viewing, or host files you have rights to distribute separately and wire those URLs in deliberately.
+After a slot is imported, guests and moderators can browse it from the same device/browser, but they cannot upload or replace it. These PDF files are intentionally ignored by git because they are large guide assets and should not be committed to the public Pages repo. For cross-device/public distribution, host files you have rights to distribute separately and wire those URLs in deliberately.
 
 ## Notes
 

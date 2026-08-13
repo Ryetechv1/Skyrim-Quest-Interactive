@@ -178,7 +178,7 @@ export function VaultPanel({
             onSendChatMessage={onSendChatMessage}
           />
         ) : activeTab === "places" ? (
-          <PlacesPanel />
+          <PlacesPanel session={session} />
         ) : activeTab === "vault" ? (
           <>
             <div className="vault-meta">

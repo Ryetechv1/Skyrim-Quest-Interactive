@@ -1,8 +1,16 @@
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
-import { ExternalLink, Landmark, Search, Upload } from "lucide-react";
+import { CheckCircle2, ExternalLink, Landmark, Lock, Search, Upload } from "lucide-react";
+import {
+  GuidePdfSlot,
+  importStoredGuidePdf,
+  readStoredGuidePdf,
+  StoredGuidePdfMeta,
+  storedGuidePdfMeta,
+} from "../guideArchive";
+import type { AuthSession } from "../types";
 
 type PlaceSourceId = "prima" | "strategy" | "uesp" | "fandom";
-type PdfSourceId = Extract<PlaceSourceId, "prima" | "strategy">;
+type PdfSourceId = GuidePdfSlot;
 type PlaceSourceKind = "wiki" | "pdf";
 
 type PlaceLink = {
@@ -138,22 +146,70 @@ function searchPage(source: PlaceSource, query: string) {
   return cleaned;
 }
 
-export function PlacesPanel() {
+type PlacesPanelProps = {
+  session: AuthSession | null;
+};
+
+export function PlacesPanel({ session }: PlacesPanelProps) {
   const [sourceId, setSourceId] = useState<PlaceSourceId>("prima");
   const [query, setQuery] = useState("");
   const source = sourceById[sourceId];
   const [targetPage, setTargetPage] = useState(sourceById.prima.defaultPage);
   const [pdfObjectUrls, setPdfObjectUrls] = useState<Partial<Record<PdfSourceId, string>>>({});
-  const [pdfFileNames, setPdfFileNames] = useState<Partial<Record<PdfSourceId, string>>>({});
+  const [pdfMeta, setPdfMeta] = useState<Partial<Record<PdfSourceId, StoredGuidePdfMeta>>>({});
+  const [pdfStatus, setPdfStatus] = useState("Guide archive sealed.");
   const pdfObjectUrlsRef = useRef(pdfObjectUrls);
   const activePdfUrl = isPdfSourceId(source.id) ? pdfObjectUrls[source.id] : undefined;
-  const activePdfName = isPdfSourceId(source.id) ? pdfFileNames[source.id] : undefined;
+  const activePdfMeta = isPdfSourceId(source.id) ? pdfMeta[source.id] : undefined;
   const targetUrl = source.kind === "pdf" ? pdfFrameUrl(targetPage, activePdfUrl) : wikiPageUrl(source, targetPage);
   const pdfInputId = `places-pdf-${source.id}`;
+  const canImportPdf = session?.role === "admin";
 
   useEffect(() => {
     pdfObjectUrlsRef.current = pdfObjectUrls;
   }, [pdfObjectUrls]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadStoredPdfs() {
+      const records = await Promise.all([readStoredGuidePdf("prima"), readStoredGuidePdf("strategy")]);
+      if (!mounted) {
+        return;
+      }
+
+      const nextUrls: Partial<Record<PdfSourceId, string>> = {};
+      const nextMeta: Partial<Record<PdfSourceId, StoredGuidePdfMeta>> = {};
+      records.forEach((record) => {
+        if (!record) {
+          return;
+        }
+        nextUrls[record.slot] = URL.createObjectURL(record.blob);
+        nextMeta[record.slot] = storedGuidePdfMeta(record);
+      });
+
+      setPdfObjectUrls((currentUrls) => {
+        Object.values(currentUrls).forEach((objectUrl) => {
+          if (objectUrl) {
+            URL.revokeObjectURL(objectUrl);
+          }
+        });
+        return nextUrls;
+      });
+      setPdfMeta(nextMeta);
+      setPdfStatus(Object.keys(nextMeta).length ? "Locked guide imports available." : "Guide archive awaiting ADMIN import.");
+    }
+
+    loadStoredPdfs().catch(() => {
+      if (mounted) {
+        setPdfStatus("Guide archive storage is unavailable.");
+      }
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(
     () => () => {
@@ -177,14 +233,37 @@ export function PlacesPanel() {
     setTargetPage(searchPage(source, query));
   }
 
-  function handlePdfFileChange(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.currentTarget.files?.[0];
+  async function handlePdfFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
     const pdfSourceId = source.id;
     if (!file || !isPdfSourceId(pdfSourceId)) {
       return;
     }
 
-    const objectUrl = URL.createObjectURL(file);
+    if (!canImportPdf) {
+      setPdfStatus("Only ADMIN can lock guide PDFs into the archive.");
+      input.value = "";
+      return;
+    }
+
+    if (pdfMeta[pdfSourceId]) {
+      setPdfStatus(`${source.label} is already locked into the archive.`);
+      input.value = "";
+      return;
+    }
+
+    let record;
+    try {
+      record = await importStoredGuidePdf(pdfSourceId, file, session.username);
+    } catch (error) {
+      const isConstraintError = error instanceof DOMException && error.name === "ConstraintError";
+      setPdfStatus(isConstraintError ? `${source.label} is already locked into the archive.` : "Guide import failed.");
+      input.value = "";
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(record.blob);
     setPdfObjectUrls((currentUrls) => {
       const previousObjectUrl = currentUrls[pdfSourceId];
       if (previousObjectUrl) {
@@ -192,9 +271,10 @@ export function PlacesPanel() {
       }
       return { ...currentUrls, [pdfSourceId]: objectUrl };
     });
-    setPdfFileNames((currentNames) => ({ ...currentNames, [pdfSourceId]: file.name }));
+    setPdfMeta((currentMeta) => ({ ...currentMeta, [pdfSourceId]: storedGuidePdfMeta(record) }));
+    setPdfStatus(`${source.label} imported and locked.`);
     setTargetPage(`${source.defaultPage}${pageHash(targetPage)}`);
-    event.currentTarget.value = "";
+    input.value = "";
   }
 
   return (
@@ -245,32 +325,46 @@ export function PlacesPanel() {
       </div>
 
       <div className="places-frame-window">
-        {source.kind === "pdf" ? (
+        {source.kind === "pdf" && canImportPdf && !activePdfMeta ? (
           <input id={pdfInputId} className="pdf-file-input" type="file" accept="application/pdf,.pdf" onChange={handlePdfFileChange} />
         ) : null}
         {targetUrl ? (
           <>
             <iframe title={`${source.label} Skyrim places`} src={targetUrl} referrerPolicy="no-referrer-when-downgrade" />
             {source.kind === "pdf" ? (
-              <label className="pdf-replace-button" htmlFor={pdfInputId}>
-                <Upload size={14} />
-                Replace PDF
-              </label>
+              <div className="pdf-lock-badge">
+                <Lock size={14} />
+                Locked Import
+              </div>
             ) : null}
           </>
         ) : (
           <div className="pdf-loader-panel">
             <div>
               <span>{source.label}</span>
-              <strong>{activePdfName ?? "Local PDF required"}</strong>
+              <strong>{canImportPdf ? "ADMIN Import Slot" : "Import Locked"}</strong>
             </div>
-            <label className="pdf-loader-button" htmlFor={pdfInputId}>
-              <Upload size={16} />
-              Load PDF
-            </label>
+            {canImportPdf ? (
+              <label className="pdf-loader-button" htmlFor={pdfInputId}>
+                <Upload size={16} />
+                Lock PDF Import
+              </label>
+            ) : (
+              <div className="pdf-loader-note">
+                <Lock size={16} />
+                Waiting for ADMIN
+              </div>
+            )}
           </div>
         )}
       </div>
+
+      {source.kind === "pdf" ? (
+        <div className="pdf-archive-status" aria-live="polite">
+          {activePdfMeta ? <CheckCircle2 size={15} /> : <Lock size={15} />}
+          <span>{activePdfMeta ? `${activePdfMeta.name} locked by ${activePdfMeta.importedBy}` : pdfStatus}</span>
+        </div>
+      ) : null}
 
       {targetUrl ? (
         <a className="places-open" href={targetUrl} target="_blank" rel="noreferrer">
