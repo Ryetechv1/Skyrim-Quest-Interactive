@@ -13,7 +13,7 @@ import {
   ShieldCheck,
   Unlock,
 } from "lucide-react";
-import { CipherWheel, computeProbeResult } from "./components/CipherWheel";
+import { CipherWheel, computeProbeResult, scriptSymbolSrc } from "./components/CipherWheel";
 import { DossierPanel } from "./components/DossierPanel";
 import { VaultPanel } from "./components/VaultPanel";
 import { NoteForge } from "./components/NoteForge";
@@ -55,58 +55,75 @@ const ORIGIN_ATTEMPT_LIMIT = 6;
 
 const ORIGIN_SYMBOL_SETS = [
   {
-    label: "Outer A",
-    detail: "Daedric capitals A-Z. The two outer frame slots are A^1 and A^2; each letter keeps its alphabet weight.",
+    label: "A^1 + A^2",
+    detail:
+      "The outer Daedric ring is A-Z. Two outer symbols are caught by the black frame, one in A^1 and one in A^2, and their alphabet places steer A^3.",
   },
   {
-    label: "Middle B",
-    detail: "The nine middle marks are 1-9. Only one symbol sits in Zone B, and it narrows the hidden calculation.",
+    label: "B Gate",
+    detail:
+      "The middle ring is 1-9. Only one red mark belongs in Zone B at a time; sweep it first to make the answer box jump in useful steps.",
   },
   {
-    label: "Inner C",
-    detail: "The inner glyph ring is read as a two-symbol memory pair. Zone C silently adds both glyph weights.",
+    label: "C Pair",
+    detail:
+      "The inner ring is a memory pair. Zone C reads two glyphs side by side, so a small inner turn can change A^3 more than expected.",
   },
   {
     label: "A^3",
-    detail: "The last box is the only spoken result. Use it to collect O, R, I, G, I, N in order.",
+    detail:
+      "The final box is the only visible answer. If A^3 shows the current ORIGIN letter, press Validate A^3 to stamp it and reveal the next phase.",
   },
 ];
 
 const ORIGIN_GUIDE_STEPS = [
   {
     unlockAt: 0,
-    title: "1. Name the rings",
+    target: "O",
+    title: "1. O - First Point",
     clue:
-      "The white Daedric outer ring is the alphabet, the red middle marks are numbers, and the inner marks are glyph memories. Make the last box speak O, then press validation.",
-    reward: "When O seals, the number gate becomes the next clue.",
+      "Begin with the answer box, not the wheel art. Watch A^3 while you turn one ring at a time: sweep B through 1-9, count how C changes the jump, then nudge A^1/A^2 until A^3 reads O. Press Validate A^3 only when O is visible.",
+    reward: "O teaches the rule: A^3 is the answer box, and only validation makes it real.",
   },
   {
     unlockAt: 1,
-    title: "2. Wake the number gate",
+    target: "R",
+    title: "2. R - Number Gate",
     clue:
-      "Zone B accepts one middle symbol from 1-9. Hold the idea of O, then change B to bend the hidden arithmetic toward R.",
-    reward: "When R seals, the inner pair stops being decoration.",
+      "Use the clue from O: keep your eyes on A^3, then use B as the first control. Move the middle ring one mark at a time until the result range bends toward R, then fine tune C and the outer pair. Validate only when A^3 shows R.",
+    reward: "R teaches that the middle symbol is not decoration; it gates the hidden arithmetic.",
   },
   {
     unlockAt: 2,
-    title: "3. Count the memory pair",
+    target: "I",
+    title: "3. I - Memory Pair",
     clue:
-      "Zone C reads two inner glyphs side by side. Small inner turns can move A^3 sharply because both glyph weights are counted together. Hunt I.",
-    reward: "When I seals, the two outer halves reveal their use.",
+      "Now read C as two glyphs side by side. Hold a useful B value, rotate the inner ring slowly, and notice when A^3 leaps or settles. If I is skipped, adjust A^1/A^2 by one outer step and sweep C again before validating.",
+    reward: "I teaches that C is a pair, so the inner ring carries two hidden weights at once.",
   },
   {
     unlockAt: 3,
-    title: "4. Split the outer answer",
+    target: "G",
+    title: "4. G - Split Outer",
     clue:
-      "Zone A is divided: A^1 and A^2 each catch one Daedric letter on the outer ring. Use the outer ring for coarse tuning while B and C refine G.",
-    reward: "When G seals, repeat the proven method without changing the rules.",
+      "The outer ring is split by the frame. Treat A^1 and A^2 as two alphabet weights, not one. Use the outer ring for broad movement, then use B for range and C for correction until the final box lands on G.",
+    reward: "G teaches that A^1 and A^2 are a paired outer instruction feeding A^3.",
   },
   {
     unlockAt: 4,
-    title: "5. Bind the origin",
+    target: "I",
+    title: "5. I - Return",
     clue:
-      "You now know the chain: choose the target, tune B, count C, split A^1/A^2, then validate A^3. Finish I, then N.",
-    reward: "When N seals, the premise record opens.",
+      "This second I proves the sequence can be repeated. Do not invent a new rule: choose the target, sweep B, count the C pair, split A^1/A^2, and validate A^3 only when the script result is I.",
+    reward: "The returned I confirms the method. The last phase asks you to use all three zones together.",
+  },
+  {
+    unlockAt: 5,
+    target: "N",
+    title: "6. N - Seal Origin",
+    clue:
+      "For N, combine every clue in order: B selects the number gate, C supplies the two-glyph memory weight, A^1/A^2 supply the alphabet pair, and A^3 speaks the answer. Validate N to complete ORIGIN.",
+    reward: "N seals ORIGIN and opens the premise record.",
   },
 ];
 
@@ -573,7 +590,7 @@ export default function App() {
       lastOriginHitRef.current = `${nextHits.length}:${originProbeResult.symbol}:${offsets.outer}-${offsets.middle}-${offsets.inner}`;
       pushEvent(
         "ok",
-        `TRUE validation: ORIGIN hit ${nextHits.length}/${ORIGIN_SOLVE_LETTERS.length}, ${originProbeResult.symbol} approved at A^3.`,
+        `TRUE validation: ORIGIN hit ${nextHits.length}/${ORIGIN_SOLVE_LETTERS.length}, ${originProbeResult.symbol} approved at A^3 and stamped from sequence ${offsets.outer}/${offsets.middle}/${offsets.inner}.`,
       );
 
       if (nextHits.length === ORIGIN_SOLVE_LETTERS.length) {
@@ -836,6 +853,25 @@ export default function App() {
           <CipherWheel offsets={offsets} rotateRing={rotateRing} />
           <div className="geometry-mark geometry-left" />
           <div className="geometry-mark geometry-right" />
+          <div className="origin-stamp-ledger" aria-label="Validated Zone A3 symbol stamps">
+            <span>Zone A^3 Stamps</span>
+            <ol>
+              {ORIGIN_SOLVE_LETTERS.map((letter, index) => {
+                const found = originHits[index];
+                const stampSrc = found ? scriptSymbolSrc(found) : null;
+
+                return (
+                  <li className={found ? "found" : ""} key={`origin-stamp-${letter}-${index}`}>
+                    {stampSrc ? (
+                      <img src={stampSrc} alt={`${found} validated A^3 stamp`} draggable={false} />
+                    ) : (
+                      <em>{index + 1}</em>
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
         </div>
 
         <div className="decoded-strip" aria-live="polite">
@@ -848,9 +884,16 @@ export default function App() {
           <div className="origin-guide-intro">
             <span>Origin Method</span>
             <p>
-              Solve one phase at a time. A^3 can show a candidate, but a letter is approved only when validation returns
-              TRUE. Each sealed letter unlocks the next method clue. Six false validations reset the chain.
+              Discover six sequences, one for each letter of ORIGIN. A candidate does not count until Validate A^3
+              returns TRUE.
             </p>
+            <ol className="origin-discovery-loop">
+              <li>Read the current target letter.</li>
+              <li>Sweep B through the 1-9 gate.</li>
+              <li>Test the two-glyph C pair.</li>
+              <li>Split A^1 and A^2 on the outer ring.</li>
+              <li>Validate A^3, then follow the next phase clue.</li>
+            </ol>
           </div>
           <div className="origin-status-panel">
             <ol className="origin-hit-tracker" aria-label="Origin hit tracker">

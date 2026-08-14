@@ -217,7 +217,7 @@ function polygonPath(points: Array<{ x: number; y: number }>) {
   return `M ${points.map(pointString).join(" L ")} Z`;
 }
 
-function scriptSymbolSrc(symbol: string) {
+export function scriptSymbolSrc(symbol: string) {
   return SCRIPT_SYMBOLS[`../assets/script-symbols/${symbol}.png`];
 }
 
