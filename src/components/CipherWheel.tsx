@@ -27,10 +27,10 @@ const RING_DRAG_ZONES = [
 
 const FULL_TURN = 360;
 const ZONE_DETECTION_ANGLES = {
-  inner: [10, 24],
-  middle: 18,
-  outerA1: -3,
-  outerA2: 22,
+  inner: [7, 19],
+  middle: 16,
+  outerA1: 10,
+  outerA2: 25,
 } as const;
 
 type CipherWheelProps = {
