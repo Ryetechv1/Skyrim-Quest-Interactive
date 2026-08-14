@@ -221,7 +221,7 @@ function scriptSymbolSrc(symbol: string) {
   return SCRIPT_SYMBOLS[`../assets/script-symbols/${symbol}.png`];
 }
 
-function computeProbeResult(offsets: RingOffsets) {
+export function computeProbeResult(offsets: RingOffsets) {
   const zoneC = detectInnerZone(offsets.inner);
   const zoneB = detectZoneSymbol(SYMBOL_RING, offsets.middle, ZONE_DETECTION_ANGLES.middle);
   const zoneA1 = detectZoneSymbol(ALPHABET, offsets.outer, ZONE_DETECTION_ANGLES.outerA1);

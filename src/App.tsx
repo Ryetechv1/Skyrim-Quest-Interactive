@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlignCenterHorizontal,
   Archive,
@@ -13,7 +13,7 @@ import {
   ShieldCheck,
   Unlock,
 } from "lucide-react";
-import { CipherWheel } from "./components/CipherWheel";
+import { CipherWheel, computeProbeResult } from "./components/CipherWheel";
 import { DossierPanel } from "./components/DossierPanel";
 import { VaultPanel } from "./components/VaultPanel";
 import { NoteForge } from "./components/NoteForge";
@@ -47,6 +47,9 @@ const initialOffsets: RingOffsets = {
   middle: 4,
   inner: 21,
 };
+
+const ORIGIN_SOLVE_WORD = "ORIGIN";
+const ORIGIN_SOLVE_LETTERS = ORIGIN_SOLVE_WORD.split("");
 
 const defaultDraft: NoteDraft = {
   title: "UNNAMED_NOTE.txt.enc",
@@ -222,6 +225,8 @@ export default function App() {
     event("ok", "Vault Key accepted for Archivist-72"),
     event("info", "Directory tree contains seven sealed objects."),
   ]);
+  const [originHits, setOriginHits] = useState<string[]>([]);
+  const lastOriginHitRef = useRef("");
 
   useEffect(() => {
     let mounted = true;
@@ -299,9 +304,11 @@ export default function App() {
   const selectedFile = sealedFiles.find((file) => file.id === selectedFileId) ?? sealedFiles[0];
   const solvedWheel = isWheelSolved(offsets);
   const decoded = decodedFragment(offsets);
+  const originProbeResult = computeProbeResult(offsets);
   const ringAccuracy = progressTowardSolution(offsets);
   const solvedCount = sealedFiles.filter((file) => file.decryptedText).length + (solvedWheel ? 1 : 0);
   const progress = archiveProgress(sealedFiles);
+  const originNextLetter = ORIGIN_SOLVE_LETTERS[originHits.length] ?? null;
 
   const knownKeys = useMemo(() => {
     const recovered = sealedFiles
@@ -316,6 +323,29 @@ export default function App() {
   function pushEvent(kind: TerminalEvent["kind"], text: string) {
     setTerminalEvents((events) => [...events.slice(-12), event(kind, text)]);
   }
+
+  useEffect(() => {
+    if (!originNextLetter || originProbeResult.symbol !== originNextLetter) {
+      return;
+    }
+
+    const hitKey = `${originHits.length}:${originProbeResult.symbol}:${offsets.outer}-${offsets.middle}-${offsets.inner}`;
+    if (lastOriginHitRef.current === hitKey) {
+      return;
+    }
+
+    lastOriginHitRef.current = hitKey;
+    const nextHits = [...originHits, originProbeResult.symbol];
+    setOriginHits(nextHits);
+    pushEvent(
+      "ok",
+      `ORIGIN hit ${nextHits.length}/${ORIGIN_SOLVE_LETTERS.length}: ${originProbeResult.symbol} registered at A^3.`,
+    );
+
+    if (nextHits.length === ORIGIN_SOLVE_LETTERS.length) {
+      pushEvent("ok", "ORIGIN sequence complete. The first point has been found.");
+    }
+  }, [originHits, originNextLetter, originProbeResult.symbol, offsets.inner, offsets.middle, offsets.outer]);
 
   function appendChatMessage(author: string, role: ChatMessage["role"], body: string) {
     const message: ChatMessage = {
@@ -484,6 +514,8 @@ export default function App() {
 
   function resetWheel() {
     setOffsets(initialOffsets);
+    setOriginHits([]);
+    lastOriginHitRef.current = "";
     pushEvent("warn", "Wheel reset. Alignment cache cleared.");
   }
 
@@ -720,6 +752,31 @@ export default function App() {
           <strong>{decoded}</strong>
           <em>{solvedWheel ? "Truth hidden reveals" : `${ringAccuracy}/3 rings match the reliquary diagram`}</em>
         </div>
+
+        <section className="origin-riddle" aria-label="Origin riddle">
+          <div>
+            <span>Origin Riddle</span>
+            <p>
+              The last box speaks once per alignment. Hold the letter it gives, then turn the circles again; six true
+              answers, kept in order, name the place before all paths: ORIGIN.
+            </p>
+          </div>
+          <ol className="origin-hit-tracker" aria-label="Origin hit tracker">
+            {ORIGIN_SOLVE_LETTERS.map((letter, index) => (
+              <li
+                className={[
+                  originHits[index] ? "found" : "",
+                  index === originHits.length ? "current" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                key={`${letter}-${index}`}
+              >
+                <span>{originHits[index] ?? letter}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
 
         <section className="wheel-controls" aria-label="Ring controls">
           {(["outer", "middle", "inner"] as RingName[]).map((ring) => (
