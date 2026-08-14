@@ -115,10 +115,10 @@ Run a local script or app-level check to confirm every phase signature can be pr
 
 Use Playwright if bundled Browser tools are unavailable. Confirm six true validations stamp O, R, I, G, I, N and open the premise modal.
 
-- [ ] **Step 3: Commit behavior**
+- [x] **Step 3: Commit behavior**
 
 Run `git status`, `git diff --check`, then commit app behavior.
 
-- [ ] **Step 4: Update PWA version and push**
+- [x] **Step 4: Update PWA version and push**
 
 Run `npm run build` after the commit, commit the generated PWA version if changed, push to `main`, wait for GitHub Pages deploy, and verify `pwa-version.json`.
