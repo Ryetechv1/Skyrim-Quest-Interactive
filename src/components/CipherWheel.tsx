@@ -2,6 +2,7 @@ import { useRef } from "react";
 import type { MutableRefObject, PointerEvent as ReactPointerEvent } from "react";
 import { ALPHABET, GLYPH_RING, SYMBOL_RING, RING_LENGTHS, normalizeOffset } from "../wheel";
 import type { RingName, RingOffsets } from "../types";
+import type { VolvelleSignature, VolvelleZoneValue } from "../volvelle";
 
 const SCRIPT_SYMBOLS = import.meta.glob("../assets/script-symbols/*.png", {
   eager: true,
@@ -68,6 +69,7 @@ const PROBE_FRAME = {
 type CipherWheelProps = {
   offsets: RingOffsets;
   rotateRing: (ring: RingName, delta: number) => void;
+  answerSymbol?: string | null;
 };
 
 type RingProps = {
@@ -85,11 +87,6 @@ type DragSession = {
   ring: RingName;
   startAngle: number;
   appliedDelta: number;
-};
-
-type ZoneSymbol = {
-  symbol: string;
-  value: number;
 };
 
 function pointerMetrics(event: ReactPointerEvent<HTMLElement>) {
@@ -110,7 +107,7 @@ function shortestAngleDelta(current: number, start: number) {
   return ((current - start + 540) % FULL_TURN) - 180;
 }
 
-function detectZoneSymbol(items: string[], offset: number, angle: number): ZoneSymbol {
+function detectZoneSymbol(items: string[], offset: number, angle: number): VolvelleZoneValue {
   const step = FULL_TURN / items.length;
   const index = normalizeOffset(Math.round((angle + 90) / step - offset), items.length);
 
@@ -120,24 +117,15 @@ function detectZoneSymbol(items: string[], offset: number, angle: number): ZoneS
   };
 }
 
-function detectInnerZone(offset: number): ZoneSymbol[] {
+function detectInnerZone(offset: number): [VolvelleZoneValue, VolvelleZoneValue] {
   const detected = ZONE_DETECTION_ANGLES.inner.map((angle) => detectZoneSymbol(GLYPH_RING, offset, angle));
 
   if (detected[0].symbol !== detected[1].symbol) {
-    return detected;
+    return detected as [VolvelleZoneValue, VolvelleZoneValue];
   }
 
   const nextIndex = normalizeOffset(detected[0].value, GLYPH_RING.length);
   return [detected[0], { symbol: GLYPH_RING[nextIndex], value: nextIndex + 1 }];
-}
-
-function resultLetter(value: number): ZoneSymbol {
-  const index = normalizeOffset(value - 1, ALPHABET.length);
-
-  return {
-    symbol: ALPHABET[index],
-    value: index + 1,
-  };
 }
 
 function roundCoord(value: number) {
@@ -221,22 +209,27 @@ export function scriptSymbolSrc(symbol: string) {
   return SCRIPT_SYMBOLS[`../assets/script-symbols/${symbol}.png`];
 }
 
-export function computeProbeResult(offsets: RingOffsets) {
-  const zoneC = detectInnerZone(offsets.inner);
-  const zoneB = detectZoneSymbol(SYMBOL_RING, offsets.middle, ZONE_DETECTION_ANGLES.middle);
-  const zoneA1 = detectZoneSymbol(ALPHABET, offsets.outer, ZONE_DETECTION_ANGLES.outerA1);
-  const zoneA2 = detectZoneSymbol(ALPHABET, offsets.outer, ZONE_DETECTION_ANGLES.outerA2);
-  const zoneCWeight = zoneC.reduce((total, item) => total + item.value, 0);
-  const zoneA1Weight = zoneA1.value + zoneCWeight;
-  const zoneA2Weight = zoneA2.value + zoneB.value;
-  const rawA3 = Math.round((zoneA1Weight + zoneA2Weight) / Math.max(zoneB.value, 1) + zoneCWeight);
-
-  return resultLetter(rawA3);
+export function detectProbeSignature(offsets: RingOffsets): VolvelleSignature {
+  return {
+    zoneC: detectInnerZone(offsets.inner),
+    zoneB: detectZoneSymbol(SYMBOL_RING, offsets.middle, ZONE_DETECTION_ANGLES.middle),
+    zoneA1: detectZoneSymbol(ALPHABET, offsets.outer, ZONE_DETECTION_ANGLES.outerA1),
+    zoneA2: detectZoneSymbol(ALPHABET, offsets.outer, ZONE_DETECTION_ANGLES.outerA2),
+  };
 }
 
-function ZoneProbeOverlay({ offsets }: { offsets: RingOffsets }) {
-  const answer = computeProbeResult(offsets);
-  const answerSymbol = scriptSymbolSrc(answer.symbol);
+export function probeSignatureMatches(current: VolvelleSignature, expected: VolvelleSignature) {
+  return (
+    current.zoneC[0].symbol === expected.zoneC[0].symbol &&
+    current.zoneC[1].symbol === expected.zoneC[1].symbol &&
+    current.zoneB.symbol === expected.zoneB.symbol &&
+    current.zoneA1.symbol === expected.zoneA1.symbol &&
+    current.zoneA2.symbol === expected.zoneA2.symbol
+  );
+}
+
+function ZoneProbeOverlay({ answerSymbol }: { answerSymbol?: string | null }) {
+  const answerSymbolImage = answerSymbol ? scriptSymbolSrc(answerSymbol) : null;
   const { radii, startAngle, splitAngle, endAngle } = PROBE_FRAME;
   const answerCenter = polarPoint(PROBE_FRAME.result.radius, splitAngle);
   const resultBox = resultBoxPoints();
@@ -291,7 +284,11 @@ function ZoneProbeOverlay({ offsets }: { offsets: RingOffsets }) {
         </g>
       </svg>
       <span className="zone-probe-answer-zone" style={answerZoneStyle}>
-        {answerSymbol ? <img className="zone-probe-result-symbol" src={answerSymbol} alt="" draggable={false} /> : <strong>{answer.symbol}</strong>}
+        {answerSymbolImage ? (
+          <img className="zone-probe-result-symbol" src={answerSymbolImage} alt="" draggable={false} />
+        ) : (
+          <strong className="zone-probe-unsettled">?</strong>
+        )}
       </span>
     </span>
   );
@@ -371,7 +368,7 @@ function AlignmentMarkers() {
   );
 }
 
-export function CipherWheel({ offsets, rotateRing }: CipherWheelProps) {
+export function CipherWheel({ offsets, rotateRing, answerSymbol = null }: CipherWheelProps) {
   const dragSessionRef = useRef<DragSession | null>(null);
   const dragMovedRef = useRef(false);
 
@@ -480,7 +477,7 @@ export function CipherWheel({ offsets, rotateRing }: CipherWheelProps) {
           </div>
         </div>
       </div>
-      <ZoneProbeOverlay offsets={offsets} />
+      <ZoneProbeOverlay answerSymbol={answerSymbol} />
       <div className="wheel-caption">
         <span>Outer: Daedric A-Z</span>
         <span>Middle: 1-9</span>

@@ -1269,6 +1269,125 @@ button:disabled {
   font-size: 11px;
 }
 
+.volvelle-ledger {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 7px;
+}
+
+.volvelle-ledger-panel {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  max-height: 220px;
+  padding: 8px 9px;
+  overflow: auto;
+  border: 1px solid rgba(239, 217, 168, 0.16);
+  background:
+    linear-gradient(145deg, rgba(118, 78, 41, 0.16), rgba(0, 0, 0, 0.12)),
+    rgba(0, 0, 0, 0.22);
+  scrollbar-color: rgba(211, 177, 105, 0.6) rgba(0, 0, 0, 0.18);
+}
+
+.volvelle-ledger-panel strong {
+  color: #fff1c4;
+  font-family: var(--font-serif);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.volvelle-ledger-panel p {
+  color: rgba(239, 217, 168, 0.76);
+  font-size: 10.5px;
+}
+
+.volvelle-ledger-panel ol {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.volvelle-ledger-panel.horizon ol {
+  grid-template-columns: repeat(13, minmax(24px, 1fr));
+}
+
+.volvelle-ledger-panel.horizon li {
+  min-height: 28px;
+  display: grid;
+  place-items: center;
+  gap: 1px;
+  border: 1px solid rgba(239, 217, 168, 0.15);
+  background: rgba(255, 244, 204, 0.04);
+}
+
+.volvelle-ledger-panel.horizon b {
+  color: #fff7da;
+  font-family: var(--font-daedric);
+  font-size: 18px;
+  line-height: 1;
+  text-shadow:
+    1px 0 0 rgba(74, 48, 25, 0.78),
+    0 0 8px rgba(255, 248, 222, 0.22);
+}
+
+.volvelle-ledger-panel.horizon span {
+  color: #caa96a;
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  line-height: 1;
+}
+
+.volvelle-ledger-panel.hours li,
+.volvelle-ledger-panel.stars li {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 0.72fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  padding: 4px 5px;
+  border: 1px solid rgba(239, 217, 168, 0.12);
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.volvelle-ledger-panel.hours b,
+.volvelle-ledger-panel.stars b {
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  min-height: 24px;
+  color: #fff8e8;
+  font-family: var(--font-daedric);
+  font-size: 18px;
+  line-height: 1;
+  text-shadow: 0 0 8px rgba(255, 248, 232, 0.22);
+}
+
+.volvelle-ledger-panel.hours span,
+.volvelle-ledger-panel.stars span {
+  min-width: 0;
+  color: #ffe3a5;
+  font-family: var(--font-serif);
+  font-size: 10.5px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.volvelle-ledger-panel.hours em,
+.volvelle-ledger-panel.stars em {
+  min-width: 0;
+  color: rgba(239, 217, 168, 0.62);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-style: normal;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
 .origin-method-chain {
   grid-column: 1 / -1;
   display: grid;
@@ -1302,6 +1421,13 @@ button:disabled {
 .origin-method-chain p {
   color: rgba(239, 217, 168, 0.82);
   font-size: 11px;
+}
+
+.origin-method-chain small {
+  color: #ffdf9f;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  line-height: 1.35;
 }
 
 .origin-method-chain em {

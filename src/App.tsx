@@ -13,7 +13,7 @@ import {
   ShieldCheck,
   Unlock,
 } from "lucide-react";
-import { CipherWheel, computeProbeResult, scriptSymbolSrc } from "./components/CipherWheel";
+import { CipherWheel, detectProbeSignature, probeSignatureMatches, scriptSymbolSrc } from "./components/CipherWheel";
 import { DossierPanel } from "./components/DossierPanel";
 import { VaultPanel } from "./components/VaultPanel";
 import { NoteForge } from "./components/NoteForge";
@@ -30,6 +30,14 @@ import {
   SOLUTION_OFFSETS,
   wheelChecksum,
 } from "./wheel";
+import {
+  VOLVELLE_ATTEMPT_LIMIT,
+  VOLVELLE_HORIZON_LEDGER,
+  VOLVELLE_HOUR_LEDGER,
+  VOLVELLE_PHASES,
+  VOLVELLE_SOLVE_LETTERS,
+  VOLVELLE_STAR_LEDGER,
+} from "./volvelle";
 import type {
   AuthSession,
   ChangeRequest,
@@ -49,83 +57,32 @@ const initialOffsets: RingOffsets = {
   inner: 21,
 };
 
-const ORIGIN_SOLVE_WORD = "ORIGIN";
-const ORIGIN_SOLVE_LETTERS = ORIGIN_SOLVE_WORD.split("");
-const ORIGIN_ATTEMPT_LIMIT = 6;
+const ORIGIN_SOLVE_LETTERS = VOLVELLE_SOLVE_LETTERS;
+const ORIGIN_ATTEMPT_LIMIT = VOLVELLE_ATTEMPT_LIMIT;
 
 const ORIGIN_SYMBOL_SETS = [
   {
-    label: "A^1 + A^2",
+    label: "Horizon Atlas",
     detail:
-      "The outer Daedric ring is A-Z. Two outer symbols are caught by the black frame, one in A^1 and one in A^2, and their alphabet places steer A^3.",
+      "Outer Daedric ring. Use A-Z values and the static lowercase guide to bring the requested pair into A^1 and A^2.",
   },
   {
-    label: "B Gate",
+    label: "Hour Gate",
     detail:
-      "The middle ring is 1-9. Only one red mark belongs in Zone B at a time; sweep it first to make the answer box jump in useful steps.",
+      "Middle ring. Each clue names an hour such as Dawn, Zenith, or Midnight; the ledger maps that hour to 1-9.",
   },
   {
-    label: "C Pair",
+    label: "Star Ledger",
     detail:
-      "The inner ring is a memory pair. Zone C reads two glyphs side by side, so a small inner turn can change A^3 more than expected.",
+      "Inner ring. The clue names two Skyrim-flavored epithets; look them up here, then place both runes inside Zone C.",
   },
   {
     label: "A^3",
     detail:
-      "The final box is the only visible answer. If A^3 shows the current ORIGIN letter, press Validate A^3 to stamp it and reveal the next phase.",
+      "The only visible answer zone. It stays unsettled until the active phase signature is witnessed by the frame.",
   },
 ];
-
-const ORIGIN_GUIDE_STEPS = [
-  {
-    unlockAt: 0,
-    target: "O",
-    title: "1. O - First Point",
-    clue:
-      "Begin with the answer box, not the wheel art. Watch A^3 while you turn one ring at a time: sweep B through 1-9, count how C changes the jump, then nudge A^1/A^2 until A^3 reads O. Press Validate A^3 only when O is visible.",
-    reward: "O teaches the rule: A^3 is the answer box, and only validation makes it real.",
-  },
-  {
-    unlockAt: 1,
-    target: "R",
-    title: "2. R - Number Gate",
-    clue:
-      "Use the clue from O: keep your eyes on A^3, then use B as the first control. Move the middle ring one mark at a time until the result range bends toward R, then fine tune C and the outer pair. Validate only when A^3 shows R.",
-    reward: "R teaches that the middle symbol is not decoration; it gates the hidden arithmetic.",
-  },
-  {
-    unlockAt: 2,
-    target: "I",
-    title: "3. I - Memory Pair",
-    clue:
-      "Now read C as two glyphs side by side. Hold a useful B value, rotate the inner ring slowly, and notice when A^3 leaps or settles. If I is skipped, adjust A^1/A^2 by one outer step and sweep C again before validating.",
-    reward: "I teaches that C is a pair, so the inner ring carries two hidden weights at once.",
-  },
-  {
-    unlockAt: 3,
-    target: "G",
-    title: "4. G - Split Outer",
-    clue:
-      "The outer ring is split by the frame. Treat A^1 and A^2 as two alphabet weights, not one. Use the outer ring for broad movement, then use B for range and C for correction until the final box lands on G.",
-    reward: "G teaches that A^1 and A^2 are a paired outer instruction feeding A^3.",
-  },
-  {
-    unlockAt: 4,
-    target: "I",
-    title: "5. I - Return",
-    clue:
-      "This second I proves the sequence can be repeated. Do not invent a new rule: choose the target, sweep B, count the C pair, split A^1/A^2, and validate A^3 only when the script result is I.",
-    reward: "The returned I confirms the method. The last phase asks you to use all three zones together.",
-  },
-  {
-    unlockAt: 5,
-    target: "N",
-    title: "6. N - Seal Origin",
-    clue:
-      "For N, combine every clue in order: B selects the number gate, C supplies the two-glyph memory weight, A^1/A^2 supply the alphabet pair, and A^3 speaks the answer. Validate N to complete ORIGIN.",
-    reward: "N seals ORIGIN and opens the premise record.",
-  },
-];
+const ORIGIN_GUIDE_STEPS = VOLVELLE_PHASES;
 
 const defaultDraft: NoteDraft = {
   title: "UNNAMED_NOTE.txt.enc",
@@ -382,13 +339,18 @@ export default function App() {
   const selectedFile = sealedFiles.find((file) => file.id === selectedFileId) ?? sealedFiles[0];
   const solvedWheel = isWheelSolved(offsets);
   const decoded = decodedFragment(offsets);
-  const originProbeResult = computeProbeResult(offsets);
+  const volvelleSignature = detectProbeSignature(offsets);
   const ringAccuracy = progressTowardSolution(offsets);
   const solvedCount = sealedFiles.filter((file) => file.decryptedText).length + (solvedWheel ? 1 : 0);
   const progress = archiveProgress(sealedFiles);
-  const originNextLetter = ORIGIN_SOLVE_LETTERS[originHits.length] ?? null;
+  const activeVolvellePhase = ORIGIN_GUIDE_STEPS[originHits.length] ?? null;
+  const originNextLetter = activeVolvellePhase?.target ?? null;
   const originGuideStepIndex = Math.min(originHits.length, ORIGIN_GUIDE_STEPS.length - 1);
   const originAttemptsRemaining = ORIGIN_ATTEMPT_LIMIT - originAttemptCount;
+  const volvellePhaseMatched = activeVolvellePhase
+    ? probeSignatureMatches(volvelleSignature, activeVolvellePhase.signature)
+    : false;
+  const volvelleAnswerSymbol = volvellePhaseMatched ? activeVolvellePhase?.target : null;
 
   const knownKeys = useMemo(() => {
     const recovered = sealedFiles
@@ -583,14 +545,14 @@ export default function App() {
       return;
     }
 
-    if (originProbeResult.symbol === originNextLetter) {
-      const nextHits = [...originHits, originProbeResult.symbol];
+    if (activeVolvellePhase && volvellePhaseMatched) {
+      const nextHits = [...originHits, activeVolvellePhase.target];
       setOriginHits(nextHits);
       setOriginAttemptCount(0);
-      lastOriginHitRef.current = `${nextHits.length}:${originProbeResult.symbol}:${offsets.outer}-${offsets.middle}-${offsets.inner}`;
+      lastOriginHitRef.current = `${nextHits.length}:${activeVolvellePhase.target}:${offsets.outer}-${offsets.middle}-${offsets.inner}`;
       pushEvent(
         "ok",
-        `TRUE validation: ORIGIN hit ${nextHits.length}/${ORIGIN_SOLVE_LETTERS.length}, ${originProbeResult.symbol} approved at A^3 and stamped from sequence ${offsets.outer}/${offsets.middle}/${offsets.inner}.`,
+        `TRUE validation: ${activeVolvellePhase.hour} witnessed ${activeVolvellePhase.target} at A^3 and stamped sequence ${offsets.outer}/${offsets.middle}/${offsets.inner}.`,
       );
 
       if (nextHits.length === ORIGIN_SOLVE_LETTERS.length) {
@@ -613,7 +575,7 @@ export default function App() {
     setOriginAttemptCount(nextAttemptCount);
     pushEvent(
       "warn",
-      `FALSE validation: A^3 reads ${originProbeResult.symbol}; seek ${originNextLetter}. False check ${nextAttemptCount}/${ORIGIN_ATTEMPT_LIMIT}.`,
+      `FALSE validation: the hour is not yet witnessed; seek ${originNextLetter}. False check ${nextAttemptCount}/${ORIGIN_ATTEMPT_LIMIT}.`,
     );
   }
 
@@ -850,7 +812,7 @@ export default function App() {
           <div className="red-thread red-thread-vertical" />
           <div className="folio-note folio-note-top">Align truth, shadow, memory.</div>
           <div className="folio-note folio-note-side">7 / 14 / 3</div>
-          <CipherWheel offsets={offsets} rotateRing={rotateRing} />
+          <CipherWheel offsets={offsets} rotateRing={rotateRing} answerSymbol={volvelleAnswerSymbol} />
           <div className="geometry-mark geometry-left" />
           <div className="geometry-mark geometry-right" />
           <div className="origin-stamp-ledger" aria-label="Validated Zone A3 symbol stamps">
@@ -889,9 +851,9 @@ export default function App() {
             </p>
             <ol className="origin-discovery-loop">
               <li>Read the current target letter.</li>
-              <li>Sweep B through the 1-9 gate.</li>
-              <li>Test the two-glyph C pair.</li>
-              <li>Split A^1 and A^2 on the outer ring.</li>
+              <li>Use the Volvelle Ledger to translate the clue names into symbols.</li>
+              <li>Place the Star Ledger pair in Zone C.</li>
+              <li>Set the Hour Gate and split the Horizon Atlas pair.</li>
               <li>Validate A^3, then follow the next phase clue.</li>
             </ol>
           </div>
@@ -950,6 +912,50 @@ export default function App() {
               </article>
             ))}
           </div>
+          <div className="volvelle-ledger" aria-label="Volvelle symbol value ledger">
+            <article className="volvelle-ledger-panel horizon">
+              <strong>Horizon Atlas</strong>
+              <p>Outer ring values. Match the requested letter pair inside A^1 and A^2.</p>
+              <ol>
+                {VOLVELLE_HORIZON_LEDGER.map((entry) => (
+                  <li key={`horizon-${entry.letter}`}>
+                    <b>{entry.letter}</b>
+                    <span>
+                      {entry.letter}:{entry.value}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </article>
+            <article className="volvelle-ledger-panel hours">
+              <strong>Hour Gate</strong>
+              <p>Middle ring values. Each clue names one hour gate.</p>
+              <ol>
+                {VOLVELLE_HOUR_LEDGER.map((entry) => (
+                  <li key={`hour-${entry.hour}`}>
+                    <b>{entry.symbol}</b>
+                    <span>{entry.hour}</span>
+                    <em>{entry.meaning}</em>
+                  </li>
+                ))}
+              </ol>
+            </article>
+            <article className="volvelle-ledger-panel stars">
+              <strong>Star Ledger</strong>
+              <p>Inner ring values. The clue names the epithets; Zone C must hold the two matching runes.</p>
+              <ol>
+                {VOLVELLE_STAR_LEDGER.map((entry) => (
+                  <li key={`star-${entry.value}`}>
+                    <b>{entry.symbol}</b>
+                    <span>
+                      {entry.value}. {entry.epithet}
+                    </span>
+                    <em>{entry.meaning}</em>
+                  </li>
+                ))}
+              </ol>
+            </article>
+          </div>
           <ol className="origin-method-chain" aria-label="Origin chained method">
             {ORIGIN_GUIDE_STEPS.map((step, index) => {
               const unlocked = originHits.length >= step.unlockAt;
@@ -969,6 +975,7 @@ export default function App() {
                         ? `Seal ${previousSeal} to reveal this phase.`
                         : "Awaiting first seal."}
                   </p>
+                  {unlocked ? <small>{step.lookupCue}</small> : null}
                   <em>{unlocked ? step.reward : "The next answer hides the next instruction."}</em>
                 </li>
               );
