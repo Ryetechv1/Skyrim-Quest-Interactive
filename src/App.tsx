@@ -77,7 +77,7 @@ const ORIGIN_GUIDE_STEPS = [
     unlockAt: 0,
     title: "1. Name the rings",
     clue:
-      "The white Daedric outer ring is the alphabet, the red middle marks are numbers, and the inner marks are glyph memories. Begin by making the last box speak O.",
+      "The white Daedric outer ring is the alphabet, the red middle marks are numbers, and the inner marks are glyph memories. Make the last box speak O, then press validation.",
     reward: "When O seals, the number gate becomes the next clue.",
   },
   {
@@ -105,7 +105,7 @@ const ORIGIN_GUIDE_STEPS = [
     unlockAt: 4,
     title: "5. Bind the origin",
     clue:
-      "You now know the chain: choose the target, tune B, count C, split A^1/A^2, and trust only A^3. Finish I, then N.",
+      "You now know the chain: choose the target, tune B, count C, split A^1/A^2, then validate A^3. Finish I, then N.",
     reward: "When N seals, the premise record opens.",
   },
 ];
@@ -387,31 +387,6 @@ export default function App() {
     setTerminalEvents((events) => [...events.slice(-12), event(kind, text)]);
   }
 
-  useEffect(() => {
-    if (!originNextLetter || originProbeResult.symbol !== originNextLetter) {
-      return;
-    }
-
-    const hitKey = `${originHits.length}:${originProbeResult.symbol}:${offsets.outer}-${offsets.middle}-${offsets.inner}`;
-    if (lastOriginHitRef.current === hitKey) {
-      return;
-    }
-
-    lastOriginHitRef.current = hitKey;
-    const nextHits = [...originHits, originProbeResult.symbol];
-    setOriginHits(nextHits);
-    setOriginAttemptCount(0);
-    pushEvent(
-      "ok",
-      `ORIGIN hit ${nextHits.length}/${ORIGIN_SOLVE_LETTERS.length}: ${originProbeResult.symbol} registered at A^3.`,
-    );
-
-    if (nextHits.length === ORIGIN_SOLVE_LETTERS.length) {
-      pushEvent("ok", "ORIGIN sequence complete. The first point has been found.");
-      setOriginPremiseOpen(true);
-    }
-  }, [originHits, originNextLetter, originProbeResult.symbol, offsets.inner, offsets.middle, offsets.outer]);
-
   function appendChatMessage(author: string, role: ChatMessage["role"], body: string) {
     const message: ChatMessage = {
       id: makeId("chat"),
@@ -592,8 +567,20 @@ export default function App() {
     }
 
     if (originProbeResult.symbol === originNextLetter) {
+      const nextHits = [...originHits, originProbeResult.symbol];
+      setOriginHits(nextHits);
       setOriginAttemptCount(0);
-      pushEvent("ok", `A^3 reads ${originProbeResult.symbol}. The current ORIGIN phase is aligned.`);
+      lastOriginHitRef.current = `${nextHits.length}:${originProbeResult.symbol}:${offsets.outer}-${offsets.middle}-${offsets.inner}`;
+      pushEvent(
+        "ok",
+        `TRUE validation: ORIGIN hit ${nextHits.length}/${ORIGIN_SOLVE_LETTERS.length}, ${originProbeResult.symbol} approved at A^3.`,
+      );
+
+      if (nextHits.length === ORIGIN_SOLVE_LETTERS.length) {
+        pushEvent("ok", "ORIGIN sequence complete. The first point has been found.");
+        setOriginPremiseOpen(true);
+      }
+
       return;
     }
 
@@ -601,7 +588,7 @@ export default function App() {
 
     if (nextAttemptCount >= ORIGIN_ATTEMPT_LIMIT) {
       resetOriginChain(
-        `Six false A^3 checks exhausted the chain. ORIGIN progress reset; begin again at ${ORIGIN_SOLVE_LETTERS[0]}.`,
+        `Six false A^3 validations exhausted the chain. ORIGIN progress reset; begin again at ${ORIGIN_SOLVE_LETTERS[0]}.`,
       );
       return;
     }
@@ -609,7 +596,7 @@ export default function App() {
     setOriginAttemptCount(nextAttemptCount);
     pushEvent(
       "warn",
-      `A^3 reads ${originProbeResult.symbol}; seek ${originNextLetter}. False check ${nextAttemptCount}/${ORIGIN_ATTEMPT_LIMIT}.`,
+      `FALSE validation: A^3 reads ${originProbeResult.symbol}; seek ${originNextLetter}. False check ${nextAttemptCount}/${ORIGIN_ATTEMPT_LIMIT}.`,
     );
   }
 
@@ -861,8 +848,8 @@ export default function App() {
           <div className="origin-guide-intro">
             <span>Origin Method</span>
             <p>
-              Solve one phase at a time. The visible A^3 box is the only answer; each sealed letter unlocks the next
-              method clue. Six false checks reset the chain.
+              Solve one phase at a time. A^3 can show a candidate, but a letter is approved only when validation returns
+              TRUE. Each sealed letter unlocks the next method clue. Six false validations reset the chain.
             </p>
           </div>
           <div className="origin-status-panel">
@@ -885,11 +872,11 @@ export default function App() {
               <strong>{originNextLetter ? `Seek ${originNextLetter}` : "ORIGIN sealed"}</strong>
               <small>
                 {originNextLetter
-                  ? `${originAttemptCount}/${ORIGIN_ATTEMPT_LIMIT} false checks - ${originAttemptsRemaining} remain`
+                  ? `${originAttemptCount}/${ORIGIN_ATTEMPT_LIMIT} false validations - ${originAttemptsRemaining} remain`
                   : "Premise record unlocked"}
               </small>
               <button type="button" onClick={checkOriginAttempt}>
-                {originNextLetter ? "Check A^3" : "Open Premise"}
+                {originNextLetter ? "Validate A^3" : "Open Premise"}
               </button>
             </div>
           </div>
