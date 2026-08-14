@@ -939,10 +939,12 @@ button:disabled {
   z-index: 1;
   margin: 0 28px 8px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 16px;
-  padding: 11px 15px;
+  grid-template-columns: minmax(0, 1fr) minmax(270px, auto);
+  align-items: stretch;
+  gap: 9px 12px;
+  max-height: 286px;
+  padding: 10px 12px;
+  overflow: auto;
   border: 1px solid rgba(35, 25, 15, 0.58);
   background:
     linear-gradient(90deg, rgba(27, 18, 10, 0.84), rgba(54, 35, 19, 0.74)),
@@ -951,9 +953,28 @@ button:disabled {
   box-shadow:
     inset 0 0 0 1px rgba(239, 217, 168, 0.08),
     0 8px 18px rgba(18, 12, 7, 0.18);
+  scrollbar-color: rgba(166, 43, 31, 0.72) rgba(0, 0, 0, 0.2);
 }
 
-.origin-riddle span {
+.origin-guide-intro,
+.origin-status-panel,
+.origin-symbol-legend article,
+.origin-method-chain li {
+  min-width: 0;
+  border: 1px solid rgba(239, 217, 168, 0.16);
+  background:
+    linear-gradient(145deg, rgba(166, 43, 31, 0.09), transparent 68%),
+    rgba(0, 0, 0, 0.2);
+}
+
+.origin-guide-intro {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  padding: 9px 11px;
+}
+
+.origin-guide-intro > span {
   display: block;
   margin-bottom: 4px;
   color: #fff0be;
@@ -964,11 +985,77 @@ button:disabled {
   text-transform: uppercase;
 }
 
-.origin-riddle p {
+.origin-riddle p,
+.origin-riddle em,
+.origin-riddle small {
   margin: 0;
   color: rgba(239, 217, 168, 0.88);
   font-size: 12px;
   line-height: 1.45;
+}
+
+.origin-phase-rail {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.origin-phase-rail li {
+  min-width: 0;
+  min-height: 38px;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+  gap: 4px;
+  padding: 5px;
+  border: 1px solid rgba(239, 217, 168, 0.16);
+  background: rgba(0, 0, 0, 0.22);
+  opacity: 0.58;
+}
+
+.origin-phase-rail li.unlocked {
+  opacity: 1;
+}
+
+.origin-phase-rail li.active {
+  border-color: rgba(211, 47, 29, 0.72);
+  box-shadow: inset 0 0 0 1px rgba(211, 47, 29, 0.22);
+}
+
+.origin-phase-rail li.sealed {
+  border-color: rgba(150, 207, 137, 0.58);
+}
+
+.origin-phase-rail b {
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(239, 217, 168, 0.24);
+  color: #fff0be;
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.origin-phase-rail span {
+  min-width: 0;
+  color: rgba(239, 217, 168, 0.8);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+  text-transform: uppercase;
+}
+
+.origin-status-panel {
+  display: grid;
+  grid-template-columns: auto minmax(138px, 1fr);
+  gap: 8px;
+  padding: 8px;
 }
 
 .origin-hit-tracker {
@@ -1004,6 +1091,117 @@ button:disabled {
   background: rgba(46, 87, 52, 0.34);
   color: #f9f2d5;
   text-shadow: 0 0 8px rgba(150, 207, 137, 0.34);
+}
+
+.origin-attempt-meter {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 5px;
+  align-content: center;
+  padding-left: 8px;
+  border-left: 1px solid rgba(239, 217, 168, 0.16);
+}
+
+.origin-attempt-meter strong {
+  color: #fff0be;
+  font-family: var(--font-serif);
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.origin-attempt-meter small {
+  color: #d6bd83;
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.origin-attempt-meter button {
+  min-height: 29px;
+  border: 1px solid rgba(211, 177, 105, 0.42);
+  border-radius: 3px;
+  color: #ffe9b8;
+  background:
+    linear-gradient(180deg, rgba(119, 33, 25, 0.88), rgba(48, 26, 13, 0.9)),
+    rgba(31, 23, 13, 0.88);
+  font-family: var(--font-serif);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.origin-symbol-legend {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.origin-symbol-legend article {
+  padding: 8px 9px;
+}
+
+.origin-symbol-legend strong,
+.origin-method-chain li > strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #fff1c4;
+  font-family: var(--font-serif);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.origin-symbol-legend p {
+  color: rgba(239, 217, 168, 0.78);
+  font-size: 11px;
+}
+
+.origin-method-chain {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.origin-method-chain li {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: 8px 9px;
+  opacity: 0.64;
+}
+
+.origin-method-chain li.unlocked {
+  opacity: 1;
+}
+
+.origin-method-chain li.active {
+  border-color: rgba(211, 47, 29, 0.62);
+  background:
+    linear-gradient(145deg, rgba(166, 43, 31, 0.3), rgba(0, 0, 0, 0.12)),
+    rgba(0, 0, 0, 0.22);
+  box-shadow: inset 0 0 0 1px rgba(211, 47, 29, 0.18);
+}
+
+.origin-method-chain p {
+  color: rgba(239, 217, 168, 0.82);
+  font-size: 11px;
+}
+
+.origin-method-chain em {
+  color: #d7bd80;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-style: normal;
+}
+
+.origin-method-chain li.locked p,
+.origin-method-chain li.locked em {
+  color: rgba(239, 217, 168, 0.48);
 }
 
 .wheel-controls,
@@ -3166,11 +3364,31 @@ button:disabled {
 
   .origin-riddle {
     grid-template-columns: 1fr;
-    text-align: center;
+    text-align: left;
+    max-height: 300px;
   }
 
   .origin-hit-tracker {
     justify-content: center;
+  }
+
+  .origin-status-panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .origin-attempt-meter {
+    padding: 7px 0 0;
+    border-left: 0;
+    border-top: 1px solid rgba(239, 217, 168, 0.16);
+    text-align: center;
+  }
+
+  .origin-symbol-legend {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .origin-method-chain {
+    grid-template-columns: 1fr;
   }
 
   .decoded-strip strong {
@@ -3346,10 +3564,27 @@ button:disabled {
     margin: 0 16px 8px;
     padding: 10px;
     gap: 10px;
+    max-height: 360px;
   }
 
   .origin-riddle p {
     font-size: 11px;
+  }
+
+  .origin-status-panel,
+  .origin-symbol-legend,
+  .origin-phase-rail,
+  .origin-method-chain {
+    grid-template-columns: 1fr;
+  }
+
+  .origin-symbol-legend p,
+  .origin-method-chain p {
+    font-size: 10px;
+  }
+
+  .origin-attempt-meter button {
+    width: 100%;
   }
 
   .origin-hit-tracker {

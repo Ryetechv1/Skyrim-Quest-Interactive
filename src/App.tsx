@@ -51,6 +51,64 @@ const initialOffsets: RingOffsets = {
 
 const ORIGIN_SOLVE_WORD = "ORIGIN";
 const ORIGIN_SOLVE_LETTERS = ORIGIN_SOLVE_WORD.split("");
+const ORIGIN_ATTEMPT_LIMIT = 6;
+
+const ORIGIN_SYMBOL_SETS = [
+  {
+    label: "Outer A",
+    detail: "Daedric capitals A-Z. The two outer frame slots are A^1 and A^2; each letter keeps its alphabet weight.",
+  },
+  {
+    label: "Middle B",
+    detail: "The nine middle marks are 1-9. Only one symbol sits in Zone B, and it narrows the hidden calculation.",
+  },
+  {
+    label: "Inner C",
+    detail: "The inner glyph ring is read as a two-symbol memory pair. Zone C silently adds both glyph weights.",
+  },
+  {
+    label: "A^3",
+    detail: "The last box is the only spoken result. Use it to collect O, R, I, G, I, N in order.",
+  },
+];
+
+const ORIGIN_GUIDE_STEPS = [
+  {
+    unlockAt: 0,
+    title: "1. Name the rings",
+    clue:
+      "The white Daedric outer ring is the alphabet, the red middle marks are numbers, and the inner marks are glyph memories. Begin by making the last box speak O.",
+    reward: "When O seals, the number gate becomes the next clue.",
+  },
+  {
+    unlockAt: 1,
+    title: "2. Wake the number gate",
+    clue:
+      "Zone B accepts one middle symbol from 1-9. Hold the idea of O, then change B to bend the hidden arithmetic toward R.",
+    reward: "When R seals, the inner pair stops being decoration.",
+  },
+  {
+    unlockAt: 2,
+    title: "3. Count the memory pair",
+    clue:
+      "Zone C reads two inner glyphs side by side. Small inner turns can move A^3 sharply because both glyph weights are counted together. Hunt I.",
+    reward: "When I seals, the two outer halves reveal their use.",
+  },
+  {
+    unlockAt: 3,
+    title: "4. Split the outer answer",
+    clue:
+      "Zone A is divided: A^1 and A^2 each catch one Daedric letter on the outer ring. Use the outer ring for coarse tuning while B and C refine G.",
+    reward: "When G seals, repeat the proven method without changing the rules.",
+  },
+  {
+    unlockAt: 4,
+    title: "5. Bind the origin",
+    clue:
+      "You now know the chain: choose the target, tune B, count C, split A^1/A^2, and trust only A^3. Finish I, then N.",
+    reward: "When N seals, the premise record opens.",
+  },
+];
 
 const defaultDraft: NoteDraft = {
   title: "UNNAMED_NOTE.txt.enc",
@@ -228,6 +286,7 @@ export default function App() {
   ]);
   const [originHits, setOriginHits] = useState<string[]>([]);
   const [originPremiseOpen, setOriginPremiseOpen] = useState(false);
+  const [originAttemptCount, setOriginAttemptCount] = useState(0);
   const lastOriginHitRef = useRef("");
 
   useEffect(() => {
@@ -311,6 +370,8 @@ export default function App() {
   const solvedCount = sealedFiles.filter((file) => file.decryptedText).length + (solvedWheel ? 1 : 0);
   const progress = archiveProgress(sealedFiles);
   const originNextLetter = ORIGIN_SOLVE_LETTERS[originHits.length] ?? null;
+  const originGuideStepIndex = Math.min(originHits.length, ORIGIN_GUIDE_STEPS.length - 1);
+  const originAttemptsRemaining = ORIGIN_ATTEMPT_LIMIT - originAttemptCount;
 
   const knownKeys = useMemo(() => {
     const recovered = sealedFiles
@@ -339,6 +400,7 @@ export default function App() {
     lastOriginHitRef.current = hitKey;
     const nextHits = [...originHits, originProbeResult.symbol];
     setOriginHits(nextHits);
+    setOriginAttemptCount(0);
     pushEvent(
       "ok",
       `ORIGIN hit ${nextHits.length}/${ORIGIN_SOLVE_LETTERS.length}: ${originProbeResult.symbol} registered at A^3.`,
@@ -376,6 +438,9 @@ export default function App() {
     sessionStorage.removeItem(STORAGE_KEYS.authSession);
     setAuthSession(null);
     setOriginPremiseOpen(false);
+    setOriginAttemptCount(0);
+    setOriginHits([]);
+    lastOriginHitRef.current = "";
     if (wasGuest) {
       setSealedFiles((files) => files.filter((file) => !file.id.startsWith("guest-")));
       setOffsets(initialOffsets);
@@ -511,6 +576,43 @@ export default function App() {
     }));
   }
 
+  function resetOriginChain(message: string) {
+    setOriginHits([]);
+    setOriginAttemptCount(0);
+    setOriginPremiseOpen(false);
+    lastOriginHitRef.current = "";
+    pushEvent("warn", message);
+  }
+
+  function checkOriginAttempt() {
+    if (!originNextLetter) {
+      setOriginPremiseOpen(true);
+      pushEvent("ok", "ORIGIN is already sealed. Premise record reopened.");
+      return;
+    }
+
+    if (originProbeResult.symbol === originNextLetter) {
+      setOriginAttemptCount(0);
+      pushEvent("ok", `A^3 reads ${originProbeResult.symbol}. The current ORIGIN phase is aligned.`);
+      return;
+    }
+
+    const nextAttemptCount = originAttemptCount + 1;
+
+    if (nextAttemptCount >= ORIGIN_ATTEMPT_LIMIT) {
+      resetOriginChain(
+        `Six false A^3 checks exhausted the chain. ORIGIN progress reset; begin again at ${ORIGIN_SOLVE_LETTERS[0]}.`,
+      );
+      return;
+    }
+
+    setOriginAttemptCount(nextAttemptCount);
+    pushEvent(
+      "warn",
+      `A^3 reads ${originProbeResult.symbol}; seek ${originNextLetter}. False check ${nextAttemptCount}/${ORIGIN_ATTEMPT_LIMIT}.`,
+    );
+  }
+
   function autoAlign() {
     setOffsets(SOLUTION_OFFSETS);
     pushEvent("ok", "Wheel aligned to H / 4 / ᚨ. Red needles stabilized.");
@@ -518,10 +620,7 @@ export default function App() {
 
   function resetWheel() {
     setOffsets(initialOffsets);
-    setOriginHits([]);
-    setOriginPremiseOpen(false);
-    lastOriginHitRef.current = "";
-    pushEvent("warn", "Wheel reset. Alignment cache cleared.");
+    resetOriginChain("Wheel reset. ORIGIN chain and alignment cache cleared.");
   }
 
   function testWheel() {
@@ -759,27 +858,91 @@ export default function App() {
         </div>
 
         <section className="origin-riddle" aria-label="Origin riddle">
-          <div>
-            <span>Origin Riddle</span>
+          <div className="origin-guide-intro">
+            <span>Origin Method</span>
             <p>
-              The last box speaks once per alignment. Hold the letter it gives, then turn the circles again; six true
-              answers, kept in order, name the place before all paths: ORIGIN.
+              Solve one phase at a time. The visible A^3 box is the only answer; each sealed letter unlocks the next
+              method clue. Six false checks reset the chain.
             </p>
           </div>
-          <ol className="origin-hit-tracker" aria-label="Origin hit tracker">
-            {ORIGIN_SOLVE_LETTERS.map((letter, index) => (
-              <li
-                className={[
-                  originHits[index] ? "found" : "",
-                  index === originHits.length ? "current" : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-                key={`${letter}-${index}`}
-              >
-                <span>{originHits[index] ?? letter}</span>
-              </li>
+          <div className="origin-status-panel">
+            <ol className="origin-hit-tracker" aria-label="Origin hit tracker">
+              {ORIGIN_SOLVE_LETTERS.map((letter, index) => (
+                <li
+                  className={[
+                    originHits[index] ? "found" : "",
+                    index === originHits.length ? "current" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  key={`${letter}-${index}`}
+                >
+                  <span>{originHits[index] ?? letter}</span>
+                </li>
+              ))}
+            </ol>
+            <div className="origin-attempt-meter" aria-live="polite">
+              <strong>{originNextLetter ? `Seek ${originNextLetter}` : "ORIGIN sealed"}</strong>
+              <small>
+                {originNextLetter
+                  ? `${originAttemptCount}/${ORIGIN_ATTEMPT_LIMIT} false checks - ${originAttemptsRemaining} remain`
+                  : "Premise record unlocked"}
+              </small>
+              <button type="button" onClick={checkOriginAttempt}>
+                {originNextLetter ? "Check A^3" : "Open Premise"}
+              </button>
+            </div>
+          </div>
+          <ol className="origin-phase-rail" aria-label="Origin phase summary">
+            {ORIGIN_GUIDE_STEPS.map((step, index) => {
+              const unlocked = originHits.length >= step.unlockAt;
+              const sealed = originHits.length > step.unlockAt;
+              const active = unlocked && originGuideStepIndex === index && originHits.length < ORIGIN_SOLVE_LETTERS.length;
+
+              return (
+                <li
+                  className={[unlocked ? "unlocked" : "locked", sealed ? "sealed" : "", active ? "active" : ""]
+                    .filter(Boolean)
+                    .join(" ")}
+                  key={`phase-rail-${step.title}`}
+                >
+                  <b>{index + 1}</b>
+                  <span>{step.title.replace(/^\d+\.\s*/, "")}</span>
+                </li>
+              );
+            })}
+          </ol>
+          <div className="origin-symbol-legend" aria-label="Origin symbol legend">
+            {ORIGIN_SYMBOL_SETS.map((set) => (
+              <article key={set.label}>
+                <strong>{set.label}</strong>
+                <p>{set.detail}</p>
+              </article>
             ))}
+          </div>
+          <ol className="origin-method-chain" aria-label="Origin chained method">
+            {ORIGIN_GUIDE_STEPS.map((step, index) => {
+              const unlocked = originHits.length >= step.unlockAt;
+              const active = unlocked && originGuideStepIndex === index && originHits.length < ORIGIN_SOLVE_LETTERS.length;
+              const previousSeal = step.unlockAt > 0 ? ORIGIN_SOLVE_LETTERS[step.unlockAt - 1] : null;
+
+              return (
+                <li
+                  className={[unlocked ? "unlocked" : "locked", active ? "active" : ""].filter(Boolean).join(" ")}
+                  key={step.title}
+                >
+                  <strong>{step.title}</strong>
+                  <p>
+                    {unlocked
+                      ? step.clue
+                      : previousSeal
+                        ? `Seal ${previousSeal} to reveal this phase.`
+                        : "Awaiting first seal."}
+                  </p>
+                  <em>{unlocked ? step.reward : "The next answer hides the next instruction."}</em>
+                </li>
+              );
+            })}
           </ol>
         </section>
 
