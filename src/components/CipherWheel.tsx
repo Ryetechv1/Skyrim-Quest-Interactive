@@ -31,16 +31,21 @@ const RING_DRAG_ZONES = [
 ] satisfies Array<{ ring: RingName; min: number; max: number }>;
 
 const FULL_TURN = 360;
+const MIDDLE_SYMBOL_LOCK_ANGLE = 30;
 const PROBE_ANGLES = {
-  start: -1,
-  middle: 10,
-  end: 21,
+  start: MIDDLE_SYMBOL_LOCK_ANGLE - 14,
+  middle: MIDDLE_SYMBOL_LOCK_ANGLE,
+  end: MIDDLE_SYMBOL_LOCK_ANGLE + 14,
+} as const;
+const OUTER_ZONE_SAMPLE_ANGLES = {
+  a1: (PROBE_ANGLES.start + PROBE_ANGLES.middle) / 2,
+  a2: (PROBE_ANGLES.middle + PROBE_ANGLES.end) / 2,
 } as const;
 const ZONE_DETECTION_ANGLES = {
-  inner: [4, 17],
+  inner: [OUTER_ZONE_SAMPLE_ANGLES.a1, OUTER_ZONE_SAMPLE_ANGLES.a2],
   middle: PROBE_ANGLES.middle,
-  outerA1: 5,
-  outerA2: 16,
+  outerA1: OUTER_ZONE_SAMPLE_ANGLES.a1,
+  outerA2: OUTER_ZONE_SAMPLE_ANGLES.a2,
 } as const;
 
 const PROBE_FRAME = {
