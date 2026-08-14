@@ -27,10 +27,6 @@ export const GLYPH_RING = [
   "ᛗ",
   "ᛚ",
   "ᛜ",
-  "ᛞ",
-  "ᛟ",
-  "ᛠ",
-  "ᛡ",
 ];
 
 export const SOLUTION_OFFSETS: RingOffsets = {
