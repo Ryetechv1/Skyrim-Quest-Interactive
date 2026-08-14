@@ -789,39 +789,30 @@ button:disabled {
 
 .zone-probe-answer-zone {
   position: absolute;
-  left: 322px;
-  top: 50px;
-  width: 86px;
-  height: 60px;
+  left: 307px;
+  top: 41px;
+  width: 112px;
+  height: 80px;
   display: grid;
-  grid-template-columns: 1fr;
-  align-content: center;
-  justify-items: center;
-  gap: 1px;
-  color: #f5df9d;
-  font-family: var(--font-mono);
+  place-items: center;
+  color: #fff8e8;
   line-height: 1;
   text-shadow:
-    0 1px 0 rgba(0, 0, 0, 0.95),
-    0 0 7px rgba(245, 204, 91, 0.34);
+    0 2px 0 rgba(0, 0, 0, 0.95),
+    0 0 10px rgba(255, 251, 235, 0.5),
+    0 0 18px rgba(255, 255, 255, 0.2);
   transform: rotate(12deg);
   transform-origin: center;
 }
 
 .zone-probe-answer-zone strong {
-  color: #ffd35f;
+  color: #fff8e8;
   font-family: var(--font-daedric);
-  font-size: 32px;
+  font-size: 82px;
   font-weight: 800;
-  -webkit-text-stroke: 0.5px rgba(6, 4, 3, 0.82);
-}
-
-.zone-probe-answer-zone em {
-  color: rgba(245, 223, 157, 0.9);
-  font-size: 11px;
-  font-style: normal;
-  font-weight: 800;
-  letter-spacing: 0;
+  -webkit-text-stroke: 1.1px rgba(6, 4, 3, 0.88);
+  transform: scaleX(1.55);
+  transform-origin: center;
 }
 
 .alignment-markers {
@@ -3024,18 +3015,14 @@ button:disabled {
   }
 
   .zone-probe-answer-zone {
-    left: 267px;
-    top: 42px;
-    width: 72px;
-    height: 50px;
+    left: 244px;
+    top: 35px;
+    width: 92px;
+    height: 66px;
   }
 
   .zone-probe-answer-zone strong {
-    font-size: 27px;
-  }
-
-  .zone-probe-answer-zone em {
-    font-size: 10px;
+    font-size: 64px;
   }
 
   .folio-note,

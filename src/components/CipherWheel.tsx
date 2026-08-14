@@ -129,7 +129,6 @@ function ZoneProbeOverlay({ offsets }: { offsets: RingOffsets }) {
       <img className="zone-probe-hud" src={zoneProbeHud} alt="" draggable={false} />
       <span className="zone-probe-answer-zone">
         <strong>{answer.symbol}</strong>
-        <em>{answer.value.toString().padStart(2, "0")}</em>
       </span>
     </span>
   );
