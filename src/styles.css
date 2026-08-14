@@ -813,10 +813,6 @@ button:disabled {
 
 .zone-probe-answer-zone {
   position: absolute;
-  left: 263px;
-  top: 42px;
-  width: 93px;
-  height: 76px;
   display: grid;
   place-items: center;
   color: #fff8e8;
@@ -826,7 +822,6 @@ button:disabled {
     0 2px 0 rgba(0, 0, 0, 0.95),
     0 0 10px rgba(255, 251, 235, 0.5),
     0 0 18px rgba(255, 255, 255, 0.2);
-  transform: rotate(12deg);
   transform-origin: center;
 }
 
@@ -3053,13 +3048,6 @@ button:disabled {
     top: -36px;
     width: 470px;
     height: 210px;
-  }
-
-  .zone-probe-answer-zone {
-    left: 263px;
-    top: 42px;
-    width: 93px;
-    height: 76px;
   }
 
   .zone-probe-answer-zone strong {

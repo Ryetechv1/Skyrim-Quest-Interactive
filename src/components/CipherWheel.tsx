@@ -31,17 +31,22 @@ const RING_DRAG_ZONES = [
 ] satisfies Array<{ ring: RingName; min: number; max: number }>;
 
 const FULL_TURN = 360;
+const PROBE_ANGLES = {
+  start: -1,
+  middle: 10,
+  end: 21,
+} as const;
 const ZONE_DETECTION_ANGLES = {
-  inner: [9, 23],
-  middle: 16,
-  outerA1: 10,
-  outerA2: 23,
+  inner: [4, 17],
+  middle: PROBE_ANGLES.middle,
+  outerA1: 5,
+  outerA2: 16,
 } as const;
 
 const PROBE_FRAME = {
-  startAngle: 5,
-  splitAngle: 15.5,
-  endAngle: 27,
+  startAngle: PROBE_ANGLES.start,
+  splitAngle: PROBE_ANGLES.middle,
+  endAngle: PROBE_ANGLES.end,
   radii: {
     core: 42,
     inner: 124,
@@ -228,6 +233,7 @@ function ZoneProbeOverlay({ offsets }: { offsets: RingOffsets }) {
   const answer = computeProbeResult(offsets);
   const answerSymbol = scriptSymbolSrc(answer.symbol);
   const { radii, startAngle, splitAngle, endAngle } = PROBE_FRAME;
+  const answerCenter = polarPoint(PROBE_FRAME.result.radius, splitAngle);
   const resultBox = resultBoxPoints();
   const resultConnector = polygonPath([
     polarPoint(radii.outer, startAngle),
@@ -236,6 +242,13 @@ function ZoneProbeOverlay({ offsets }: { offsets: RingOffsets }) {
     polarPoint(radii.outer, endAngle),
   ]);
   const resultZone = polygonPath([resultBox.topLeft, resultBox.topRight, resultBox.bottomRight, resultBox.bottomLeft]);
+  const answerZoneStyle = {
+    left: `${answerCenter.x - PROBE_FRAME.result.halfLength}px`,
+    top: `${answerCenter.y - PROBE_FRAME.result.halfHeight}px`,
+    width: `${PROBE_FRAME.result.halfLength * 2}px`,
+    height: `${PROBE_FRAME.result.halfHeight * 2}px`,
+    transform: `rotate(${splitAngle}deg)`,
+  };
 
   return (
     <span className="zone-probe-anchor" aria-hidden="true">
@@ -272,7 +285,7 @@ function ZoneProbeOverlay({ offsets }: { offsets: RingOffsets }) {
           <path d={`M ${pointString(resultBox.bottomLeft)} L ${pointString(resultBox.bottomRight)}`} />
         </g>
       </svg>
-      <span className="zone-probe-answer-zone">
+      <span className="zone-probe-answer-zone" style={answerZoneStyle}>
         {answerSymbol ? <img className="zone-probe-result-symbol" src={answerSymbol} alt="" draggable={false} /> : <strong>{answer.symbol}</strong>}
       </span>
     </span>
