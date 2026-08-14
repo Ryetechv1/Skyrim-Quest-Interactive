@@ -18,6 +18,7 @@ import { DossierPanel } from "./components/DossierPanel";
 import { VaultPanel } from "./components/VaultPanel";
 import { NoteForge } from "./components/NoteForge";
 import { AccessGate } from "./components/AccessGate";
+import { OriginPremiseModal } from "./components/OriginPremiseModal";
 import { authenticateArchivist, createGuestSession, roleLabel } from "./auth";
 import { dossierSteps, inventory, vaultFiles } from "./data";
 import { openText, sealText, sealVaultFiles } from "./crypto";
@@ -226,6 +227,7 @@ export default function App() {
     event("info", "Directory tree contains seven sealed objects."),
   ]);
   const [originHits, setOriginHits] = useState<string[]>([]);
+  const [originPremiseOpen, setOriginPremiseOpen] = useState(false);
   const lastOriginHitRef = useRef("");
 
   useEffect(() => {
@@ -344,6 +346,7 @@ export default function App() {
 
     if (nextHits.length === ORIGIN_SOLVE_LETTERS.length) {
       pushEvent("ok", "ORIGIN sequence complete. The first point has been found.");
+      setOriginPremiseOpen(true);
     }
   }, [originHits, originNextLetter, originProbeResult.symbol, offsets.inner, offsets.middle, offsets.outer]);
 
@@ -372,6 +375,7 @@ export default function App() {
     const wasGuest = authSession?.role === "guest";
     sessionStorage.removeItem(STORAGE_KEYS.authSession);
     setAuthSession(null);
+    setOriginPremiseOpen(false);
     if (wasGuest) {
       setSealedFiles((files) => files.filter((file) => !file.id.startsWith("guest-")));
       setOffsets(initialOffsets);
@@ -515,6 +519,7 @@ export default function App() {
   function resetWheel() {
     setOffsets(initialOffsets);
     setOriginHits([]);
+    setOriginPremiseOpen(false);
     lastOriginHitRef.current = "";
     pushEvent("warn", "Wheel reset. Alignment cache cleared.");
   }
@@ -883,6 +888,8 @@ export default function App() {
           onArchivistAccess={handleArchivistAccess}
         />
       ) : null}
+
+      <OriginPremiseModal open={originPremiseOpen} onClose={() => setOriginPremiseOpen(false)} />
     </main>
   );
 }
