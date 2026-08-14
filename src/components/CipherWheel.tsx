@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import type { MutableRefObject, PointerEvent as ReactPointerEvent } from "react";
 import zoneProbeHud from "../assets/references/zone-probe-hud.png";
-import { ALPHABET, GLYPH_RING, SYMBOL_RING, RING_LENGTHS } from "../wheel";
+import { ALPHABET, GLYPH_RING, SYMBOL_RING, RING_LENGTHS, normalizeOffset } from "../wheel";
 import type { RingName, RingOffsets } from "../types";
 
 const LOWERCASE_GUIDE = "abcdefghijklmnopqrstuvwxyz".split("");
@@ -26,6 +26,12 @@ const RING_DRAG_ZONES = [
 ] satisfies Array<{ ring: RingName; min: number; max: number }>;
 
 const FULL_TURN = 360;
+const ZONE_DETECTION_ANGLES = {
+  inner: [10, 24],
+  middle: 18,
+  outerA1: -3,
+  outerA2: 22,
+} as const;
 
 type CipherWheelProps = {
   offsets: RingOffsets;
@@ -49,6 +55,11 @@ type DragSession = {
   appliedDelta: number;
 };
 
+type ZoneSymbol = {
+  symbol: string;
+  value: number;
+};
+
 function pointerMetrics(event: ReactPointerEvent<HTMLElement>) {
   const rect = event.currentTarget.getBoundingClientRect();
   const centerX = rect.left + rect.width / 2;
@@ -67,10 +78,59 @@ function shortestAngleDelta(current: number, start: number) {
   return ((current - start + 540) % FULL_TURN) - 180;
 }
 
-function ZoneProbeOverlay() {
+function detectZoneSymbol(items: string[], offset: number, angle: number): ZoneSymbol {
+  const step = FULL_TURN / items.length;
+  const index = normalizeOffset(Math.round((angle + 90) / step - offset), items.length);
+
+  return {
+    symbol: items[index],
+    value: index + 1,
+  };
+}
+
+function detectInnerZone(offset: number): ZoneSymbol[] {
+  const detected = ZONE_DETECTION_ANGLES.inner.map((angle) => detectZoneSymbol(GLYPH_RING, offset, angle));
+
+  if (detected[0].symbol !== detected[1].symbol) {
+    return detected;
+  }
+
+  const nextIndex = normalizeOffset(detected[0].value, GLYPH_RING.length);
+  return [detected[0], { symbol: GLYPH_RING[nextIndex], value: nextIndex + 1 }];
+}
+
+function resultLetter(value: number): ZoneSymbol {
+  const index = normalizeOffset(value - 1, ALPHABET.length);
+
+  return {
+    symbol: ALPHABET[index],
+    value: index + 1,
+  };
+}
+
+function computeProbeResult(offsets: RingOffsets) {
+  const zoneC = detectInnerZone(offsets.inner);
+  const zoneB = detectZoneSymbol(SYMBOL_RING, offsets.middle, ZONE_DETECTION_ANGLES.middle);
+  const zoneA1 = detectZoneSymbol(ALPHABET, offsets.outer, ZONE_DETECTION_ANGLES.outerA1);
+  const zoneA2 = detectZoneSymbol(ALPHABET, offsets.outer, ZONE_DETECTION_ANGLES.outerA2);
+  const zoneCWeight = zoneC.reduce((total, item) => total + item.value, 0);
+  const zoneA1Weight = zoneA1.value + zoneCWeight;
+  const zoneA2Weight = zoneA2.value + zoneB.value;
+  const rawA3 = Math.round((zoneA1Weight + zoneA2Weight) / Math.max(zoneB.value, 1) + zoneCWeight);
+
+  return resultLetter(rawA3);
+}
+
+function ZoneProbeOverlay({ offsets }: { offsets: RingOffsets }) {
+  const answer = computeProbeResult(offsets);
+
   return (
     <span className="zone-probe-anchor" aria-hidden="true">
       <img className="zone-probe-hud" src={zoneProbeHud} alt="" draggable={false} />
+      <span className="zone-probe-answer-zone">
+        <strong>{answer.symbol}</strong>
+        <em>{answer.value.toString().padStart(2, "0")}</em>
+      </span>
     </span>
   );
 }
@@ -258,7 +318,7 @@ export function CipherWheel({ offsets, rotateRing }: CipherWheelProps) {
           </div>
         </div>
       </div>
-      <ZoneProbeOverlay />
+      <ZoneProbeOverlay offsets={offsets} />
       <div className="wheel-caption">
         <span>Outer: Daedric A-Z</span>
         <span>Middle: 1-9</span>
