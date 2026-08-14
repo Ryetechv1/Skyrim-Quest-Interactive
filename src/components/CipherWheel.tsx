@@ -1,8 +1,13 @@
 import { useRef } from "react";
 import type { MutableRefObject, PointerEvent as ReactPointerEvent } from "react";
-import zoneProbeHud from "../assets/references/zone-probe-hud.png";
 import { ALPHABET, GLYPH_RING, SYMBOL_RING, RING_LENGTHS, normalizeOffset } from "../wheel";
 import type { RingName, RingOffsets } from "../types";
+
+const SCRIPT_SYMBOLS = import.meta.glob("../assets/script-symbols/*.png", {
+  eager: true,
+  import: "default",
+  query: "?url",
+}) as Record<string, string>;
 
 const LOWERCASE_GUIDE = "abcdefghijklmnopqrstuvwxyz".split("");
 
@@ -27,10 +32,27 @@ const RING_DRAG_ZONES = [
 
 const FULL_TURN = 360;
 const ZONE_DETECTION_ANGLES = {
-  inner: [7, 19],
+  inner: [9, 23],
   middle: 16,
   outerA1: 10,
-  outerA2: 25,
+  outerA2: 23,
+} as const;
+
+const PROBE_FRAME = {
+  startAngle: 5,
+  splitAngle: 15.5,
+  endAngle: 27,
+  radii: {
+    core: 42,
+    inner: 124,
+    middle: 184,
+    outer: 250,
+  },
+  result: {
+    radius: 320,
+    halfLength: 42,
+    halfHeight: 38,
+  },
 } as const;
 
 type CipherWheelProps = {
@@ -108,6 +130,87 @@ function resultLetter(value: number): ZoneSymbol {
   };
 }
 
+function roundCoord(value: number) {
+  return Number(value.toFixed(2));
+}
+
+function polarPoint(radius: number, angle: number) {
+  const radians = (angle * Math.PI) / 180;
+
+  return {
+    x: roundCoord(Math.cos(radians) * radius),
+    y: roundCoord(Math.sin(radians) * radius),
+  };
+}
+
+function pointString(point: { x: number; y: number }) {
+  return `${point.x} ${point.y}`;
+}
+
+function arcPath(radius: number, startAngle: number, endAngle: number) {
+  const start = polarPoint(radius, startAngle);
+  const end = polarPoint(radius, endAngle);
+
+  return `M ${pointString(start)} A ${radius} ${radius} 0 0 1 ${pointString(end)}`;
+}
+
+function radialPath(innerRadius: number, outerRadius: number, angle: number) {
+  return `M ${pointString(polarPoint(innerRadius, angle))} L ${pointString(polarPoint(outerRadius, angle))}`;
+}
+
+function ringSectorPath(innerRadius: number, outerRadius: number, startAngle: number, endAngle: number) {
+  const outerStart = polarPoint(outerRadius, startAngle);
+  const outerEnd = polarPoint(outerRadius, endAngle);
+  const innerEnd = polarPoint(innerRadius, endAngle);
+  const innerStart = polarPoint(innerRadius, startAngle);
+
+  return [
+    `M ${pointString(outerStart)}`,
+    `A ${outerRadius} ${outerRadius} 0 0 1 ${pointString(outerEnd)}`,
+    `L ${pointString(innerEnd)}`,
+    `A ${innerRadius} ${innerRadius} 0 0 0 ${pointString(innerStart)}`,
+    "Z",
+  ].join(" ");
+}
+
+function offsetPoint(point: { x: number; y: number }, x: number, y: number, amount: number) {
+  return {
+    x: roundCoord(point.x + x * amount),
+    y: roundCoord(point.y + y * amount),
+  };
+}
+
+function resultBoxPoints() {
+  const angle = PROBE_FRAME.splitAngle;
+  const radians = (angle * Math.PI) / 180;
+  const direction = {
+    x: Math.cos(radians),
+    y: Math.sin(radians),
+  };
+  const normal = {
+    x: -Math.sin(radians),
+    y: Math.cos(radians),
+  };
+  const center = polarPoint(PROBE_FRAME.result.radius, angle);
+  const start = offsetPoint(center, direction.x, direction.y, -PROBE_FRAME.result.halfLength);
+  const end = offsetPoint(center, direction.x, direction.y, PROBE_FRAME.result.halfLength);
+
+  return {
+    topLeft: offsetPoint(start, normal.x, normal.y, -PROBE_FRAME.result.halfHeight),
+    topRight: offsetPoint(end, normal.x, normal.y, -PROBE_FRAME.result.halfHeight),
+    bottomRight: offsetPoint(end, normal.x, normal.y, PROBE_FRAME.result.halfHeight),
+    bottomLeft: offsetPoint(start, normal.x, normal.y, PROBE_FRAME.result.halfHeight),
+  };
+}
+
+function polygonPath(points: Array<{ x: number; y: number }>) {
+  return `M ${points.map(pointString).join(" L ")} Z`;
+}
+
+function scriptSymbolSrc(symbol: string) {
+  return SCRIPT_SYMBOLS[`../assets/script-symbols/${symbol}.png`];
+}
+
 function computeProbeResult(offsets: RingOffsets) {
   const zoneC = detectInnerZone(offsets.inner);
   const zoneB = detectZoneSymbol(SYMBOL_RING, offsets.middle, ZONE_DETECTION_ANGLES.middle);
@@ -123,12 +226,54 @@ function computeProbeResult(offsets: RingOffsets) {
 
 function ZoneProbeOverlay({ offsets }: { offsets: RingOffsets }) {
   const answer = computeProbeResult(offsets);
+  const answerSymbol = scriptSymbolSrc(answer.symbol);
+  const { radii, startAngle, splitAngle, endAngle } = PROBE_FRAME;
+  const resultBox = resultBoxPoints();
+  const resultConnector = polygonPath([
+    polarPoint(radii.outer, startAngle),
+    resultBox.topLeft,
+    resultBox.bottomLeft,
+    polarPoint(radii.outer, endAngle),
+  ]);
+  const resultZone = polygonPath([resultBox.topLeft, resultBox.topRight, resultBox.bottomRight, resultBox.bottomLeft]);
 
   return (
     <span className="zone-probe-anchor" aria-hidden="true">
-      <img className="zone-probe-hud" src={zoneProbeHud} alt="" draggable={false} />
+      <svg className="zone-probe-frame" viewBox="-32 -36 470 210" focusable="false" aria-hidden="true">
+        <defs>
+          <radialGradient id="zone-probe-region-fade">
+            <stop offset="0%" stopColor="#d7d5ca" stopOpacity="0.08" />
+            <stop offset="62%" stopColor="#b9b7ae" stopOpacity="0.28" />
+            <stop offset="100%" stopColor="#9b9990" stopOpacity="0.5" />
+          </radialGradient>
+        </defs>
+        <g className="zone-probe-shading">
+          <path d={ringSectorPath(radii.core, radii.inner, startAngle, endAngle)} />
+          <path d={ringSectorPath(radii.inner, radii.middle, startAngle, endAngle)} />
+          <path d={ringSectorPath(radii.middle, radii.outer, startAngle, splitAngle)} />
+          <path d={ringSectorPath(radii.middle, radii.outer, splitAngle, endAngle)} />
+          <path d={resultConnector} />
+          <path d={resultZone} />
+        </g>
+        <g className="zone-probe-ink">
+          <circle cx="0" cy="0" r="8.5" />
+          <path d={radialPath(8.5, radii.outer, startAngle)} />
+          <path d={radialPath(8.5, radii.outer, endAngle)} />
+          <path d={radialPath(radii.middle, radii.outer, splitAngle)} />
+          <path d={arcPath(radii.core, startAngle, endAngle)} />
+          <path d={arcPath(radii.inner, startAngle, endAngle)} />
+          <path d={arcPath(radii.middle, startAngle, endAngle)} />
+          <path d={arcPath(radii.outer, startAngle, endAngle)} />
+          <path d={`M ${pointString(polarPoint(radii.outer, startAngle))} L ${pointString(resultBox.topLeft)}`} />
+          <path d={`M ${pointString(polarPoint(radii.outer, endAngle))} L ${pointString(resultBox.bottomLeft)}`} />
+          <path d={`M ${pointString(resultBox.topLeft)} L ${pointString(resultBox.bottomLeft)}`} />
+          <path d={`M ${pointString(resultBox.topRight)} L ${pointString(resultBox.bottomRight)}`} />
+          <path d={`M ${pointString(resultBox.topLeft)} L ${pointString(resultBox.topRight)}`} />
+          <path d={`M ${pointString(resultBox.bottomLeft)} L ${pointString(resultBox.bottomRight)}`} />
+        </g>
+      </svg>
       <span className="zone-probe-answer-zone">
-        <strong>{answer.symbol}</strong>
+        {answerSymbol ? <img className="zone-probe-result-symbol" src={answerSymbol} alt="" draggable={false} /> : <strong>{answer.symbol}</strong>}
       </span>
     </span>
   );

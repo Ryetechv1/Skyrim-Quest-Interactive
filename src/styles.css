@@ -771,15 +771,15 @@ button:disabled {
   transform-origin: 0 0;
 }
 
-.zone-probe-hud {
+.zone-probe-frame {
   position: absolute;
-  left: -23px;
-  top: -26px;
-  width: 442px;
+  left: -32px;
+  top: -36px;
+  width: 470px;
+  height: 210px;
   max-width: none;
-  height: auto;
+  overflow: visible;
   user-select: none;
-  -webkit-user-drag: none;
   opacity: 0.98;
   mix-blend-mode: multiply;
   filter:
@@ -787,22 +787,62 @@ button:disabled {
     drop-shadow(0 5px 4px rgba(9, 5, 2, 0.38));
 }
 
+.zone-probe-shading path {
+  fill: url("#zone-probe-region-fade");
+  mix-blend-mode: multiply;
+}
+
+.zone-probe-ink {
+  fill: rgba(3, 2, 1, 0.96);
+  stroke: rgba(3, 2, 1, 0.96);
+  stroke-width: 8px;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+}
+
+.zone-probe-ink path {
+  fill: none;
+}
+
+.zone-probe-ink path:nth-of-type(4),
+.zone-probe-ink path:nth-of-type(5),
+.zone-probe-ink path:nth-of-type(6),
+.zone-probe-ink path:nth-of-type(7) {
+  stroke-linecap: round;
+}
+
 .zone-probe-answer-zone {
   position: absolute;
-  left: 307px;
-  top: 41px;
-  width: 112px;
-  height: 80px;
+  left: 263px;
+  top: 42px;
+  width: 93px;
+  height: 76px;
   display: grid;
   place-items: center;
   color: #fff8e8;
   line-height: 1;
+  overflow: hidden;
   text-shadow:
     0 2px 0 rgba(0, 0, 0, 0.95),
     0 0 10px rgba(255, 251, 235, 0.5),
     0 0 18px rgba(255, 255, 255, 0.2);
   transform: rotate(12deg);
   transform-origin: center;
+}
+
+.zone-probe-result-symbol {
+  width: 74%;
+  max-width: 74%;
+  height: 74%;
+  max-height: 74%;
+  object-fit: contain;
+  aspect-ratio: auto;
+  user-select: none;
+  -webkit-user-drag: none;
+  filter:
+    drop-shadow(0 2px 0 rgba(0, 0, 0, 0.92))
+    drop-shadow(0 0 9px rgba(255, 251, 235, 0.44))
+    drop-shadow(0 0 16px rgba(255, 255, 255, 0.22));
 }
 
 .zone-probe-answer-zone strong {
@@ -3008,17 +3048,18 @@ button:disabled {
     height: 330px;
   }
 
-  .zone-probe-hud {
-    left: -20px;
-    top: -23px;
-    width: 370px;
+  .zone-probe-frame {
+    left: -32px;
+    top: -36px;
+    width: 470px;
+    height: 210px;
   }
 
   .zone-probe-answer-zone {
-    left: 244px;
-    top: 35px;
-    width: 92px;
-    height: 66px;
+    left: 263px;
+    top: 42px;
+    width: 93px;
+    height: 76px;
   }
 
   .zone-probe-answer-zone strong {
