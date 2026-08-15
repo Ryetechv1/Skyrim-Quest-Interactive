@@ -194,7 +194,7 @@ export function VaultPanel({
     <section className="vault-panel">
       <header className="vault-header">
         <div>
-          <h2>MEGA Vault</h2>
+          <h2>The Reliquary</h2>
           <p>Vault status: {busy ? "decrypting" : "secure"}</p>
         </div>
         <Lock size={22} />
