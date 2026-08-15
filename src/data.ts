@@ -41,7 +41,7 @@ export const REFERENCE_IMAGES = [
 
 export const dossierSteps: DossierStep[] = [
   { id: "reliquary", label: "The Reliquary", status: "solved" },
-  { id: "wheel", label: "Cipher Wheel", status: "active" },
+  { id: "wheel", label: "The Story Begins", status: "active" },
   { id: "vault", label: "The Vault", status: "open" },
   { id: "mask", label: "The Mask", status: "locked" },
   { id: "leviathan", label: "Leviathan Notes", status: "locked" },
@@ -55,28 +55,28 @@ export const inventory: InventoryItem[] = [
     name: "Brass Lens",
     detail: "Reveals red marginalia when the wheel aligns.",
     icon: Search,
-    acquired: true,
+    acquired: false,
   },
   {
     id: "astrolabe",
     name: "Astrolabe",
     detail: "Calibrates the middle numeral ring.",
     icon: Compass,
-    acquired: true,
+    acquired: false,
   },
   {
     id: "ink",
     name: "Ink Vial",
     detail: "Stores solved phrases as dossier fragments.",
     icon: FlaskConical,
-    acquired: true,
+    acquired: false,
   },
   {
     id: "chronicle",
     name: "Chronicle",
     detail: "Records terminal events and decrypted files.",
     icon: ScrollText,
-    acquired: true,
+    acquired: false,
   },
   {
     id: "seal-ring",
@@ -188,6 +188,19 @@ export const vaultTree: VaultFolder = {
   name: "Archive: MASK_OF_DESPAIR.mega",
   type: "folder",
   children: [
+    {
+      id: "lore",
+      name: "00_Lore",
+      type: "folder",
+      children: [
+        {
+          id: "storyline-folder",
+          name: "01_Storyline",
+          type: "folder",
+          children: [],
+        },
+      ],
+    },
     {
       id: "research",
       name: "01_Research",

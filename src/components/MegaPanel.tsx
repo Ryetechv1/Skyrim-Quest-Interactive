@@ -116,7 +116,7 @@ export function MegaPanel({ session: appSession, onRequestChange }: MegaPanelPro
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [secondFactorCode, setSecondFactorCode] = useState("");
-  const [folderName, setFolderName] = useState("Codex GPT Uploads");
+  const [folderName, setFolderName] = useState("Skyrim Reliquary Uploads");
   const [renameValue, setRenameValue] = useState("");
   const [selectedUpload, setSelectedUpload] = useState<File | null>(null);
   const [shareLink, setShareLink] = useState("");

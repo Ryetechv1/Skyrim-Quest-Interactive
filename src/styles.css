@@ -1932,6 +1932,30 @@ button:disabled {
   font-size: 12px;
 }
 
+button.ledger-row {
+  width: 100%;
+  color: #e8cf9c;
+  text-align: left;
+}
+
+.note-ledger-row {
+  cursor: pointer;
+}
+
+.note-ledger-row.selected {
+  border-color: rgba(198, 155, 84, 0.52);
+  background:
+    linear-gradient(90deg, rgba(105, 31, 23, 0.24), transparent 70%),
+    rgba(198, 155, 84, 0.12);
+}
+
+.ledger-row span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .ledger-row strong {
   color: var(--green);
   font-size: 10px;

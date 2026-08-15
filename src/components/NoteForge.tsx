@@ -3,6 +3,8 @@ import type { AuthSession, EncryptedFolder, NoteDraft } from "../types";
 
 const VAULT_ROOT = "Archive: MASK_OF_DESPAIR.mega/";
 const DEFAULT_FOLDER_OPTIONS = [
+  "00_Lore",
+  "00_Lore/01_Storyline",
   "01_Research",
   "02_Artifacts/03_Keys",
   "03_Forbidden_Library/02_Constellations",

@@ -8,9 +8,11 @@ type DossierPanelProps = {
   onSignOut: () => void;
   steps: DossierStep[];
   inventory: InventoryItem[];
-  solvedCount: number;
-  fragmentCount: number;
-  progress: number;
+  progressRows: {
+    label: string;
+    value: string;
+    width: number;
+  }[];
 };
 
 function statusIcon(status: DossierStep["status"]) {
@@ -28,14 +30,12 @@ export function DossierPanel({
   onSignOut,
   steps,
   inventory,
-  solvedCount,
-  fragmentCount,
-  progress,
+  progressRows,
 }: DossierPanelProps) {
   return (
     <aside className="dossier-panel" aria-label="Dossier and inventory">
       <header className="brand-header">
-        <h2>Codex GPT</h2>
+        <h2>SKYRIM’S RELIQUARY</h2>
         <p>The Reliquary of Knowledge</p>
         <div className="investigator">
           <UserRound size={15} />
@@ -84,22 +84,14 @@ export function DossierPanel({
       </section>
 
       <section className="dossier-section progress-section" aria-labelledby="progress-heading">
-        <h3 id="progress-heading">Progress</h3>
-        <div className="progress-row">
-          <span>Puzzles Solved</span>
-          <strong>{solvedCount} / 12</strong>
-          <i style={{ width: `${Math.min(100, (solvedCount / 12) * 100)}%` }} />
-        </div>
-        <div className="progress-row">
-          <span>Fragments Found</span>
-          <strong>{fragmentCount} / 7</strong>
-          <i style={{ width: `${Math.min(100, (fragmentCount / 7) * 100)}%` }} />
-        </div>
-        <div className="progress-row">
-          <span>Vault Decrypted</span>
-          <strong>{progress}%</strong>
-          <i style={{ width: `${progress}%` }} />
-        </div>
+        <h3 id="progress-heading">Quest Progress</h3>
+        {progressRows.map((row) => (
+          <div className="progress-row" key={row.label}>
+            <span>{row.label}</span>
+            <strong>{row.value}</strong>
+            <i style={{ width: `${Math.max(0, Math.min(100, row.width))}%` }} />
+          </div>
+        ))}
       </section>
 
       <section className="style-atlas" aria-labelledby="style-heading">

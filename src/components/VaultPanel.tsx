@@ -11,7 +11,7 @@ import {
   Unlock,
 } from "lucide-react";
 import type { CSSProperties, FormEvent } from "react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { manuscriptTabs } from "../data";
 import type {
   AuthSession,
@@ -163,6 +163,23 @@ export function VaultPanel({
   const selectedFile = files.find((file) => file.id === selectedFileId);
   const tree = makeTree(files, folders);
   const canCreateFolder = session?.role === "admin";
+  const noteFiles = useMemo(
+    () =>
+      files.filter(
+        (file) =>
+          file.path.includes("/00_Lore/") ||
+          file.path.includes("/01_Research/01_Notes") ||
+          file.id.startsWith("published-") ||
+          file.id.startsWith("guest-"),
+      ),
+    [files],
+  );
+
+  useEffect(() => {
+    if (activeTab === "notes" && noteFiles.length && !noteFiles.some((file) => file.id === selectedFileId)) {
+      setSelectedFileId(noteFiles[0].id);
+    }
+  }, [activeTab, noteFiles, selectedFileId, setSelectedFileId]);
 
   function handleCreateFolder(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -228,7 +245,7 @@ export function VaultPanel({
             <div className="tree-wrap">
               <div className="tree-heading">
                 <h3>Encrypted Folders</h3>
-                <span>{folders.length} admin branch{folders.length === 1 ? "" : "es"}</span>
+                <span>{folders.length} branch{folders.length === 1 ? "" : "es"} indexed</span>
               </div>
               <form className="folder-branch-forge" onSubmit={handleCreateFolder}>
                 <label>
@@ -249,6 +266,27 @@ export function VaultPanel({
               <TreeView folder={tree} selectedFileId={selectedFileId} setSelectedFileId={setSelectedFileId} />
             </div>
           </>
+        ) : activeTab === "notes" ? (
+          <div className="key-ledger note-ledger">
+            <h3>Manuscript Notes</h3>
+            {noteFiles.length ? (
+              noteFiles.map((file) => (
+                <button
+                  type="button"
+                  className={file.id === selectedFileId ? "ledger-row note-ledger-row selected" : "ledger-row note-ledger-row"}
+                  key={file.id}
+                  onClick={() => setSelectedFileId(file.id)}
+                >
+                  <FileText size={15} />
+                  <span>{file.name}</span>
+                  <strong>{file.decryptedText ? "opened" : "sealed"}</strong>
+                </button>
+              ))
+            ) : (
+              <p>No storyline record has awakened yet. Complete The Story Begins to write the first lore note.</p>
+            )}
+            <p>Unlocked storyline records and published Archivist notes collect here.</p>
+          </div>
         ) : (
           <div className="key-ledger">
             <h3>{activeTab === "keys" ? "Encryption Keys" : "Manuscript Notes"}</h3>

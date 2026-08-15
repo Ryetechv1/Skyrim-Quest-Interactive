@@ -18,7 +18,7 @@ import { DossierPanel } from "./components/DossierPanel";
 import { VaultPanel } from "./components/VaultPanel";
 import { NoteForge } from "./components/NoteForge";
 import { AccessGate } from "./components/AccessGate";
-import { OriginPremiseModal } from "./components/OriginPremiseModal";
+import { OriginPremiseModal, PREMISE_PARAGRAPHS, PREMISE_TITLE } from "./components/OriginPremiseModal";
 import { authenticateArchivist, createGuestSession, roleLabel } from "./auth";
 import { dossierSteps, inventory, vaultFiles } from "./data";
 import { openText, sealText, sealVaultFiles } from "./crypto";
@@ -111,6 +111,22 @@ const STORAGE_KEYS = {
 
 const COLLABORATION_CHANNEL = "davinci-archivist-collaboration";
 const VAULT_ROOT = "Archive: MASK_OF_DESPAIR.mega";
+const ORIGIN_STORY_FOLDER = "00_Lore/01_Storyline";
+const ORIGIN_STORY_FILE_ID = "lore-origin-premise";
+const SYSTEM_ENCRYPTED_FOLDERS: EncryptedFolder[] = [
+  {
+    id: "system-folder-lore",
+    path: `${VAULT_ROOT}/00_Lore`,
+    createdBy: "Reliquary",
+    createdAt: "1970-01-01T00:00:00.000Z",
+  },
+  {
+    id: "system-folder-storyline",
+    path: `${VAULT_ROOT}/${ORIGIN_STORY_FOLDER}`,
+    createdBy: "Reliquary",
+    createdAt: "1970-01-01T00:00:00.000Z",
+  },
+];
 const isWebArchiveMode = window.location.pathname.includes("/web-archive/");
 
 type CollaborationMessage =
@@ -388,6 +404,44 @@ function absoluteFolderPath(relativePath: string) {
   return `${VAULT_ROOT}/${relativePath}`;
 }
 
+function mergeEncryptedFolderBranches(folders: EncryptedFolder[]) {
+  const byPath = new Map<string, EncryptedFolder>();
+
+  [...SYSTEM_ENCRYPTED_FOLDERS, ...folders].forEach((folder) => {
+    byPath.set(folder.path.toLowerCase(), folder);
+  });
+
+  return Array.from(byPath.values()).sort((first, second) => first.path.localeCompare(second.path));
+}
+
+function originStoryText() {
+  return `${PREMISE_TITLE}\n\n${PREMISE_PARAGRAPHS.join("\n\n")}`;
+}
+
+function upsertSealedFile(files: SealedFile[], file: SealedFile) {
+  return [...files.filter((item) => item.id !== file.id), file];
+}
+
+async function makeOriginStorylineFile(): Promise<SealedFile> {
+  const plainText = originStoryText();
+  const sealed = await sealText(plainText, VOLVELLE_SOLVE_WORD);
+
+  return {
+    id: ORIGIN_STORY_FILE_ID,
+    name: "PREMISE_ORIGIN.story.txt.enc",
+    type: "file",
+    path: absoluteFolderPath(ORIGIN_STORY_FOLDER),
+    keyLabel: "ORIGIN Story Seal",
+    password: VOLVELLE_SOLVE_WORD,
+    plainText,
+    clue: "Unlocked by completing The Story Begins. This storyline record is mirrored into Notes.",
+    size: `${Math.max(1, Math.ceil(plainText.length / 1024))}.${plainText.length % 10} KB`,
+    locked: false,
+    decryptedText: plainText,
+    ...sealed,
+  };
+}
+
 function collectKnownFolderPaths(files: SealedFile[], folders: EncryptedFolder[]) {
   const known = new Set<string>();
 
@@ -461,11 +515,18 @@ export default function App() {
 
   useEffect(() => {
     let mounted = true;
-    sealVaultFiles(vaultFiles).then((files) => {
+    sealVaultFiles(vaultFiles).then(async (files) => {
       if (!mounted) {
         return;
       }
-      setSealedFiles([...files, ...readStoredJson<SealedFile[]>(STORAGE_KEYS.publishedFiles, [])]);
+      let nextFiles = [...files, ...readStoredJson<SealedFile[]>(STORAGE_KEYS.publishedFiles, [])];
+      if (readVolvelleCompletionMemory()) {
+        nextFiles = upsertSealedFile(nextFiles, await makeOriginStorylineFile());
+      }
+      if (!mounted) {
+        return;
+      }
+      setSealedFiles(nextFiles);
       setTerminalEvents((events) => [
         ...events,
         event("ok", "Archive: MASK_OF_DESPAIR.mega indexed"),
@@ -555,8 +616,8 @@ export default function App() {
   const solvedWheel = isWheelSolved(offsets);
   const volvelleSignature = detectProbeSignature(offsets);
   const ringAccuracy = progressTowardSolution(offsets);
-  const solvedCount = sealedFiles.filter((file) => file.decryptedText).length + (solvedWheel ? 1 : 0);
   const progress = archiveProgress(sealedFiles);
+  const displayedEncryptedFolders = useMemo(() => mergeEncryptedFolderBranches(encryptedFolders), [encryptedFolders]);
   const activeVolvellePhase = ORIGIN_GUIDE_STEPS[originHits.length] ?? null;
   const codedFragment = buildCodedFragment(activeVolvellePhase, volvelleSignature);
   const originNextLetter = activeVolvellePhase?.target ?? null;
@@ -578,6 +639,24 @@ export default function App() {
         minute: "2-digit",
       }).format(new Date(volvelleMemory.expiresAt))
     : null;
+  const originProgress = Math.round((originHits.length / ORIGIN_SOLVE_LETTERS.length) * 100);
+  const dossierProgressRows = [
+    {
+      label: "Current Chapter",
+      value: originNextLetter ? `Seek ${originNextLetter}` : "Storyline Stored",
+      width: originNextLetter ? originProgress : 100,
+    },
+    {
+      label: "ORIGIN Seals",
+      value: `${originHits.length} / ${ORIGIN_SOLVE_LETTERS.length}`,
+      width: originProgress,
+    },
+    {
+      label: "Vault Records",
+      value: `${progress}% indexed`,
+      width: progress,
+    },
+  ];
 
   const knownKeys = useMemo(() => {
     const recovered = sealedFiles
@@ -717,6 +796,18 @@ export default function App() {
     appendChatMessage("Reliquary", "system", `${publisher} published ${file.name}.`);
   }
 
+  async function archiveOriginStoryline(focusRecord = false) {
+    const file = await makeOriginStorylineFile();
+
+    setSealedFiles((files) => upsertSealedFile(files, file));
+
+    if (focusRecord) {
+      setSelectedFileId(file.id);
+      setActiveTab("notes");
+      pushEvent("ok", `${file.name} copied into ${ORIGIN_STORY_FOLDER} and mirrored in Notes.`);
+    }
+  }
+
   function createEncryptedFolder(rawPath: string) {
     if (authSession?.role !== "admin") {
       pushEvent("error", "Only Archivist_Z can create encrypted folder branches.");
@@ -730,7 +821,7 @@ export default function App() {
     }
 
     const path = absoluteFolderPath(relativePath);
-    const knownFolders = collectKnownFolderPaths(sealedFiles, encryptedFolders);
+    const knownFolders = collectKnownFolderPaths(sealedFiles, displayedEncryptedFolders);
     if (knownFolders.has(path.toLowerCase())) {
       pushEvent("warn", `${relativePath} already exists in the Vault branch ledger.`);
       return;
@@ -763,6 +854,7 @@ export default function App() {
     if (clearMemory) {
       clearVolvelleCompletionMemory();
       setVolvelleMemory(null);
+      setSealedFiles((files) => files.filter((file) => file.id !== ORIGIN_STORY_FILE_ID));
     }
     setOriginHits([]);
     setOriginAttemptCount(0);
@@ -813,6 +905,7 @@ export default function App() {
   function checkOriginAttempt() {
     if (!originNextLetter) {
       setOriginPremiseOpen(true);
+      void archiveOriginStoryline(false);
       pushEvent("ok", `${VOLVELLE_SOLVE_WORD} is already sealed. Premise record reopened.`);
       return;
     }
@@ -835,6 +928,7 @@ export default function App() {
           `${VOLVELLE_SOLVE_WORD} sequence complete. Completion remembered for ${VOLVELLE_REMEMBRANCE_DAYS} days.`,
         );
         setOriginPremiseOpen(true);
+        void archiveOriginStoryline(true);
       }
 
       return;
@@ -1062,18 +1156,8 @@ export default function App() {
         session={authSession}
         onSignOut={signOut}
         steps={dossierSteps}
-        inventory={inventory.map((item) => ({
-          ...item,
-          acquired:
-            item.acquired ||
-            (item.id === "seal-ring" && knownKeys.includes("VERITAS")) ||
-            (item.id === "folding-key" && knownKeys.includes("OCCULTA")) ||
-            (item.id === "wax" &&
-              sealedFiles.some((file) => file.id.startsWith("guest-") || file.id.startsWith("published-"))),
-        }))}
-        solvedCount={solvedCount}
-        fragmentCount={knownKeys.length}
-        progress={progress}
+        inventory={inventory}
+        progressRows={dossierProgressRows}
       />
 
       <section className="workbench" aria-label="The Story Begins workbench">
@@ -1306,10 +1390,12 @@ export default function App() {
             <AlignCenterHorizontal size={16} />
             Align
           </button>
-          <button type="button" className="seal-button primary" onClick={testWheel}>
-            <ShieldCheck size={16} />
-            Test Decrypt
-          </button>
+          {authSession?.role !== "guest" ? (
+            <button type="button" className="seal-button primary" onClick={testWheel}>
+              <ShieldCheck size={16} />
+              Test Decrypt
+            </button>
+          ) : null}
         </section>
 
         <section className="key-console" aria-label="Key entry">
@@ -1348,7 +1434,7 @@ export default function App() {
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           files={sealedFiles}
-          folders={encryptedFolders}
+          folders={displayedEncryptedFolders}
           selectedFileId={selectedFileId}
           setSelectedFileId={setSelectedFileId}
           terminalEvents={terminalEvents}
@@ -1370,11 +1456,11 @@ export default function App() {
           }}
           onCreateEncryptedFolder={createEncryptedFolder}
         />
-        {activeTab !== "places" ? (
+        {activeTab !== "places" && authSession?.role !== "guest" ? (
           <NoteForge
             session={authSession}
             draft={draft}
-            folders={encryptedFolders}
+            folders={displayedEncryptedFolders}
             setDraft={setDraft}
             onSeal={sealCustomNote}
             busy={busy}
@@ -1382,7 +1468,7 @@ export default function App() {
         ) : null}
       </aside>
 
-      {activeTab !== "archivists" ? (
+      {activeTab !== "archivists" && authSession?.role !== "guest" ? (
         <button type="button" className="floating-add" onClick={() => setActiveTab("notes")} aria-label="Open note forge">
           <Plus size={20} />
         </button>
