@@ -1,7 +1,9 @@
 import { ALPHABET, GLYPH_RING, SYMBOL_RING } from "./wheel";
 
-export const VOLVELLE_SOLVE_WORD = "DRAGON";
+export const VOLVELLE_SOLVE_WORD = "ORIGIN";
 export const VOLVELLE_SOLVE_LETTERS = VOLVELLE_SOLVE_WORD.split("");
+export const VOLVELLE_STAMP_WORD = "DRAGON";
+export const VOLVELLE_STAMP_LETTERS = VOLVELLE_STAMP_WORD.split("");
 export const VOLVELLE_ATTEMPT_LIMIT = 6;
 
 export type VolvelleZoneValue = {
@@ -68,7 +70,7 @@ export const VOLVELLE_STAR_LEDGER: VolvelleStarLedgerEntry[] = [
   { value: 8, symbol: "ᚹ", epithet: "Elder Witness", meaning: "the scroll that remembers" },
   { value: 19, symbol: "ᛖ", epithet: "Ash March", meaning: "the road toward Red Mountain" },
   { value: 13, symbol: "ᛇ", epithet: "Hidden Yew", meaning: "a concealed old path" },
-  { value: 22, symbol: "ᛜ", epithet: "Dragon Seal", meaning: "the closing sign" },
+  { value: 22, symbol: "ᛜ", epithet: "Origin Seal", meaning: "the closing sign" },
   { value: 15, symbol: "ᛉ", epithet: "Watcher Fork", meaning: "a forked guard-mark" },
   { value: 18, symbol: "ᛒ", epithet: "Red Betrayal", meaning: "the judgment of Lorkhan" },
   { value: 16, symbol: "ᛊ", epithet: "Snow Serpent", meaning: "a winding Skyrim trail" },
@@ -123,9 +125,9 @@ function signature(
 export const VOLVELLE_PHASES: VolvellePhase[] = [
   {
     unlockAt: 0,
-    target: "D",
+    target: "O",
     hour: "Dawn",
-    title: "1. D - Dawn / Dragonstone",
+    title: "1. O - Dawn / Dragonstone",
     clue:
       "Where the dragon-map first lay under Nordic stone, the first hour wakes. In the Star Ledger, wake First Ember beside Dragon Breath; split the Horizon Atlas at the Dragonborn's beginning after C.",
     reward: "Dawn names the answer box: only A^3 speaks. The next road climbs to the mountain of the Voice.",
@@ -145,9 +147,9 @@ export const VOLVELLE_PHASES: VolvellePhase[] = [
   },
   {
     unlockAt: 2,
-    target: "A",
+    target: "I",
     hour: "Zenith",
-    title: "3. A - Zenith / Blackreach",
+    title: "3. I - Zenith / Blackreach",
     clue:
       "Below Skyrim, the false sun of Blackreach crowns the deep. Join Deep Key to Blackreach Glow, raise Zenith, and let the cavern's first two letters form the horizon.",
     reward: "Zenith teaches the star pair. Two inner signs must sit together before the lens has memory.",
@@ -167,9 +169,9 @@ export const VOLVELLE_PHASES: VolvellePhase[] = [
   },
   {
     unlockAt: 4,
-    target: "O",
+    target: "I",
     hour: "Midnight",
-    title: "5. O - Midnight / Sovngarde",
+    title: "5. I - Midnight / Sovngarde",
     clue:
       "In Sovngarde, the dead do not count years; they keep the song. Take Nordic Song beside Hall Echo, let Midnight darken, and split the horizon at the two letters that begin the Nordic oath.",
     reward: "Midnight proves recurrence. The same answer may return, but only from a new alignment.",
@@ -183,7 +185,7 @@ export const VOLVELLE_PHASES: VolvellePhase[] = [
     title: "6. N - Return / First Tower",
     clue:
       "When the path leaves Skyrim, seek the first fixed point. Bring Mundus Stone beside Lorkhan Spark, return to the first fixed hour, and split the horizon at the first two letters before any road.",
-    reward: "Return seals DRAGON and opens the premise record.",
+    reward: "Return seals ORIGIN and opens the premise record.",
     signature: signature(["ᛗ", "ᛚ"], "3", "A", "B"),
     offsets: { outer: 8, middle: 1, inner: 10 },
   },

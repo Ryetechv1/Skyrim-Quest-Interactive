@@ -37,6 +37,8 @@ import {
   VOLVELLE_PHASES,
   VOLVELLE_SOLVE_LETTERS,
   VOLVELLE_SOLVE_WORD,
+  VOLVELLE_STAMP_LETTERS,
+  VOLVELLE_STAMP_WORD,
   VOLVELLE_STAR_LEDGER,
 } from "./volvelle";
 import type {
@@ -59,6 +61,7 @@ const initialOffsets: RingOffsets = {
 };
 
 const ORIGIN_SOLVE_LETTERS = VOLVELLE_SOLVE_LETTERS;
+const ZONE_A3_STAMP_LETTERS = VOLVELLE_STAMP_LETTERS;
 const ORIGIN_ATTEMPT_LIMIT = VOLVELLE_ATTEMPT_LIMIT;
 const VOLVELLE_REMEMBRANCE_DAYS = 5;
 const VOLVELLE_REMEMBRANCE_MS = VOLVELLE_REMEMBRANCE_DAYS * 24 * 60 * 60 * 1000;
@@ -127,6 +130,7 @@ type CollaborationMessage =
 
 type VolvelleCompletionMemory = {
   word: string;
+  stampWord?: string;
   hits: string[];
   completedAt: string;
   expiresAt: string;
@@ -173,6 +177,7 @@ function readVolvelleCompletionMemory(): VolvelleCompletionMemory | null {
   if (
     !memory ||
     memory.word !== VOLVELLE_SOLVE_WORD ||
+    memory.stampWord !== VOLVELLE_STAMP_WORD ||
     memory.hits.join("") !== VOLVELLE_SOLVE_WORD ||
     !Number.isFinite(expiresAt)
   ) {
@@ -192,6 +197,7 @@ function writeVolvelleCompletionMemory(hits: string[]): VolvelleCompletionMemory
   const completedAt = new Date();
   const memory: VolvelleCompletionMemory = {
     word: VOLVELLE_SOLVE_WORD,
+    stampWord: VOLVELLE_STAMP_WORD,
     hits,
     completedAt: completedAt.toISOString(),
     expiresAt: new Date(completedAt.getTime() + VOLVELLE_REMEMBRANCE_MS).toISOString(),
@@ -898,14 +904,14 @@ export default function App() {
           <div className="origin-stamp-ledger" aria-label="Validated Zone A3 symbol stamps">
             <span>Zone A^3 Stamps</span>
             <ol>
-              {ORIGIN_SOLVE_LETTERS.map((letter, index) => {
+              {ZONE_A3_STAMP_LETTERS.map((letter, index) => {
                 const found = originHits[index];
-                const stampSrc = found ? scriptSymbolSrc(found) : null;
+                const stampSrc = found ? scriptSymbolSrc(letter) : null;
 
                 return (
                   <li className={found ? "found" : ""} key={`origin-stamp-${letter}-${index}`}>
                     {stampSrc ? (
-                      <img src={stampSrc} alt={`${found} validated A^3 stamp`} draggable={false} />
+                      <img src={stampSrc} alt={`${letter} A^3 stamp from ${found} validation`} draggable={false} />
                     ) : (
                       <em>{index + 1}</em>
                     )}
@@ -922,12 +928,12 @@ export default function App() {
           <em>{solvedWheel ? "Truth hidden reveals" : `${ringAccuracy}/3 rings match the reliquary diagram`}</em>
         </div>
 
-        <section className="origin-riddle" aria-label="Dragon volvelle riddle">
+        <section className="origin-riddle" aria-label="Origin volvelle riddle">
           <div className="origin-guide-intro">
-            <span>Dragon Method</span>
+            <span>Origin Method</span>
             <p>
               Discover six sequences, one for each letter of {VOLVELLE_SOLVE_WORD}. A candidate does not count until
-              Validate A^3 returns TRUE.
+              Validate A^3 returns TRUE. Each proven letter stamps the hidden glyph clue.
             </p>
             <ol className="origin-discovery-loop">
               <li>Read the current target letter.</li>
@@ -938,7 +944,7 @@ export default function App() {
             </ol>
           </div>
           <div className="origin-status-panel">
-            <ol className="origin-hit-tracker" aria-label="Dragon hit tracker">
+            <ol className="origin-hit-tracker" aria-label="Origin hit tracker">
               {ORIGIN_SOLVE_LETTERS.map((letter, index) => (
                 <li
                   className={[
@@ -974,7 +980,7 @@ export default function App() {
               </div>
             </div>
           </div>
-          <ol className="origin-phase-rail" aria-label="Dragon phase summary">
+          <ol className="origin-phase-rail" aria-label="Origin phase summary">
             {ORIGIN_GUIDE_STEPS.map((step, index) => {
               const unlocked = originHits.length >= step.unlockAt;
               const sealed = originHits.length > step.unlockAt;
@@ -1045,7 +1051,7 @@ export default function App() {
               </ol>
             </article>
           </div>
-          <ol className="origin-method-chain" aria-label="Dragon chained method">
+          <ol className="origin-method-chain" aria-label="Origin chained method">
             {ORIGIN_GUIDE_STEPS.map((step, index) => {
               const unlocked = originHits.length >= step.unlockAt;
               const active = unlocked && originGuideStepIndex === index && originHits.length < ORIGIN_SOLVE_LETTERS.length;
