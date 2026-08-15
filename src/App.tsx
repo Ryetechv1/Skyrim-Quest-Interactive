@@ -858,7 +858,7 @@ export default function App() {
       {isWebArchiveMode ? (
         <div className="archive-publish-ribbon" role="status">
           <span>Web Archive Publish - offline cache ready after first full load</span>
-          <a href="/davinci-escape-room/download/davinci-web-archive.zip" download>
+          <a href="/Skyrim-Quest-Interactive/download/davinci-web-archive.zip" download>
             Download Archive
           </a>
         </div>

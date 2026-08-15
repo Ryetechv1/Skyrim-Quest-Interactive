@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const distDir = join(root, "dist");
-const basePath = "/davinci-escape-room/";
+const basePath = "/Skyrim-Quest-Interactive/";
 const archiveRoute = "web-archive";
 const pwaVersion = readPwaVersion();
 const cacheVersion = `davinci-web-archive-${pwaVersion}`;

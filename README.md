@@ -1,6 +1,6 @@
-# Codex GPT Da Vinci Escape Room
+# Skyrim Quest Interactive
 
-An antique Leonardo da Vinci inspired escape-room web app with a three-layer cipher wheel, a MEGA-style encrypted vault, folder/key/password puzzles, and browser-local encryption.
+A Skyrim-inspired interactive quest archive with a three-layer cipher wheel, a MEGA-style encrypted vault, folder/key/password puzzles, and browser-local encryption.
 
 ## Features
 
@@ -13,7 +13,7 @@ An antique Leonardo da Vinci inspired escape-room web app with a three-layer cip
 - `.mega` JSON export of encrypted archive payload metadata
 - In-app MEGA cloud GUI for account login, browsing, upload, folder creation, rename, download, trash, and share links
 - Guest View sandbox for browse-only users with session-reset experiments and blocked file-system actions
-- Three Archivist accounts behind the riddle wall: `Archivist_Z` admin, `Archivist_Y` moderator 1, and `Archivist_X` moderator 2
+- Three Archivist accounts: `Archivist_Z` admin, `Archivist_Y` moderator 1, and `Archivist_X` moderator 2
 - Moderator publish/accept change requests, admin approval/rejection, and in-app Archivist live comments
 - Supplied manuscript/cipher images used as theme references and local assets
 
@@ -31,13 +31,13 @@ Open the Vite URL shown in the terminal. The local development build defaults to
 GitHub Pages deploys from `main` to:
 
 ```text
-https://Ryetechv1.github.io/davinci-escape-room/
+https://Ryetechv1.github.io/Skyrim-Quest-Interactive/
 ```
 
 Separate web archive publish:
 
 ```text
-https://Ryetechv1.github.io/davinci-escape-room/web-archive/
+https://Ryetechv1.github.io/Skyrim-Quest-Interactive/web-archive/
 ```
 
 The web archive route is a normal GitHub Pages route with an installable manifest and a service worker. After a first successful online load through an allowed browser, the app shell and local assets can reload from the browser cache.
@@ -46,7 +46,7 @@ The PWA/service-worker version is derived from the deployed git commit SHA, so e
 Downloadable static archive package:
 
 ```text
-https://Ryetechv1.github.io/davinci-escape-room/download/davinci-web-archive.zip
+https://Ryetechv1.github.io/Skyrim-Quest-Interactive/download/davinci-web-archive.zip
 ```
 
 ## Build

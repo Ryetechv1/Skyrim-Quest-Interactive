@@ -2,14 +2,14 @@
   "name": "Codex GPT Da Vinci Web Archive",
   "short_name": "Da Vinci Archive",
   "description": "Standalone Da Vinci escape-room web archive with an antique cipher wheel and encrypted vault simulation.",
-  "start_url": "/davinci-escape-room/web-archive/",
-  "scope": "/davinci-escape-room/",
+  "start_url": "/Skyrim-Quest-Interactive/web-archive/",
+  "scope": "/Skyrim-Quest-Interactive/",
   "display": "standalone",
   "background_color": "#100d0a",
   "theme_color": "#21170f",
   "icons": [
     {
-      "src": "/davinci-escape-room/archive-icon.svg",
+      "src": "/Skyrim-Quest-Interactive/archive-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"

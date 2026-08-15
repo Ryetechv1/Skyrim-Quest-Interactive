@@ -3235,26 +3235,32 @@ button:disabled {
   place-items: center;
   padding: 22px;
   background:
-    radial-gradient(circle at 50% 42%, rgba(123, 37, 26, 0.18), transparent 42%),
-    rgba(8, 6, 4, 0.82);
-  backdrop-filter: blur(5px);
+    radial-gradient(circle at 50% 38%, rgba(174, 139, 77, 0.16), transparent 36%),
+    linear-gradient(135deg, rgba(11, 13, 14, 0.88), rgba(28, 29, 28, 0.9)),
+    rgba(8, 8, 7, 0.9);
+  backdrop-filter: blur(6px) saturate(0.8);
 }
 
 .access-window {
   width: min(760px, 100%);
   position: relative;
-  padding: 30px;
-  border: 1px solid rgba(232, 205, 148, 0.72);
-  border-radius: 6px;
-  outline: 2px solid rgba(28, 19, 10, 0.82);
-  outline-offset: -8px;
+  padding: 32px;
+  border: 1px solid rgba(213, 184, 117, 0.64);
+  border-radius: 4px;
+  outline: 2px solid rgba(12, 12, 11, 0.88);
+  outline-offset: -9px;
   box-shadow:
-    0 32px 90px rgba(0, 0, 0, 0.58),
-    inset 0 0 0 1px rgba(255, 239, 196, 0.22);
+    0 36px 90px rgba(0, 0, 0, 0.72),
+    0 0 52px rgba(164, 49, 34, 0.16),
+    inset 0 0 0 1px rgba(255, 238, 184, 0.14),
+    inset 0 0 72px rgba(0, 0, 0, 0.48);
   background:
-    linear-gradient(rgba(223, 200, 153, 0.92), rgba(196, 162, 105, 0.94)),
-    url("./assets/references/photo-8.jpg") center / cover;
-  color: var(--ink);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 28px),
+    linear-gradient(45deg, rgba(0, 0, 0, 0.18) 0 1px, transparent 1px 34px),
+    radial-gradient(circle at 18% 14%, rgba(255, 242, 198, 0.11), transparent 24%),
+    radial-gradient(circle at 80% 88%, rgba(126, 34, 25, 0.2), transparent 28%),
+    linear-gradient(180deg, rgba(79, 80, 72, 0.96), rgba(37, 39, 37, 0.98) 46%, rgba(19, 20, 20, 0.99));
+  color: #f3e4bf;
 }
 
 .access-window::before,
@@ -3266,12 +3272,18 @@ button:disabled {
 
 .access-window::before {
   inset: 16px;
-  border: 1px solid rgba(32, 22, 12, 0.5);
+  border: 1px solid rgba(232, 205, 148, 0.38);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.62),
+    inset 0 0 24px rgba(0, 0, 0, 0.36);
 }
 
 .access-window::after {
   inset: 24px;
-  border: 1px dashed rgba(169, 45, 30, 0.34);
+  border: 1px solid rgba(93, 98, 92, 0.58);
+  background:
+    linear-gradient(90deg, transparent 0 11%, rgba(234, 208, 145, 0.12) 11% 11.4%, transparent 11.4% 88.6%, rgba(234, 208, 145, 0.12) 88.6% 89%, transparent 89%),
+    linear-gradient(0deg, transparent 0 12%, rgba(234, 208, 145, 0.1) 12% 12.4%, transparent 12.4% 87.6%, rgba(234, 208, 145, 0.1) 87.6% 88%, transparent 88%);
 }
 
 .access-sigil {
@@ -3280,13 +3292,15 @@ button:disabled {
   display: grid;
   place-items: center;
   margin: 0 auto 14px;
-  border: 1px solid rgba(38, 26, 14, 0.72);
+  border: 1px solid rgba(232, 205, 148, 0.56);
   border-radius: 50%;
-  color: var(--red);
+  color: #f5d98d;
   background:
-    repeating-conic-gradient(rgba(169, 45, 30, 0.24) 0 12deg, transparent 12deg 24deg),
-    rgba(246, 225, 178, 0.42);
-  box-shadow: inset 0 0 0 8px rgba(30, 21, 12, 0.08);
+    repeating-conic-gradient(rgba(245, 217, 141, 0.24) 0 10deg, rgba(0, 0, 0, 0.2) 10deg 20deg),
+    radial-gradient(circle, rgba(76, 81, 78, 0.95), rgba(20, 22, 22, 0.96));
+  box-shadow:
+    0 0 24px rgba(245, 217, 141, 0.18),
+    inset 0 0 0 8px rgba(0, 0, 0, 0.2);
 }
 
 .access-window header {
@@ -3300,128 +3314,45 @@ button:disabled {
 .access-window h2 {
   margin: 0;
   font-family: var(--font-serif);
-  font-size: clamp(32px, 5vw, 52px);
+  font-size: clamp(30px, 4.7vw, 50px);
   line-height: 0.95;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  color: #ffe8af;
+  text-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.75),
+    0 0 20px rgba(209, 49, 35, 0.22);
 }
 
 .access-window p {
   margin: 14px auto 0;
-  color: #4c2519;
+  color: rgba(239, 222, 184, 0.9);
   font-family: var(--font-serif);
-  font-size: clamp(16px, 2.2vw, 22px);
-  line-height: 1.35;
+  font-size: clamp(15px, 2vw, 20px);
+  line-height: 1.45;
   font-weight: 700;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.82);
 }
 
-.access-code {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 13px 18px;
-  padding: 18px;
-  border: 1px solid rgba(37, 25, 13, 0.6);
-  background: rgba(37, 25, 13, 0.16);
-}
-
-.bypass-panel {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: end;
-  gap: 10px;
-  margin-top: 12px;
-  padding: 12px;
-  border: 1px solid rgba(37, 25, 13, 0.5);
-  background: rgba(37, 25, 13, 0.12);
-}
-
-.bypass-panel label {
-  min-width: 0;
-  display: grid;
-  grid-template-columns: 18px auto minmax(56px, 1fr);
-  align-items: center;
-  gap: 8px;
-  color: #3f2417;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.bypass-panel input {
-  min-width: 0;
-  height: 38px;
-  border: 1px solid rgba(37, 25, 13, 0.72);
-  border-radius: 3px;
-  background: rgba(248, 226, 181, 0.76);
-  color: var(--ink);
-  padding: 0 10px;
-  font-family: var(--font-mono);
-  font-size: 16px;
-  font-weight: 800;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-.bypass-panel button {
-  min-height: 38px;
-  border: 1px solid rgba(37, 25, 13, 0.56);
-  border-radius: 4px;
+.access-kicker {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 8px 14px;
-  color: #f4deb0;
-  background: rgba(29, 20, 12, 0.9);
-  font-family: var(--font-serif);
-  font-size: 13px;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.access-word {
-  display: inline-flex;
-  align-items: center;
-}
-
-.access-token {
-  display: inline-flex;
-  align-items: center;
-}
-
-.access-token input {
-  width: 3.2ch;
-  height: 44px;
-  padding: 0 4px;
-  border: 1px solid rgba(37, 25, 13, 0.72);
-  border-radius: 3px;
-  background: rgba(248, 226, 181, 0.74);
-  color: var(--ink);
+  min-height: 28px;
+  margin-bottom: 10px;
+  padding: 4px 12px;
+  border: 1px solid rgba(232, 205, 148, 0.42);
+  color: #d8b46f;
+  background: rgba(12, 13, 13, 0.42);
   font-family: var(--font-mono);
-  font-size: 19px;
-  font-weight: 700;
-  text-align: center;
-  box-shadow: inset 0 0 0 2px rgba(255, 241, 202, 0.18);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
-.access-token input[maxlength="2"] {
-  width: 4.1ch;
-}
-
-.access-dash {
-  display: inline-grid;
-  place-items: center;
-  min-width: 16px;
-  color: var(--red);
-  font-family: var(--font-serif);
-  font-size: 26px;
-  font-weight: 700;
+.access-welcome {
+  max-width: 640px;
 }
 
 .access-actions {
@@ -3435,23 +3366,29 @@ button:disabled {
 
 .access-actions button {
   min-height: 38px;
-  border: 1px solid rgba(37, 25, 13, 0.56);
-  border-radius: 4px;
+  border: 1px solid rgba(216, 180, 111, 0.52);
+  border-radius: 3px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   padding: 8px 16px;
-  color: #f4deb0;
-  background: rgba(29, 20, 12, 0.9);
+  color: #f5ddb0;
+  background:
+    linear-gradient(180deg, rgba(71, 74, 70, 0.95), rgba(24, 25, 25, 0.98)),
+    rgba(29, 20, 12, 0.9);
   font-family: var(--font-serif);
   font-size: 13px;
   text-transform: uppercase;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.36);
 }
 
 .access-actions .access-submit {
-  border-color: rgba(164, 49, 34, 0.8);
-  background: linear-gradient(180deg, rgba(145, 42, 30, 0.95), rgba(74, 23, 16, 0.98));
+  border-color: rgba(245, 199, 105, 0.72);
+  color: #fff0be;
+  background: linear-gradient(180deg, rgba(132, 45, 34, 0.95), rgba(65, 20, 17, 0.98));
 }
 
 .access-error {
@@ -3463,7 +3400,7 @@ button:disabled {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: var(--red);
+  color: #ffb09e;
   font-family: var(--font-mono);
   font-size: 12px;
   text-align: center;
@@ -3480,8 +3417,11 @@ button:disabled {
   display: grid;
   gap: 12px;
   padding: 18px;
-  border: 1px solid rgba(37, 25, 13, 0.6);
-  background: rgba(37, 25, 13, 0.16);
+  border: 1px solid rgba(232, 205, 148, 0.32);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 36%),
+    rgba(9, 10, 10, 0.38);
+  box-shadow: inset 0 0 26px rgba(0, 0, 0, 0.32);
 }
 
 .archivist-login-grid label {
@@ -3489,7 +3429,7 @@ button:disabled {
   grid-template-columns: 20px 92px minmax(0, 1fr);
   align-items: center;
   gap: 8px;
-  color: #3f2417;
+  color: #dac18f;
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 700;
@@ -3500,10 +3440,11 @@ button:disabled {
 .archivist-login-grid input {
   min-width: 0;
   height: 40px;
-  border: 1px solid rgba(37, 25, 13, 0.72);
-  border-radius: 3px;
-  background: rgba(248, 226, 181, 0.76);
-  color: var(--ink);
+  border: 1px solid rgba(231, 199, 128, 0.44);
+  border-radius: 2px;
+  background:
+    linear-gradient(180deg, rgba(22, 23, 23, 0.94), rgba(9, 10, 10, 0.98));
+  color: #f5e2b6;
   padding: 0 10px;
   font-family: var(--font-mono);
   font-size: 13px;
@@ -3518,10 +3459,10 @@ button:disabled {
 }
 
 .password-field button {
-  border: 1px solid rgba(37, 25, 13, 0.56);
-  border-radius: 3px;
-  color: #f4deb0;
-  background: rgba(29, 20, 12, 0.9);
+  border: 1px solid rgba(231, 199, 128, 0.44);
+  border-radius: 2px;
+  color: #f5deb0;
+  background: linear-gradient(180deg, rgba(67, 70, 66, 0.96), rgba(22, 23, 23, 0.98));
 }
 
 .credential-ledger {
@@ -3535,8 +3476,9 @@ button:disabled {
   display: grid;
   gap: 4px;
   padding: 9px;
-  border: 1px solid rgba(37, 25, 13, 0.36);
-  background: rgba(248, 226, 181, 0.34);
+  border: 1px solid rgba(232, 205, 148, 0.28);
+  background:
+    linear-gradient(180deg, rgba(72, 75, 70, 0.42), rgba(17, 18, 18, 0.52));
 }
 
 .credential-ledger strong,
@@ -3549,18 +3491,18 @@ button:disabled {
 }
 
 .credential-ledger strong {
-  color: #311d12;
+  color: #f1d99b;
   font-family: var(--font-mono);
   font-size: 12px;
 }
 
 .credential-ledger span {
-  color: #5b2d1f;
+  color: rgba(236, 218, 179, 0.68);
   font-size: 11px;
 }
 
 .credential-ledger code {
-  color: var(--red);
+  color: #d8b46f;
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 800;
@@ -4057,35 +3999,8 @@ button:disabled {
     padding: 24px 14px 20px;
   }
 
-  .access-code {
-    gap: 10px 12px;
-    padding: 12px 8px;
-  }
-
-  .access-token input {
-    height: 38px;
-    font-size: 16px;
-  }
-
-  .access-dash {
-    min-width: 12px;
-    font-size: 20px;
-  }
-
   .access-actions {
     flex-direction: column;
-  }
-
-  .bypass-panel {
-    grid-template-columns: 1fr;
-  }
-
-  .bypass-panel label {
-    grid-template-columns: 18px 1fr;
-  }
-
-  .bypass-panel input {
-    grid-column: 1 / -1;
   }
 }
 
