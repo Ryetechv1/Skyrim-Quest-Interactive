@@ -6,6 +6,7 @@ import type { AuthSession, DossierStep, InventoryItem } from "../types";
 type DossierPanelProps = {
   session: AuthSession | null;
   onSignOut: () => void;
+  onSelectStep?: (stepId: string) => void;
   steps: DossierStep[];
   inventory: InventoryItem[];
   progressRows: {
@@ -28,6 +29,7 @@ function statusIcon(status: DossierStep["status"]) {
 export function DossierPanel({
   session,
   onSignOut,
+  onSelectStep,
   steps,
   inventory,
   progressRows,
@@ -54,7 +56,22 @@ export function DossierPanel({
         <h3 id="dossier-heading">Dossier</h3>
         <ol className="dossier-list">
           {steps.map((step, index) => (
-            <li className={step.status} key={step.id}>
+            <li
+              className={[step.status, onSelectStep ? "selectable" : ""].filter(Boolean).join(" ")}
+              key={step.id}
+              onClick={() => onSelectStep?.(step.id)}
+              onKeyDown={(event) => {
+                if (!onSelectStep) {
+                  return;
+                }
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onSelectStep(step.id);
+                }
+              }}
+              role={onSelectStep ? "button" : undefined}
+              tabIndex={onSelectStep ? 0 : undefined}
+            >
               <span>{String(index + 1).padStart(2, "0")}</span>
               <strong>{step.label}</strong>
               {statusIcon(step.status)}

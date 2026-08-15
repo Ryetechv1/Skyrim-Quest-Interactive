@@ -64,9 +64,14 @@
           return Promise.all([serviceWorkers, cacheStorage]).catch(function () {});
         }
 
-        function reloadArchive() {
+        function recoverArchive() {
           sessionStorage.removeItem(recoveryKey);
-          window.location.replace(basePath + "web-archive/?repaired=" + Date.now());
+          window.location.replace(basePath + "index.html?archive-recovered=" + Date.now());
+        }
+
+        function enterApp() {
+          sessionStorage.removeItem(recoveryKey);
+          window.location.replace(basePath + "index.html?access=" + Date.now());
         }
 
         function beginGuestView() {
@@ -80,7 +85,7 @@
               startedAt: new Date().toISOString(),
             }),
           );
-          clearServiceWorkersAndCaches().then(reloadArchive);
+          enterApp();
         }
 
         function generatedArchivistPassword(seed) {
@@ -155,7 +160,7 @@
               startedAt: new Date().toISOString(),
             }),
           );
-          clearServiceWorkersAndCaches().then(reloadArchive);
+          enterApp();
         }
 
         function repairArchive() {
@@ -173,7 +178,7 @@
             sessionStorage.removeItem(key);
           });
 
-          clearServiceWorkersAndCaches().then(reloadArchive);
+          clearServiceWorkersAndCaches().then(recoverArchive);
         }
 
         function showStaticAccessFallback(message) {

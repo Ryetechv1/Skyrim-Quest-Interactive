@@ -266,6 +266,27 @@ button:disabled {
   background: rgba(11, 9, 7, 0.25);
 }
 
+.dossier-list li.selectable {
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.dossier-list li.selectable:hover,
+.dossier-list li.selectable:focus-visible {
+  border-left-color: rgba(212, 74, 52, 0.8);
+  background:
+    linear-gradient(90deg, rgba(169, 45, 30, 0.22), transparent 72%),
+    rgba(18, 13, 8, 0.48);
+  color: #fff3cf;
+  outline: 1px solid rgba(240, 217, 168, 0.22);
+  outline-offset: 2px;
+  transform: translateX(1px);
+}
+
 .dossier-list li span {
   color: var(--brass);
   font-family: var(--font-mono);
@@ -378,9 +399,10 @@ button:disabled {
   height: calc(var(--web-view-height) - 20px);
   min-height: 0;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto auto auto auto;
+  grid-template-rows: auto auto minmax(360px, 1fr) auto auto auto auto;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   background:
     linear-gradient(rgba(220, 197, 150, 0.88), rgba(205, 176, 124, 0.9)),
     url("./assets/references/photo-5.jpg") center / cover;
@@ -446,6 +468,94 @@ button:disabled {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.puzzle-mode-console {
+  position: relative;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  margin: 6px 28px 8px;
+  padding: 11px;
+  border: 1px solid rgba(49, 31, 16, 0.44);
+  background:
+    linear-gradient(90deg, rgba(80, 42, 20, 0.18), transparent 55%, rgba(80, 42, 20, 0.14)),
+    rgba(232, 202, 139, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(253, 236, 190, 0.18);
+  color: #291b10;
+  pointer-events: auto;
+}
+
+.puzzle-mode-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.puzzle-mode-copy span {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #8a2f22;
+}
+
+.puzzle-mode-copy strong {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.puzzle-mode-copy p {
+  margin: 0;
+  max-width: 70ch;
+  color: rgba(42, 28, 16, 0.86);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.puzzle-mode-actions {
+  display: grid;
+  gap: 8px;
+  justify-items: end;
+}
+
+.puzzle-mode-toggle,
+.puzzle-jump-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.puzzle-mode-toggle button,
+.puzzle-jump-buttons button {
+  min-height: 32px;
+  border: 1px solid rgba(79, 46, 22, 0.5);
+  border-radius: 3px;
+  padding: 0 10px;
+  background:
+    linear-gradient(180deg, rgba(251, 224, 167, 0.38), rgba(126, 77, 35, 0.26)),
+    rgba(28, 19, 11, 0.16);
+  color: #2a1c10;
+  font-family: var(--font-serif);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.puzzle-mode-toggle button.active {
+  border-color: rgba(128, 38, 25, 0.74);
+  background:
+    linear-gradient(180deg, rgba(171, 62, 40, 0.64), rgba(77, 30, 17, 0.74)),
+    rgba(31, 19, 11, 0.22);
+  color: #ffe9b7;
+  box-shadow: inset 0 0 0 1px rgba(255, 230, 174, 0.2);
+}
+
+.puzzle-jump-buttons button {
+  min-width: 132px;
 }
 
 .manuscript-stage {
@@ -4208,8 +4318,26 @@ button.ledger-row {
   }
 
   .workbench {
-    grid-template-rows: auto auto auto auto auto auto;
-    overflow: hidden;
+    grid-template-rows: auto auto auto auto auto auto auto;
+    overflow: visible;
+  }
+
+  .puzzle-mode-console {
+    grid-template-columns: 1fr;
+  }
+
+  .puzzle-mode-actions {
+    justify-items: stretch;
+  }
+
+  .puzzle-mode-toggle,
+  .puzzle-jump-buttons {
+    justify-content: stretch;
+  }
+
+  .puzzle-mode-toggle button,
+  .puzzle-jump-buttons button {
+    flex: 1 1 160px;
   }
 
   .vault-column {
@@ -4263,6 +4391,19 @@ button.ledger-row {
 
   .archive-status {
     white-space: normal;
+  }
+
+  .puzzle-mode-console {
+    margin: 6px 18px 8px;
+    padding: 9px;
+  }
+
+  .puzzle-mode-copy strong {
+    font-size: 16px;
+  }
+
+  .puzzle-mode-copy p {
+    font-size: 11px;
   }
 
   .manuscript-stage {

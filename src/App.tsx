@@ -170,6 +170,8 @@ type VolvelleHintWallet = {
   revealed: string[];
 };
 
+type PuzzleViewMode = "adventure" | "moderation";
+
 function event(kind: TerminalEvent["kind"], text: string): TerminalEvent {
   return {
     id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
@@ -491,6 +493,7 @@ export default function App() {
   const [authSession, setAuthSession] = useState<AuthSession | null>(() =>
     readSessionJson<AuthSession | null>(STORAGE_KEYS.authSession, null),
   );
+  const [puzzleViewMode, setPuzzleViewMode] = useState<PuzzleViewMode>("adventure");
   const [draft, setDraft] = useState<NoteDraft>(defaultDraft);
   const [busy, setBusy] = useState(false);
   const [changeRequests, setChangeRequests] = useState<ChangeRequest[]>(() =>
@@ -646,6 +649,10 @@ export default function App() {
   const originComplete = originHits.length >= ORIGIN_SOLVE_LETTERS.length;
   const brokenPathIsSolved = Boolean(brokenPathSolved(brokenPathState));
   const brokenPathPercent = brokenPathProgress(brokenPathState);
+  const canReviewPuzzles = authSession?.role === "admin" || authSession?.role === "moderator";
+  const effectivePuzzleViewMode: PuzzleViewMode = canReviewPuzzles ? puzzleViewMode : "adventure";
+  const moderationMode = effectivePuzzleViewMode === "moderation";
+  const brokenPathAccessible = moderationMode || originComplete;
   const volvelleRememberedUntil = volvelleMemory
     ? new Intl.DateTimeFormat(undefined, {
         month: "short",
@@ -658,8 +665,13 @@ export default function App() {
   const dossierProgressRows = [
     {
       label: "Current Chapter",
-      value: originNextLetter ? `Seek ${originNextLetter}` : "Storyline Stored",
-      width: originNextLetter ? originProgress : 100,
+      value: moderationMode ? "Moderation Review" : originNextLetter ? `Seek ${originNextLetter}` : "Storyline Stored",
+      width: moderationMode ? 100 : originNextLetter ? originProgress : 100,
+    },
+    {
+      label: "Puzzle Mode",
+      value: moderationMode ? "Free Viewing" : "Adventure Chain",
+      width: moderationMode ? 100 : originProgress,
     },
     {
       label: "ORIGIN Seals",
@@ -668,12 +680,14 @@ export default function App() {
     },
     {
       label: "Broken Path",
-      value: !originComplete
+      value: !brokenPathAccessible
         ? "sealed"
         : brokenPathIsSolved
           ? `${BROKEN_PATH_FINAL_WORD} recovered`
-          : `${brokenPathPercent}% traced`,
-      width: originComplete ? brokenPathPercent : 0,
+          : moderationMode && !originComplete
+            ? "review unlocked"
+            : `${brokenPathPercent}% traced`,
+      width: brokenPathAccessible ? (brokenPathIsSolved ? 100 : Math.max(brokenPathPercent, moderationMode ? 12 : 0)) : 0,
     },
     {
       label: "Vault Records",
@@ -689,7 +703,7 @@ export default function App() {
     {
       id: "broken-path",
       label: "Broken Path",
-      status: originComplete ? (brokenPathIsSolved ? "solved" : "active") : "locked",
+      status: brokenPathAccessible ? (brokenPathIsSolved ? "solved" : "active") : "locked",
     },
     { id: "mask", label: "The Mask", status: "locked" },
     { id: "leviathan", label: "Leviathan Notes", status: "locked" },
@@ -747,6 +761,7 @@ export default function App() {
     const wasGuest = authSession?.role === "guest";
     sessionStorage.removeItem(STORAGE_KEYS.authSession);
     setAuthSession(null);
+    setPuzzleViewMode("adventure");
     setOriginPremiseOpen(false);
     setOriginAttemptCount(0);
     const remembered = readVolvelleCompletionMemory();
@@ -764,6 +779,7 @@ export default function App() {
 
   function handleGuestAccess() {
     const session = createGuestSession();
+    setPuzzleViewMode("adventure");
     setSession(session);
     pushEvent("warn", "GUEST VIEW opened. Experiments are local and reset with the browser session.");
   }
@@ -1184,6 +1200,59 @@ export default function App() {
     pushEvent("ok", "Encrypted MEGA archive exported as JSON payload.");
   }
 
+  function scrollIntoView(selector: string) {
+    window.requestAnimationFrame(() => {
+      document.querySelector<HTMLElement>(selector)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
+  function viewOriginPuzzle() {
+    setActiveTab("vault");
+    scrollIntoView(".workbench");
+    pushEvent(
+      "info",
+      moderationMode
+        ? "Moderation Mode: ORIGIN is open for free review."
+        : "Adventure Mode: ORIGIN remains the active first puzzle.",
+    );
+  }
+
+  function viewBrokenPathPuzzle() {
+    if (!brokenPathAccessible) {
+      pushEvent("warn", "Adventure Mode keeps The Broken Path sealed until ORIGIN is complete.");
+      return;
+    }
+
+    setActiveTab("cipher");
+    scrollIntoView(".vault-column");
+    pushEvent(
+      "info",
+      moderationMode
+        ? "Moderation Mode: The Broken Path is open for free review."
+        : "Adventure Mode: The Broken Path is available because ORIGIN is sealed.",
+    );
+  }
+
+  function selectDossierStep(stepId: string) {
+    if (stepId === "wheel") {
+      viewOriginPuzzle();
+      return;
+    }
+
+    if (stepId === "broken-path") {
+      viewBrokenPathPuzzle();
+      return;
+    }
+
+    if (stepId === "vault" || stepId === "reliquary") {
+      setActiveTab("vault");
+      scrollIntoView(stepId === "vault" ? ".vault-column" : ".dossier-panel");
+      return;
+    }
+
+    pushEvent("warn", `${displayedDossierSteps.find((step) => step.id === stepId)?.label ?? "This dossier"} remains sealed.`);
+  }
+
   return (
     <main
       className={[
@@ -1205,6 +1274,7 @@ export default function App() {
       <DossierPanel
         session={authSession}
         onSignOut={signOut}
+        onSelectStep={selectDossierStep}
         steps={displayedDossierSteps}
         inventory={inventory}
         progressRows={dossierProgressRows}
@@ -1221,6 +1291,46 @@ export default function App() {
             <span>Archive: MASK_OF_DESPAIR.mega</span>
           </div>
         </header>
+
+        {canReviewPuzzles ? (
+          <section className="puzzle-mode-console" aria-label="Archivist puzzle viewing mode">
+            <div className="puzzle-mode-copy">
+              <span>Archivist Puzzle Lens</span>
+              <strong>{moderationMode ? "Moderation Mode" : "Adventure Mode"}</strong>
+              <p>
+                {moderationMode
+                  ? "Free-view both puzzle phases for review, repair, and content planning."
+                  : "Play the quest in order: ORIGIN opens first, then The Broken Path wakes after completion."}
+              </p>
+            </div>
+            <div className="puzzle-mode-actions">
+              <div className="puzzle-mode-toggle" role="group" aria-label="Choose puzzle viewing mode">
+                <button
+                  type="button"
+                  className={effectivePuzzleViewMode === "adventure" ? "active" : ""}
+                  onClick={() => setPuzzleViewMode("adventure")}
+                >
+                  Adventure Mode
+                </button>
+                <button
+                  type="button"
+                  className={effectivePuzzleViewMode === "moderation" ? "active" : ""}
+                  onClick={() => setPuzzleViewMode("moderation")}
+                >
+                  Moderation Mode
+                </button>
+              </div>
+              <div className="puzzle-jump-buttons">
+                <button type="button" onClick={viewOriginPuzzle}>
+                  View ORIGIN
+                </button>
+                <button type="button" onClick={viewBrokenPathPuzzle} disabled={!brokenPathAccessible}>
+                  View The Broken Path
+                </button>
+              </div>
+            </div>
+          </section>
+        ) : null}
 
         <div className="manuscript-stage">
           <div className="red-thread red-thread-horizontal" />
@@ -1504,7 +1614,7 @@ export default function App() {
             appendChatMessage(authSession.username, authSession.role, body);
           }}
           onCreateEncryptedFolder={createEncryptedFolder}
-          brokenPathUnlocked={originComplete}
+          brokenPathUnlocked={brokenPathAccessible}
           brokenPathState={brokenPathState}
           onBrokenPathStateChange={updateBrokenPathState}
           onBrokenPathLog={pushEvent}
