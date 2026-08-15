@@ -37,7 +37,7 @@ export function AccessGate({ onGuestAccess, onArchivistAccess }: AccessGateProps
           <ShieldCheck size={30} />
         </div>
         <header>
-          <span className="access-kicker">Ancient Nordic Archive</span>
+          <span className="access-kicker">Ancient Nordic Passage</span>
           <h2 id="access-title">Skyrim Quest Interactive</h2>
           <p className="access-welcome">{ACCESS_WELCOME}</p>
         </header>
@@ -89,7 +89,7 @@ export function AccessGate({ onGuestAccess, onArchivistAccess }: AccessGateProps
           </button>
           <button type="submit" className="access-submit">
             <Unlock size={16} />
-            Enter Archive
+            Begin Quest
           </button>
         </div>
 

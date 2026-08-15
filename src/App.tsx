@@ -65,6 +65,8 @@ const ZONE_A3_STAMP_LETTERS = VOLVELLE_STAMP_LETTERS;
 const ORIGIN_ATTEMPT_LIMIT = VOLVELLE_ATTEMPT_LIMIT;
 const VOLVELLE_REMEMBRANCE_DAYS = 5;
 const VOLVELLE_REMEMBRANCE_MS = VOLVELLE_REMEMBRANCE_DAYS * 24 * 60 * 60 * 1000;
+const VOLVELLE_HINT_MAX_TOKENS = 5;
+const VOLVELLE_HINT_REFRESH_MS = 60 * 60 * 1000;
 
 const ORIGIN_SYMBOL_SETS = [
   {
@@ -75,12 +77,12 @@ const ORIGIN_SYMBOL_SETS = [
   {
     label: "Hour Gate",
     detail:
-      "Middle ring. Each clue names an hour such as Dawn, Zenith, or Midnight; the ledger maps that hour to 1-9.",
+      "Middle ring. Each clue points to an hour such as Dawn, Zenith, or Midnight; the ledger maps that hour to 1-9.",
   },
   {
     label: "Star Ledger",
     detail:
-      "Inner ring. The clue names two Skyrim-flavored epithets; look them up here, then place both runes inside Zone C.",
+      "Inner ring. The clue points to two descriptions; match them to rows here, then place both runes inside Zone C.",
   },
   {
     label: "A^3",
@@ -104,6 +106,7 @@ const STORAGE_KEYS = {
   publishedFiles: "davinci.archivists.publishedFiles",
   encryptedFolders: "davinci.archivists.encryptedFolders",
   volvelleCompletion: "davinci.volvelle.completion",
+  volvelleHints: "davinci.volvelle.hints",
 };
 
 const COLLABORATION_CHANNEL = "davinci-archivist-collaboration";
@@ -134,6 +137,12 @@ type VolvelleCompletionMemory = {
   hits: string[];
   completedAt: string;
   expiresAt: string;
+};
+
+type VolvelleHintWallet = {
+  tokens: number;
+  refreshedAt: number;
+  revealed: string[];
 };
 
 function event(kind: TerminalEvent["kind"], text: string): TerminalEvent {
@@ -168,6 +177,57 @@ function readSessionJson<T>(key: string, fallback: T): T {
 
 function writeStoredJson<T>(key: string, value: T) {
   localStorage.setItem(key, JSON.stringify(value));
+}
+
+function phaseHintKey(index: number) {
+  return `phase-${index}`;
+}
+
+function normalizeVolvelleHintWallet(
+  wallet: Partial<VolvelleHintWallet> | null | undefined,
+  now = Date.now(),
+): VolvelleHintWallet {
+  const rawTokens = Number.isFinite(wallet?.tokens) ? Number(wallet?.tokens) : VOLVELLE_HINT_MAX_TOKENS;
+  let tokens = Math.min(VOLVELLE_HINT_MAX_TOKENS, Math.max(0, Math.floor(rawTokens)));
+  let refreshedAt = Number.isFinite(wallet?.refreshedAt) ? Number(wallet?.refreshedAt) : now;
+
+  if (tokens < VOLVELLE_HINT_MAX_TOKENS) {
+    const earned = Math.floor(Math.max(0, now - refreshedAt) / VOLVELLE_HINT_REFRESH_MS);
+    if (earned > 0) {
+      tokens = Math.min(VOLVELLE_HINT_MAX_TOKENS, tokens + earned);
+      refreshedAt += earned * VOLVELLE_HINT_REFRESH_MS;
+    }
+  } else if (refreshedAt > now) {
+    refreshedAt = now;
+  }
+
+  return {
+    tokens,
+    refreshedAt,
+    revealed: Array.from(new Set(Array.isArray(wallet?.revealed) ? wallet.revealed.filter(Boolean) : [])),
+  };
+}
+
+function readVolvelleHintWallet(): VolvelleHintWallet {
+  const wallet = normalizeVolvelleHintWallet(
+    readStoredJson<Partial<VolvelleHintWallet> | null>(STORAGE_KEYS.volvelleHints, null),
+  );
+  writeStoredJson(STORAGE_KEYS.volvelleHints, wallet);
+  return wallet;
+}
+
+function writeVolvelleHintWallet(wallet: VolvelleHintWallet) {
+  writeStoredJson(STORAGE_KEYS.volvelleHints, wallet);
+}
+
+function formatHintRefresh(wallet: VolvelleHintWallet) {
+  if (wallet.tokens >= VOLVELLE_HINT_MAX_TOKENS) {
+    return "full";
+  }
+
+  const remainingMs = Math.max(0, wallet.refreshedAt + VOLVELLE_HINT_REFRESH_MS - Date.now());
+  const minutes = Math.ceil(remainingMs / 60000);
+  return minutes <= 1 ? "next token in 1 min" : `next token in ${minutes} min`;
 }
 
 function readVolvelleCompletionMemory(): VolvelleCompletionMemory | null {
@@ -316,6 +376,7 @@ export default function App() {
   const [volvelleMemory, setVolvelleMemory] = useState<VolvelleCompletionMemory | null>(() =>
     readVolvelleCompletionMemory(),
   );
+  const [volvelleHintWallet, setVolvelleHintWallet] = useState<VolvelleHintWallet>(() => readVolvelleHintWallet());
   const [originHits, setOriginHits] = useState<string[]>(() => volvelleMemory?.hits ?? []);
   const [originPremiseOpen, setOriginPremiseOpen] = useState(false);
   const [originAttemptCount, setOriginAttemptCount] = useState(0);
@@ -338,6 +399,25 @@ export default function App() {
     return () => {
       mounted = false;
     };
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setVolvelleHintWallet((current) => {
+        const next = normalizeVolvelleHintWallet(current);
+        if (
+          next.tokens !== current.tokens ||
+          next.refreshedAt !== current.refreshedAt ||
+          next.revealed.length !== current.revealed.length
+        ) {
+          writeVolvelleHintWallet(next);
+          return next;
+        }
+        return current;
+      });
+    }, 60000);
+
+    return () => window.clearInterval(timer);
   }, []);
 
   useEffect(() => {
@@ -409,6 +489,10 @@ export default function App() {
     ? probeSignatureMatches(volvelleSignature, activeVolvellePhase.signature)
     : false;
   const volvelleAnswerSymbol = volvellePhaseMatched ? activeVolvellePhase?.target : null;
+  const activeVolvelleHintKey = activeVolvellePhase ? phaseHintKey(activeVolvellePhase.unlockAt) : "";
+  const activeVolvelleHint =
+    activeVolvellePhase && volvelleHintWallet.revealed.includes(activeVolvelleHintKey) ? activeVolvellePhase.hint : "";
+  const hintRefreshLabel = formatHintRefresh(volvelleHintWallet);
   const volvelleRememberedUntil = volvelleMemory
     ? new Intl.DateTimeFormat(undefined, {
         month: "short",
@@ -613,6 +697,40 @@ export default function App() {
   function retryVolvellePuzzle() {
     setOffsets(initialOffsets);
     resetOriginChain(`Retry opened. ${VOLVELLE_SOLVE_WORD} remembrance cleared and the Volvelle is ready again.`, true);
+  }
+
+  function useVolvelleHint() {
+    if (!activeVolvellePhase) {
+      pushEvent("ok", `${VOLVELLE_SOLVE_WORD} is already sealed. No further hint is needed.`);
+      return;
+    }
+
+    const hintKey = phaseHintKey(activeVolvellePhase.unlockAt);
+    const normalized = normalizeVolvelleHintWallet(volvelleHintWallet);
+
+    if (normalized.revealed.includes(hintKey)) {
+      setVolvelleHintWallet(normalized);
+      writeVolvelleHintWallet(normalized);
+      pushEvent("warn", `Phase ${activeVolvellePhase.unlockAt + 1} hint is already revealed.`);
+      return;
+    }
+
+    if (normalized.tokens <= 0) {
+      setVolvelleHintWallet(normalized);
+      writeVolvelleHintWallet(normalized);
+      pushEvent("error", `No hint tokens remain; ${formatHintRefresh(normalized)}.`);
+      return;
+    }
+
+    const now = Date.now();
+    const next: VolvelleHintWallet = {
+      tokens: normalized.tokens - 1,
+      refreshedAt: normalized.tokens === VOLVELLE_HINT_MAX_TOKENS ? now : normalized.refreshedAt,
+      revealed: [...normalized.revealed, hintKey],
+    };
+    setVolvelleHintWallet(next);
+    writeVolvelleHintWallet(next);
+    pushEvent("ok", `Hint token spent on phase ${activeVolvellePhase.unlockAt + 1}. ${next.tokens}/5 remain.`);
   }
 
   function checkOriginAttempt() {
@@ -937,7 +1055,7 @@ export default function App() {
             </p>
             <ol className="origin-discovery-loop">
               <li>Read the current target letter.</li>
-              <li>Use the Volvelle Ledger to translate the clue names into symbols.</li>
+              <li>Use the Volvelle Ledger to translate clue descriptions into symbols.</li>
               <li>Place the Star Ledger pair in Zone C.</li>
               <li>Match the Hour Gate and split the Horizon Atlas pair.</li>
               <li>Validate A^3, then follow the next phase clue.</li>
@@ -979,6 +1097,23 @@ export default function App() {
                 ) : null}
               </div>
             </div>
+          </div>
+          <div className="origin-hint-panel" aria-label="Volvelle hint tokens">
+            <div>
+              <strong>Hint Tokens</strong>
+              <span>
+                {volvelleHintWallet.tokens}/{VOLVELLE_HINT_MAX_TOKENS}
+              </span>
+              <small>{hintRefreshLabel}</small>
+            </div>
+            <button
+              type="button"
+              onClick={useVolvelleHint}
+              disabled={!originNextLetter || Boolean(activeVolvelleHint) || volvelleHintWallet.tokens <= 0}
+            >
+              {activeVolvelleHint ? "Hint Revealed" : "Use Hint"}
+            </button>
+            <p>{activeVolvelleHint || "Spend one token to reveal a phase-specific nudge."}</p>
           </div>
           <ol className="origin-phase-rail" aria-label="Origin phase summary">
             {ORIGIN_GUIDE_STEPS.map((step, index) => {
@@ -1024,7 +1159,7 @@ export default function App() {
             </article>
             <article className="volvelle-ledger-panel hours">
               <strong>Hour Gate</strong>
-              <p>Middle ring values. Each clue names one hour gate.</p>
+              <p>Middle ring values. Each clue points toward one hour gate.</p>
               <ol>
                 {VOLVELLE_HOUR_LEDGER.map((entry) => (
                   <li key={`hour-${entry.hour}`}>
@@ -1037,7 +1172,7 @@ export default function App() {
             </article>
             <article className="volvelle-ledger-panel stars">
               <strong>Star Ledger</strong>
-              <p>Inner ring values. The clue names the epithets; Zone C must hold the two matching runes.</p>
+              <p>Inner ring values. Match the clue descriptions to these rows; Zone C must hold the two matching runes.</p>
               <ol>
                 {VOLVELLE_STAR_LEDGER.map((entry) => (
                   <li key={`star-${entry.value}`}>

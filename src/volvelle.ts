@@ -24,6 +24,7 @@ export type VolvellePhase = {
   hour: string;
   title: string;
   clue: string;
+  hint: string;
   reward: string;
   signature: VolvelleSignature;
   offsets: {
@@ -129,7 +130,9 @@ export const VOLVELLE_PHASES: VolvellePhase[] = [
     hour: "Dawn",
     title: "1. O - Dawn / Dragonstone",
     clue:
-      "Where the dragon-map first lay under Nordic stone, the first hour wakes. In the Star Ledger, wake First Ember beside Dragon Breath; split the Horizon Atlas at the Dragonborn's beginning after C.",
+      "Where the dragon-map first lay under Nordic stone, the first hour wakes. In the Star Ledger, find the first waking mark beside the return of dragons; split the Horizon Atlas at the Dragonborn's beginning after C.",
+    hint:
+      "Search the Star Ledger descriptions, not the names: one row speaks of the first waking mark, and another of the return of dragons. The hour is first light / beginning.",
     reward: "Dawn names the answer box: only A^3 speaks. The next road climbs to the mountain of the Voice.",
     signature: signature(["ᚠ", "ᚢ"], "1", "D", "E"),
     offsets: { outer: 5, middle: 3, inner: 7 },
@@ -140,7 +143,9 @@ export const VOLVELLE_PHASES: VolvellePhase[] = [
     hour: "Prime",
     title: "2. R - Prime / High Hrothgar",
     clue:
-      "At High Hrothgar, breath is counted before it is shouted. Take Grey Voice beside Mountain Road, let Prime answer, and split the horizon at the initials of High Hrothgar's climb.",
+      "At High Hrothgar, breath is counted before it is shouted. Take the Greybeards' call beside the climb to High Hrothgar, let Prime answer, and split the horizon at the initials of High Hrothgar's climb.",
+    hint:
+      "The Star Ledger descriptions mention the Greybeards' call and the climb to High Hrothgar. The Hour Gate meaning is disciplined voice.",
     reward: "Prime teaches the hour gate. Numbers do not solve the lock; they choose which hour may be heard.",
     signature: signature(["ᚨ", "ᚱ"], "2", "H", "I"),
     offsets: { outer: 1, middle: 2, inner: 4 },
@@ -151,7 +156,9 @@ export const VOLVELLE_PHASES: VolvellePhase[] = [
     hour: "Zenith",
     title: "3. I - Zenith / Blackreach",
     clue:
-      "Below Skyrim, the false sun of Blackreach crowns the deep. Join Deep Key to Blackreach Glow, raise Zenith, and let the cavern's first two letters form the horizon.",
+      "Below Skyrim, the false sun of Blackreach crowns the deep. Join the way into hidden depths to the false sun below Skyrim, raise Zenith, and let the cavern's first two letters form the horizon.",
+    hint:
+      "Look for descriptions about hidden depths and the false sun below Skyrim. The Hour Gate meaning is hidden sun.",
     reward: "Zenith teaches the star pair. Two inner signs must sit together before the lens has memory.",
     signature: signature(["ᚲ", "ᚷ"], "5", "B", "C"),
     offsets: { outer: 7, middle: 8, inner: 2 },
@@ -162,7 +169,9 @@ export const VOLVELLE_PHASES: VolvellePhase[] = [
     hour: "Dusk",
     title: "4. G - Dusk / Time-Wound",
     clue:
-      "At the Time-Wound, old battle and present breath overlap. Pair Time Wound with Frost Need, call Dusk, and split the horizon where the throat's storm turns.",
+      "At the Time-Wound, old battle and present breath overlap. Pair the wound at the throat of the world with the cold necessity of fate, call Dusk, and split the horizon where the throat's storm turns.",
+    hint:
+      "The two inner descriptions are the wound at the throat of the world and the cold necessity of fate. The Hour Gate meaning is time turning back on itself.",
     reward: "Dusk teaches the split horizon. A^1 and A^2 are two halves of the same sightline.",
     signature: signature(["ᚺ", "ᚾ"], "7", "S", "T"),
     offsets: { outer: 16, middle: 6, inner: 21 },
@@ -173,7 +182,9 @@ export const VOLVELLE_PHASES: VolvellePhase[] = [
     hour: "Midnight",
     title: "5. I - Midnight / Sovngarde",
     clue:
-      "In Sovngarde, the dead do not count years; they keep the song. Take Nordic Song beside Hall Echo, let Midnight darken, and split the horizon at the two letters that begin the Nordic oath.",
+      "In Sovngarde, the dead do not count years; they keep the song. Take Sovngarde's remembered song beside the echo inside Shor's hall, let Midnight darken, and split the horizon at the two letters that begin the Nordic oath.",
+    hint:
+      "The Star Ledger descriptions point to Sovngarde's remembered song and the echo inside Shor's hall. The Hour Gate meaning names Sovngarde and the dead.",
     reward: "Midnight proves recurrence. The same answer may return, but only from a new alignment.",
     signature: signature(["ᛁ", "ᛃ"], "9", "N", "O"),
     offsets: { outer: 21, middle: 4, inner: 19 },
@@ -184,7 +195,9 @@ export const VOLVELLE_PHASES: VolvellePhase[] = [
     hour: "Return",
     title: "6. N - Return / First Tower",
     clue:
-      "When the path leaves Skyrim, seek the first fixed point. Bring Mundus Stone beside Lorkhan Spark, return to the first fixed hour, and split the horizon at the first two letters before any road.",
+      "When the path leaves Skyrim, seek the first fixed point. Bring the mortal world's fixed weight beside the heart-wound principle, return to the first fixed hour, and split the horizon at the first two letters before any road.",
+    hint:
+      "Match descriptions for the mortal world's fixed weight and the heart-wound principle. The Hour Gate meaning is first fixed point.",
     reward: "Return seals ORIGIN and opens the premise record.",
     signature: signature(["ᛗ", "ᛚ"], "3", "A", "B"),
     offsets: { outer: 8, middle: 1, inner: 10 },
