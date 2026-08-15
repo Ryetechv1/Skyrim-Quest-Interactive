@@ -23,6 +23,7 @@ import type {
   TerminalEvent,
 } from "../types";
 import { ArchivistPanel } from "./ArchivistPanel";
+import { BrokenPathPuzzle, type BrokenPathState } from "./BrokenPathPuzzle";
 import { GuidePanel } from "./GuidePanel";
 import { MegaPanel } from "./MegaPanel";
 import { PlacesPanel } from "./PlacesPanel";
@@ -45,6 +46,10 @@ type VaultPanelProps = {
   onRequestChange: (title: string, summary: string, payload: ChangeRequestPayload) => void;
   onSendChatMessage: (body: string) => void;
   onCreateEncryptedFolder: (folderPath: string) => void;
+  brokenPathUnlocked: boolean;
+  brokenPathState: BrokenPathState;
+  onBrokenPathStateChange: (state: BrokenPathState) => void;
+  onBrokenPathLog: (kind: TerminalEvent["kind"], text: string) => void;
 };
 
 type TreeFolder = {
@@ -158,6 +163,10 @@ export function VaultPanel({
   onRequestChange,
   onSendChatMessage,
   onCreateEncryptedFolder,
+  brokenPathUnlocked,
+  brokenPathState,
+  onBrokenPathStateChange,
+  onBrokenPathLog,
 }: VaultPanelProps) {
   const [folderDraft, setFolderDraft] = useState("");
   const selectedFile = files.find((file) => file.id === selectedFileId);
@@ -242,6 +251,13 @@ export function VaultPanel({
           <PlacesPanel />
         ) : activeTab === "guides" ? (
           <GuidePanel session={session} />
+        ) : activeTab === "cipher" ? (
+          <BrokenPathPuzzle
+            unlocked={brokenPathUnlocked}
+            state={brokenPathState}
+            onStateChange={onBrokenPathStateChange}
+            onLog={onBrokenPathLog}
+          />
         ) : activeTab === "vault" ? (
           <>
             <div className="vault-meta">
@@ -316,7 +332,11 @@ export function VaultPanel({
           </div>
         )}
 
-        {activeTab !== "mega" && activeTab !== "archivists" && activeTab !== "places" && activeTab !== "guides" ? (
+        {activeTab !== "mega" &&
+        activeTab !== "archivists" &&
+        activeTab !== "places" &&
+        activeTab !== "guides" &&
+        activeTab !== "cipher" ? (
           <>
             <article className={isOriginStoryRecord ? "file-preview origin-story-preview" : "file-preview"}>
               <header>

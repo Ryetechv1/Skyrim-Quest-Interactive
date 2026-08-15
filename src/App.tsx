@@ -14,13 +14,20 @@ import {
   Unlock,
 } from "lucide-react";
 import { CipherWheel, detectProbeSignature, probeSignatureMatches, scriptSymbolSrc } from "./components/CipherWheel";
+import {
+  BROKEN_PATH_FINAL_WORD,
+  DEFAULT_BROKEN_PATH_STATE,
+  brokenPathProgress,
+  brokenPathSolved,
+  type BrokenPathState,
+} from "./components/BrokenPathPuzzle";
 import { DossierPanel } from "./components/DossierPanel";
 import { VaultPanel } from "./components/VaultPanel";
 import { NoteForge } from "./components/NoteForge";
 import { AccessGate } from "./components/AccessGate";
 import { OriginPremiseModal, PREMISE_PARAGRAPHS, PREMISE_TITLE } from "./components/OriginPremiseModal";
 import { authenticateArchivist, createGuestSession, roleLabel } from "./auth";
-import { dossierSteps, inventory, vaultFiles } from "./data";
+import { inventory, vaultFiles } from "./data";
 import { openText, sealText, sealVaultFiles } from "./crypto";
 import {
   isWheelSolved,
@@ -46,6 +53,7 @@ import type {
   ChangeRequest,
   ChangeRequestPayload,
   ChatMessage,
+  DossierStep,
   EncryptedFolder,
   NoteDraft,
   RingName,
@@ -107,6 +115,7 @@ const STORAGE_KEYS = {
   encryptedFolders: "davinci.archivists.encryptedFolders",
   volvelleCompletion: "davinci.volvelle.completion",
   volvelleHints: "davinci.volvelle.hints",
+  brokenPath: "davinci.brokenPath.state",
 };
 
 const COLLABORATION_CHANNEL = "davinci-archivist-collaboration";
@@ -511,6 +520,9 @@ export default function App() {
   const [originHits, setOriginHits] = useState<string[]>(() => volvelleMemory?.hits ?? []);
   const [originPremiseOpen, setOriginPremiseOpen] = useState(false);
   const [originAttemptCount, setOriginAttemptCount] = useState(0);
+  const [brokenPathState, setBrokenPathState] = useState<BrokenPathState>(() =>
+    readStoredJson<BrokenPathState>(STORAGE_KEYS.brokenPath, DEFAULT_BROKEN_PATH_STATE),
+  );
   const lastOriginHitRef = useRef("");
 
   useEffect(() => {
@@ -631,6 +643,9 @@ export default function App() {
   const activeVolvelleHint =
     activeVolvellePhase && volvelleHintWallet.revealed.includes(activeVolvelleHintKey) ? activeVolvellePhase.hint : "";
   const hintRefreshLabel = formatHintRefresh(volvelleHintWallet);
+  const originComplete = originHits.length >= ORIGIN_SOLVE_LETTERS.length;
+  const brokenPathIsSolved = Boolean(brokenPathSolved(brokenPathState));
+  const brokenPathPercent = brokenPathProgress(brokenPathState);
   const volvelleRememberedUntil = volvelleMemory
     ? new Intl.DateTimeFormat(undefined, {
         month: "short",
@@ -652,10 +667,33 @@ export default function App() {
       width: originProgress,
     },
     {
+      label: "Broken Path",
+      value: !originComplete
+        ? "sealed"
+        : brokenPathIsSolved
+          ? `${BROKEN_PATH_FINAL_WORD} recovered`
+          : `${brokenPathPercent}% traced`,
+      width: originComplete ? brokenPathPercent : 0,
+    },
+    {
       label: "Vault Records",
       value: `${progress}% indexed`,
       width: progress,
     },
+  ];
+
+  const displayedDossierSteps: DossierStep[] = [
+    { id: "reliquary", label: "The Reliquary", status: "solved" },
+    { id: "wheel", label: "The Story Begins", status: originComplete ? "solved" : "active" },
+    { id: "vault", label: "The Vault", status: "open" },
+    {
+      id: "broken-path",
+      label: "Broken Path",
+      status: originComplete ? (brokenPathIsSolved ? "solved" : "active") : "locked",
+    },
+    { id: "mask", label: "The Mask", status: "locked" },
+    { id: "leviathan", label: "Leviathan Notes", status: "locked" },
+    { id: "seal", label: "Final Seal", status: "locked" },
   ];
 
   const knownKeys = useMemo(() => {
@@ -665,11 +703,23 @@ export default function App() {
         const matches = file.decryptedText?.match(/Recovered (?:passphrase|final password): ([A-Z0-9-]+)/g) ?? [];
         return matches.map((match) => match.split(": ")[1]);
       });
-    return Array.from(new Set(["R3LIQU4RY-72", ...(solvedWheel ? ["VERITAS"] : []), ...recovered]));
-  }, [sealedFiles, solvedWheel]);
+    return Array.from(
+      new Set([
+        "R3LIQU4RY-72",
+        ...(solvedWheel ? ["VERITAS"] : []),
+        ...(brokenPathIsSolved ? [BROKEN_PATH_FINAL_WORD] : []),
+        ...recovered,
+      ]),
+    );
+  }, [brokenPathIsSolved, sealedFiles, solvedWheel]);
 
   function pushEvent(kind: TerminalEvent["kind"], text: string) {
     setTerminalEvents((events) => [...events.slice(-12), event(kind, text)]);
+  }
+
+  function updateBrokenPathState(next: BrokenPathState) {
+    setBrokenPathState(next);
+    writeStoredJson(STORAGE_KEYS.brokenPath, next);
   }
 
   function appendChatMessage(author: string, role: ChatMessage["role"], body: string) {
@@ -1155,7 +1205,7 @@ export default function App() {
       <DossierPanel
         session={authSession}
         onSignOut={signOut}
-        steps={dossierSteps}
+        steps={displayedDossierSteps}
         inventory={inventory}
         progressRows={dossierProgressRows}
       />
@@ -1454,6 +1504,10 @@ export default function App() {
             appendChatMessage(authSession.username, authSession.role, body);
           }}
           onCreateEncryptedFolder={createEncryptedFolder}
+          brokenPathUnlocked={originComplete}
+          brokenPathState={brokenPathState}
+          onBrokenPathStateChange={updateBrokenPathState}
+          onBrokenPathLog={pushEvent}
         />
         {activeTab !== "places" && authSession?.role !== "guest" ? (
           <NoteForge
