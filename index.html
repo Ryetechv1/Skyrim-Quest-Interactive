@@ -83,6 +83,81 @@
           clearServiceWorkersAndCaches().then(reloadArchive);
         }
 
+        function generatedArchivistPassword(seed) {
+          var hash = 0x811c9dc5;
+          var phrase = seed + ":MASK_OF_DESPAIR:DA_VINCI_RELIQUARY";
+
+          for (var index = 0; index < phrase.length; index += 1) {
+            hash ^= phrase.charCodeAt(index);
+            hash = Math.imul(hash, 0x01000193);
+          }
+
+          var partA = (hash >>> 0).toString(36).toUpperCase().padStart(7, "0").slice(0, 5);
+          var partB = (Math.imul(hash ^ 0x9e3779b9, 0x85ebca6b) >>> 0)
+            .toString(36)
+            .toUpperCase()
+            .padStart(7, "0")
+            .slice(0, 5);
+          var suffix = seed.charAt(seed.length - 1) || "X";
+
+          return suffix + "-" + partA + "-" + partB;
+        }
+
+        var fallbackArchivists = [
+          {
+            username: "Archivist_Z",
+            password: "ADMIN",
+            role: "admin",
+            title: "ADMIN",
+          },
+          {
+            username: "Archivist_Y",
+            password: generatedArchivistPassword("Archivist_Y"),
+            role: "moderator",
+            title: "MODERATOR 1",
+          },
+          {
+            username: "Archivist_X",
+            password: generatedArchivistPassword("Archivist_X"),
+            role: "moderator",
+            title: "MODERATOR 2",
+          },
+        ];
+
+        function beginArchivistView() {
+          var usernameField = document.getElementById("fallback-username");
+          var passwordField = document.getElementById("fallback-password");
+          var statusField = document.getElementById("fallback-login-status");
+          var username = usernameField ? usernameField.value.trim() : "";
+          var password = passwordField ? passwordField.value : "";
+          var match = fallbackArchivists.find(function (credential) {
+            return credential.username === username && credential.password === password;
+          });
+
+          if (!match) {
+            if (statusField) {
+              statusField.textContent = "Archivist credential rejected.";
+            }
+            if (passwordField) {
+              passwordField.focus();
+              passwordField.select();
+            }
+            return;
+          }
+
+          sessionStorage.setItem(
+            "davinci.auth.session",
+            JSON.stringify({
+              id: match.username + "-" + Date.now(),
+              username: match.username,
+              role: match.role,
+              title: match.title,
+              startedAt: new Date().toISOString(),
+            }),
+          );
+          clearServiceWorkersAndCaches().then(reloadArchive);
+        }
+
         function repairArchive() {
           [
             "davinci.auth.session",
@@ -216,19 +291,22 @@
             '<p style="max-width:1000px;margin:clamp(12px,1.55vw,18px) auto 0;color:#351c0e;font:800 clamp(15px,1.65vw,22px)/1.3 Georgia,serif;text-shadow:0 1px 0 rgba(255,235,185,.22),0 0 8px rgba(241,205,137,.18);">Welcome Dragonborn! You are about to embark on a remarkable journey, discovering the keys and lore of Skyrim&rsquo;s Ancient Past! Be weary my fellow travelers, the puzzles you&rsquo;ll find that lie before you are not for the faint of hearts! Your Destiny Awaits!</p>',
             "</header>",
             '<div style="position:relative;z-index:1;display:grid;gap:clamp(10px,1.35vw,14px);padding:clamp(14px,1.65vw,18px) clamp(18px,3vw,32px);border:1px solid rgba(81,43,18,.24);background:linear-gradient(135deg,rgba(255,244,199,.1),transparent 36%),rgba(76,38,16,.1);box-shadow:inset 0 0 26px rgba(61,29,12,.18);text-align:left;">',
-            '<label style="' + labelStyle + '"><span>&#9906;</span><span>Username</span><select style="' +
+            '<label style="' + labelStyle + '"><span>&#9906;</span><span>Username</span><select id="fallback-username" style="' +
               inputStyle +
               '"><option>Archivist_Z</option><option>Archivist_Y</option><option>Archivist_X</option></select></label>',
             '<label style="' + labelStyle + '"><span>&#9919;</span><span>Password</span><span style="' +
               passwordFieldStyle +
-              '"><input type="password" style="' +
+              '"><input id="fallback-password" type="password" autocomplete="current-password" style="' +
               inputStyle +
-              '"><button type="button" aria-label="Show password" style="border:1px solid rgba(75,39,17,.46);background:linear-gradient(180deg,rgba(92,49,23,.96),rgba(38,21,11,.98));color:#f7ddb0;font:800 18px Georgia,serif;">&#9673;</button></span></label>',
+              '"><button id="fallback-password-toggle" type="button" aria-label="Show password" style="border:1px solid rgba(75,39,17,.46);background:linear-gradient(180deg,rgba(92,49,23,.96),rgba(38,21,11,.98));color:#f7ddb0;font:800 18px Georgia,serif;">&#9673;</button></span></label>',
             '<div style="' + credentialGridStyle + '">',
             '<div style="' + credentialCardStyle + '"><strong style="' + credentialNameStyle + '">Archivist_Z</strong><span style="' + credentialRoleStyle + '">ADMIN</span><code style="' + credentialCodeStyle + '">ADMIN ONLY</code></div>',
             '<div style="' + credentialCardStyle + '"><strong style="' + credentialNameStyle + '">Archivist_Y</strong><span style="' + credentialRoleStyle + '">MODERATOR 1</span><code style="' + credentialCodeStyle + '">ADMIN ONLY</code></div>',
             '<div style="' + credentialCardStyle + '"><strong style="' + credentialNameStyle + '">Archivist_X</strong><span style="' + credentialRoleStyle + '">MODERATOR 2</span><code style="' + credentialCodeStyle + '">ADMIN ONLY</code></div>',
             "</div>",
+            '<p id="fallback-login-status" aria-live="polite" style="min-height:14px;margin:0;color:#6c2416;font:800 ' +
+              (isCompactFallback ? "9px" : "12px") +
+              ' monospace;text-align:center;text-transform:uppercase;"></p>',
             "</div>",
             '<div style="position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:16px;justify-content:center;margin-top:clamp(10px,1.6vw,18px);">',
             '<button id="fallback-guest" type="button" style="' +
@@ -244,7 +322,14 @@
           document.body.appendChild(panel);
           document.getElementById("fallback-guest").addEventListener("click", beginGuestView);
           document.getElementById("fallback-reload").addEventListener("click", function () {
-            clearServiceWorkersAndCaches().then(reloadArchive);
+            beginArchivistView();
+          });
+          document.getElementById("fallback-password-toggle").addEventListener("click", function () {
+            var passwordField = document.getElementById("fallback-password");
+            if (!passwordField) {
+              return;
+            }
+            passwordField.type = passwordField.type === "password" ? "text" : "password";
           });
         }
 
