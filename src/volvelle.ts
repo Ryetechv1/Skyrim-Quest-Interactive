@@ -133,7 +133,7 @@ export const VOLVELLE_PHASES: VolvellePhase[] = [
       "Where the dragon-map first lay under Nordic stone, the first hour wakes. In the Star Ledger, find the first waking mark beside the return of dragons; split the Horizon Atlas at the Dragonborn's beginning after C.",
     hint:
       "Search the Star Ledger descriptions, not the names: one row speaks of the first waking mark, and another of the return of dragons. The hour is first light / beginning.",
-    reward: "Dawn names the answer box: only A^3 speaks. The next road climbs to the mountain of the Voice.",
+    reward: "Dawn names the answer box: only the final sight speaks. The next road climbs to the mountain of the Voice.",
     signature: signature(["ᚠ", "ᚢ"], "1", "D", "E"),
     offsets: { outer: 5, middle: 3, inner: 7 },
   },
@@ -172,7 +172,7 @@ export const VOLVELLE_PHASES: VolvellePhase[] = [
       "At the Time-Wound, old battle and present breath overlap. Pair the wound at the throat of the world with the cold necessity of fate, call Dusk, and split the horizon where the throat's storm turns.",
     hint:
       "The two inner descriptions are the wound at the throat of the world and the cold necessity of fate. The Hour Gate meaning is time turning back on itself.",
-    reward: "Dusk teaches the split horizon. A^1 and A^2 are two halves of the same sightline.",
+    reward: "Dusk teaches the split horizon. The twin horizon is two halves of the same sightline.",
     signature: signature(["ᚺ", "ᚾ"], "7", "S", "T"),
     offsets: { outer: 16, middle: 6, inner: 21 },
   },

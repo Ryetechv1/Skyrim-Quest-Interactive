@@ -72,7 +72,7 @@ const ORIGIN_SYMBOL_SETS = [
   {
     label: "Horizon Atlas",
     detail:
-      "Outer Daedric ring. Use A-Z values and the static lowercase guide to bring the requested pair into A^1 and A^2.",
+      "Outer Daedric ring. Use A-Z values and the static lowercase guide to bring the requested pair into the twin horizon.",
   },
   {
     label: "Hour Gate",
@@ -85,7 +85,7 @@ const ORIGIN_SYMBOL_SETS = [
       "Inner ring. The clue points to two descriptions; match them to rows here, then place both runes inside Zone C.",
   },
   {
-    label: "A^3",
+    label: "Final Sight",
     detail:
       "The only visible answer zone. It stays unsettled until the active phase signature is witnessed by the frame.",
   },
@@ -258,7 +258,7 @@ function phasePlaceLabel(phase: VolvellePhase) {
 function buildCodedFragment(phase: VolvellePhase | null, current: VolvelleSignature) {
   if (!phase) {
     return {
-      text: "ORIGIN is sealed; the Dragon glyphs hold their final scar in A^3.",
+      text: "ORIGIN is sealed; the Dragon glyphs hold their final scar in the final sight.",
       status: "All three sights have already answered.",
     };
   }
@@ -282,9 +282,9 @@ function buildCodedFragment(phase: VolvellePhase | null, current: VolvelleSignat
   }
 
   if (matches.horizon) {
-    matched.push("A^1/A^2 draw the horizon true");
+    matched.push("the twin horizon draws true");
   } else {
-    missing.push("A^1/A^2 horizon");
+    missing.push("twin horizon");
   }
 
   if (matches.count === 0) {
@@ -296,8 +296,8 @@ function buildCodedFragment(phase: VolvellePhase | null, current: VolvelleSignat
 
   if (matches.count === 3) {
     return {
-      text: `${phaseName}: Zone C, ${phase.hour}, and the horizon agree; A^3 is ready to speak ${phase.target}.`,
-      status: "3/3 riddle stages align - validate A^3 to stamp the sequence.",
+      text: `${phaseName}: Zone C, ${phase.hour}, and the horizon agree; the final sight is ready to speak ${phase.target}.`,
+      status: "3/3 riddle stages align - validate the final sight to stamp the sequence.",
     };
   }
 
@@ -824,7 +824,7 @@ export default function App() {
       lastOriginHitRef.current = `${nextHits.length}:${activeVolvellePhase.target}:${offsets.outer}-${offsets.middle}-${offsets.inner}`;
       pushEvent(
         "ok",
-        `TRUE validation: ${activeVolvellePhase.hour} witnessed ${activeVolvellePhase.target} at A^3 and stamped sequence ${offsets.outer}/${offsets.middle}/${offsets.inner}.`,
+        `TRUE validation: ${activeVolvellePhase.hour} witnessed ${activeVolvellePhase.target} at the final sight and stamped sequence ${offsets.outer}/${offsets.middle}/${offsets.inner}.`,
       );
 
       if (nextHits.length === ORIGIN_SOLVE_LETTERS.length) {
@@ -844,7 +844,7 @@ export default function App() {
 
     if (nextAttemptCount >= ORIGIN_ATTEMPT_LIMIT) {
       resetOriginChain(
-        `Six false A^3 validations exhausted the chain. ${VOLVELLE_SOLVE_WORD} progress reset; begin again at ${ORIGIN_SOLVE_LETTERS[0]}.`,
+        `Six false final-sight validations exhausted the chain. ${VOLVELLE_SOLVE_WORD} progress reset; begin again at ${ORIGIN_SOLVE_LETTERS[0]}.`,
       );
       return;
     }
@@ -1076,10 +1076,10 @@ export default function App() {
         progress={progress}
       />
 
-      <section className="workbench" aria-label="3-Layer Cipher Wheel workbench">
+      <section className="workbench" aria-label="The Story Begins workbench">
         <header className="workbench-header">
           <div>
-            <h1>3-Layer Cipher Wheel</h1>
+            <h1>The Story Begins…</h1>
             <p>The Reliquary of Knowledge</p>
           </div>
           <div className="archive-status">
@@ -1096,8 +1096,8 @@ export default function App() {
           <CipherWheel offsets={offsets} rotateRing={rotateRing} answerSymbol={volvelleAnswerSymbol} />
           <div className="geometry-mark geometry-left" />
           <div className="geometry-mark geometry-right" />
-          <div className="origin-stamp-ledger" aria-label="Validated Zone A3 symbol stamps">
-            <span>Zone A^3 Stamps</span>
+          <div className="origin-stamp-ledger" aria-label="Validated final sight symbol stamps">
+            <span>Final Sight Stamps</span>
             <ol>
               {ZONE_A3_STAMP_LETTERS.map((letter, index) => {
                 const found = originHits[index];
@@ -1106,7 +1106,7 @@ export default function App() {
                 return (
                   <li className={found ? "found" : ""} key={`origin-stamp-${letter}-${index}`}>
                     {stampSrc ? (
-                      <img src={stampSrc} alt={`${letter} A^3 stamp from ${found} validation`} draggable={false} />
+                      <img src={stampSrc} alt={`${letter} final sight stamp from ${found} validation`} draggable={false} />
                     ) : (
                       <em>{index + 1}</em>
                     )}
@@ -1128,14 +1128,14 @@ export default function App() {
             <span>Origin Method</span>
             <p>
               Discover six sequences, one for each letter of {VOLVELLE_SOLVE_WORD}. A candidate does not count until
-              Validate A^3 returns TRUE. Each proven letter stamps the hidden glyph clue.
+              the final sight returns TRUE. Each proven letter stamps the hidden glyph clue.
             </p>
             <ol className="origin-discovery-loop">
               <li>Read the current target letter.</li>
               <li>Use the Volvelle Ledger to translate clue descriptions into symbols.</li>
               <li>Place the Star Ledger pair in Zone C.</li>
               <li>Match the Hour Gate and split the Horizon Atlas pair.</li>
-              <li>Validate A^3, then follow the next phase clue.</li>
+              <li>Validate the final sight, then follow the next phase clue.</li>
             </ol>
           </div>
           <div className="origin-status-panel">
@@ -1165,7 +1165,7 @@ export default function App() {
               </small>
               <div className="origin-attempt-actions">
                 <button type="button" onClick={checkOriginAttempt}>
-                  {originNextLetter ? "Validate A^3" : "Open Premise"}
+                  {originNextLetter ? "Validate Final Sight" : "Open Premise"}
                 </button>
                 {!originNextLetter ? (
                   <button type="button" className="retry-puzzle" onClick={retryVolvellePuzzle}>
@@ -1222,7 +1222,7 @@ export default function App() {
           <div className="volvelle-ledger" aria-label="Volvelle symbol value ledger">
             <article className="volvelle-ledger-panel horizon">
               <strong>Horizon Atlas</strong>
-              <p>Outer ring values. Match the requested letter pair inside A^1 and A^2.</p>
+              <p>Outer ring values. Match the requested letter pair inside the twin horizon.</p>
               <ol>
                 {VOLVELLE_HORIZON_LEDGER.map((entry) => (
                   <li key={`horizon-${entry.letter}`}>
