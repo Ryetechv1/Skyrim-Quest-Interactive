@@ -18,65 +18,158 @@
       (function () {
         var basePath = "/Skyrim-Quest-Interactive/";
         var recoveryKey = "skyrimQuestArchiveRecovery";
+        var fallbackId = "static-access-fallback";
+        var meaningfulUiSelector =
+          ".access-window, .app-shell, .shell-layout, .web-archive-shell, [data-app-ready='true']";
 
-        if (window.location.pathname.indexOf(basePath + "web-archive/") !== 0) {
+        if (window.location.pathname.indexOf(basePath) !== 0) {
           return;
         }
 
-        window.setTimeout(function () {
+        function hasMeaningfulUi() {
           var root = document.getElementById("root");
+          return Boolean(root && root.querySelector(meaningfulUiSelector));
+        }
 
-          var hasMeaningfulUi =
-            root &&
-            root.querySelector(".access-window, .app-shell, .shell-layout, .web-archive-shell, [data-app-ready='true']");
+        function clearServiceWorkersAndCaches() {
+          var serviceWorkers =
+            "serviceWorker" in navigator
+              ? navigator.serviceWorker
+                  .getRegistrations()
+                  .then(function (registrations) {
+                    return Promise.all(
+                      registrations.map(function (registration) {
+                        return registration.unregister();
+                      }),
+                    );
+                  })
+              : Promise.resolve();
 
-          if (hasMeaningfulUi) {
+          var cacheStorage =
+            "caches" in window
+              ? caches.keys().then(function (keys) {
+                  return Promise.all(
+                    keys
+                      .filter(function (key) {
+                        return key.indexOf("davinci-web-archive-") === 0 || key.indexOf("skyrim-quest-web-archive-") === 0;
+                      })
+                      .map(function (key) {
+                        return caches.delete(key);
+                      }),
+                  );
+                })
+              : Promise.resolve();
+
+          return Promise.all([serviceWorkers, cacheStorage]).catch(function () {});
+        }
+
+        function reloadArchive() {
+          sessionStorage.removeItem(recoveryKey);
+          window.location.replace(basePath + "web-archive/?repaired=" + Date.now());
+        }
+
+        function beginGuestView() {
+          sessionStorage.setItem(
+            "davinci.auth.session",
+            JSON.stringify({
+              id: "guest-" + Date.now(),
+              username: "GUEST VIEW",
+              role: "guest",
+              title: "Guest View",
+              startedAt: new Date().toISOString(),
+            }),
+          );
+          clearServiceWorkersAndCaches().then(reloadArchive);
+        }
+
+        function repairArchive() {
+          [
+            "davinci.auth.session",
+            "davinci.archivists.changeRequests",
+            "davinci.archivists.chatMessages",
+            "davinci.archivists.publishedFiles",
+            "davinci.archivists.encryptedFolders",
+            "davinci.volvelle.completion",
+            "davinci.volvelle.hints",
+            "davinci.brokenPath.state",
+          ].forEach(function (key) {
+            localStorage.removeItem(key);
+            sessionStorage.removeItem(key);
+          });
+
+          clearServiceWorkersAndCaches().then(reloadArchive);
+        }
+
+        function showStaticAccessFallback(message) {
+          if (hasMeaningfulUi() || document.getElementById(fallbackId)) {
             return;
           }
 
-          var notice = document.createElement("div");
-          notice.style.cssText = [
+          var panel = document.createElement("div");
+          panel.id = fallbackId;
+          panel.style.cssText = [
             "position:fixed",
-            "inset:24px",
-            "z-index:9999",
+            "inset:0",
+            "z-index:99999",
             "display:grid",
             "place-items:center",
             "padding:24px",
-            "background:rgba(16,12,8,.92)",
-            "color:#f2dbad",
-            "font:700 18px Georgia,serif",
-            "text-align:center",
-            "border:1px solid rgba(242,219,173,.42)",
+            "overflow:auto",
+            "background:radial-gradient(circle at 50% 35%,rgba(124,72,35,.22),transparent 34%),linear-gradient(135deg,rgba(9,7,5,.94),rgba(34,23,14,.94))",
+            "color:#24160c",
+            "font-family:Georgia,serif",
           ].join(";");
-          notice.textContent = "Recovering Skyrim Quest Interactive archive...";
-          document.body.appendChild(notice);
 
-          var alreadyRecovered = sessionStorage.getItem(recoveryKey);
-          sessionStorage.setItem(recoveryKey, "1");
+          panel.innerHTML =
+            '<section style="width:min(760px,100%);max-height:calc(100dvh - 48px);overflow:auto;padding:32px;border:1px solid rgba(80,47,25,.7);outline:1px solid rgba(255,232,177,.34);outline-offset:-12px;box-shadow:0 36px 90px rgba(0,0,0,.7),inset 0 0 82px rgba(61,29,12,.46);background:linear-gradient(180deg,rgba(232,202,143,.96),rgba(180,126,69,.96));text-align:center;">' +
+            '<div style="width:62px;height:62px;margin:0 auto 14px;display:grid;place-items:center;border:1px solid rgba(70,39,19,.58);border-radius:50%;background:repeating-conic-gradient(rgba(111,52,25,.18) 0 10deg,transparent 10deg 20deg),radial-gradient(circle,rgba(238,206,148,.8),rgba(154,96,45,.88));font-size:30px;">&#x26E8;</div>' +
+            '<p style="display:inline-block;margin:0 0 12px;padding:7px 12px;border:1px solid rgba(91,47,22,.28);font:700 11px Georgia,serif;letter-spacing:.28em;text-transform:uppercase;color:#6f2f1f;">Ancient Nordic Passage</p>' +
+            '<h1 style="margin:0;font-size:clamp(32px,6vw,58px);line-height:.9;letter-spacing:.08em;text-transform:uppercase;text-shadow:0 1px 0 rgba(255,236,183,.5);">Skyrim Quest Interactive</h1>' +
+            '<p style="max-width:650px;margin:20px auto 0;font-size:clamp(16px,2vw,21px);line-height:1.45;font-weight:700;">Welcome Dragonborn! You are about to embark on a remarkable journey, discovering the keys and lore of Skyrim&rsquo;s Ancient Past! Be weary my fellow travelers, the puzzles you&rsquo;ll find that lie before you are not for the faint of hearts! Your Destiny Awaits!</p>' +
+            '<p style="max-width:620px;margin:18px auto 0;color:#5a2b18;font:700 13px monospace;">' +
+            message +
+            "</p>" +
+            '<div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:28px;">' +
+            '<button id="fallback-guest" type="button" style="min-height:42px;padding:0 20px;border:1px solid rgba(218,184,110,.62);background:linear-gradient(180deg,rgba(55,31,17,.96),rgba(25,16,10,.98));color:#ffe7ad;font:800 14px Georgia,serif;text-transform:uppercase;cursor:pointer;">Guest View</button>' +
+            '<button id="fallback-reload" type="button" style="min-height:42px;padding:0 20px;border:1px solid rgba(218,184,110,.62);background:linear-gradient(180deg,rgba(142,49,30,.95),rgba(68,22,15,.98));color:#ffe7ad;font:800 14px Georgia,serif;text-transform:uppercase;cursor:pointer;">Reload Passage</button>' +
+            '<button id="fallback-repair" type="button" style="min-height:42px;padding:0 20px;border:1px solid rgba(70,39,19,.5);background:rgba(255,231,173,.3);color:#321c10;font:800 14px Georgia,serif;text-transform:uppercase;cursor:pointer;">Repair Old Cache</button>' +
+            "</div>" +
+            "</section>";
 
-          var reload = function () {
-            if (alreadyRecovered) {
-              return;
-            }
-            window.location.replace(basePath + "index.html?archive-recovered=" + Date.now());
-          };
+          document.body.appendChild(panel);
+          document.getElementById("fallback-guest").addEventListener("click", beginGuestView);
+          document.getElementById("fallback-reload").addEventListener("click", function () {
+            clearServiceWorkersAndCaches().then(reloadArchive);
+          });
+          document.getElementById("fallback-repair").addEventListener("click", repairArchive);
+        }
 
-          if (!("serviceWorker" in navigator)) {
-            reload();
+        window.addEventListener("error", function () {
+          window.setTimeout(function () {
+            showStaticAccessFallback("A cached inscription failed to wake. Choose Guest View or repair the old cache.");
+          }, 50);
+        });
+
+        window.addEventListener("unhandledrejection", function () {
+          window.setTimeout(function () {
+            showStaticAccessFallback("A cached inscription failed to wake. Choose Guest View or repair the old cache.");
+          }, 50);
+        });
+
+        window.setTimeout(function () {
+          if (hasMeaningfulUi()) {
             return;
           }
 
-          navigator.serviceWorker
-            .getRegistrations()
-            .then(function (registrations) {
-              return Promise.all(
-                registrations.map(function (registration) {
-                  return registration.unregister();
-                }),
-              );
-            })
-            .then(reload)
-            .catch(reload);
+          if (window.location.pathname.indexOf(basePath + "web-archive/") === 0 && !sessionStorage.getItem(recoveryKey)) {
+            sessionStorage.setItem(recoveryKey, "1");
+            clearServiceWorkersAndCaches().then(function () {
+              window.location.replace(basePath + "index.html?archive-recovered=" + Date.now());
+            });
+            return;
+          }
+
+          showStaticAccessFallback("The old archive shell is still holding this page. Use Guest View or Repair Old Cache.");
         }, 3500);
       })();
     </script>
