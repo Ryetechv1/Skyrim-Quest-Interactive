@@ -8,7 +8,7 @@ const distDir = join(root, "dist");
 const basePath = "/Skyrim-Quest-Interactive/";
 const archiveRoute = "web-archive";
 const pwaVersion = readPwaVersion();
-const cacheVersion = `davinci-web-archive-${pwaVersion}`;
+const cacheVersion = `skyrim-quest-web-archive-${pwaVersion}`;
 
 function readPwaVersion() {
   try {
@@ -69,7 +69,17 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((key) => key.startsWith("davinci-web-archive-") && key !== CACHE_NAME).map((key) => caches.delete(key))))
+      .then((keys) =>
+        Promise.all(
+          keys
+            .filter(
+              (key) =>
+                (key.startsWith("davinci-web-archive-") || key.startsWith("skyrim-quest-web-archive-")) &&
+                key !== CACHE_NAME,
+            )
+            .map((key) => caches.delete(key)),
+        ),
+      )
       .then(() => self.clients.claim()),
   );
 });
@@ -85,13 +95,38 @@ self.addEventListener("fetch", (event) => {
   }
 
   event.respondWith(
-    caches.match(event.request).then(async (cachedResponse) => {
-      const cache = await caches.open(CACHE_NAME);
-      const preciseCachedResponse = cachedResponse || (await matchCached(cache, event.request, requestUrl));
+    caches.open(CACHE_NAME).then(async (cache) => {
       const isNavigation =
         event.request.mode === "navigate" ||
         event.request.destination === "document" ||
         event.request.headers.get("accept")?.includes("text/html");
+      const shouldPreferNetwork =
+        isNavigation ||
+        event.request.destination === "script" ||
+        event.request.destination === "style" ||
+        requestUrl.pathname.endsWith("/pwa-version.json") ||
+        requestUrl.pathname.endsWith("/manifest.webmanifest");
+
+      if (shouldPreferNetwork) {
+        try {
+          const response = await fetch(event.request, { cache: "no-store" });
+          if (response.ok) {
+            await cache.put(event.request, response.clone());
+            await cache.put(new URL(requestUrl.pathname, self.location.origin).href, response.clone());
+          }
+          return response;
+        } catch {
+          const fallback =
+            (await matchCached(cache, event.request, requestUrl)) ||
+            (isNavigation && requestUrl.pathname === ARCHIVE_ROUTE ? await cache.match(ARCHIVE_INDEX) : null) ||
+            (isNavigation ? await cache.match(APP_INDEX) : null);
+
+          return fallback || Response.error();
+        }
+      }
+
+      const cachedResponse = await caches.match(event.request);
+      const preciseCachedResponse = cachedResponse || (await matchCached(cache, event.request, requestUrl));
       const archiveFallback = isNavigation && requestUrl.pathname === ARCHIVE_ROUTE ? await cache.match(ARCHIVE_INDEX) : null;
       const appFallback = isNavigation ? await cache.match(APP_INDEX) : null;
       const networkResponse = fetch(event.request)
