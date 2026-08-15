@@ -41,13 +41,6 @@ export const RING_LENGTHS = {
   inner: GLYPH_RING.length,
 } satisfies Record<keyof RingOffsets, number>;
 
-const encryptedFragments = [
-  "QEVTKA CWMEX AVDQFEMZK",
-  "JMXTIB GFNKX IADKTQXUH",
-  "PZMCSD ZQYLZ CZKZDRKMT",
-  "HIDDEN INK AWAITS ALIGN",
-];
-
 export function normalizeOffset(value: number, length = ALPHABET.length) {
   return ((value % length) + length) % length;
 }
@@ -62,15 +55,6 @@ export function isWheelSolved(offsets: RingOffsets) {
     normalizeOffset(offsets.middle, RING_LENGTHS.middle) === SOLUTION_OFFSETS.middle &&
     normalizeOffset(offsets.inner, RING_LENGTHS.inner) === SOLUTION_OFFSETS.inner
   );
-}
-
-export function decodedFragment(offsets: RingOffsets) {
-  if (isWheelSolved(offsets)) {
-    return "VERITAS OCCULTA REVELATUR";
-  }
-
-  const index = normalizeOffset(offsets.outer + offsets.middle + offsets.inner) % encryptedFragments.length;
-  return encryptedFragments[index];
 }
 
 export function wheelChecksum(offsets: RingOffsets) {

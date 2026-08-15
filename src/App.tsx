@@ -23,7 +23,6 @@ import { authenticateArchivist, createGuestSession, roleLabel } from "./auth";
 import { dossierSteps, inventory, vaultFiles } from "./data";
 import { openText, sealText, sealVaultFiles } from "./crypto";
 import {
-  decodedFragment,
   isWheelSolved,
   progressTowardSolution,
   RING_LENGTHS,
@@ -41,6 +40,7 @@ import {
   VOLVELLE_STAMP_WORD,
   VOLVELLE_STAR_LEDGER,
 } from "./volvelle";
+import type { VolvellePhase, VolvelleSignature } from "./volvelle";
 import type {
   AuthSession,
   ChangeRequest,
@@ -228,6 +228,83 @@ function formatHintRefresh(wallet: VolvelleHintWallet) {
   const remainingMs = Math.max(0, wallet.refreshedAt + VOLVELLE_HINT_REFRESH_MS - Date.now());
   const minutes = Math.ceil(remainingMs / 60000);
   return minutes <= 1 ? "next token in 1 min" : `next token in ${minutes} min`;
+}
+
+function volvelleStageMatches(current: VolvelleSignature, phase: VolvellePhase) {
+  const star =
+    current.zoneC[0].symbol === phase.signature.zoneC[0].symbol &&
+    current.zoneC[1].symbol === phase.signature.zoneC[1].symbol;
+  const hour = current.zoneB.symbol === phase.signature.zoneB.symbol;
+  const horizon =
+    current.zoneA1.symbol === phase.signature.zoneA1.symbol &&
+    current.zoneA2.symbol === phase.signature.zoneA2.symbol;
+
+  return {
+    star,
+    hour,
+    horizon,
+    count: [star, hour, horizon].filter(Boolean).length,
+  };
+}
+
+function phaseTitleLabel(phase: VolvellePhase) {
+  return phase.title.replace(/^\d+\.\s*/, "");
+}
+
+function phasePlaceLabel(phase: VolvellePhase) {
+  return phaseTitleLabel(phase).split("/").pop()?.trim() || phaseTitleLabel(phase);
+}
+
+function buildCodedFragment(phase: VolvellePhase | null, current: VolvelleSignature) {
+  if (!phase) {
+    return {
+      text: "ORIGIN is sealed; the Dragon glyphs hold their final scar in A^3.",
+      status: "All three sights have already answered.",
+    };
+  }
+
+  const matches = volvelleStageMatches(current, phase);
+  const place = phasePlaceLabel(phase);
+  const phaseName = phaseTitleLabel(phase);
+  const matched: string[] = [];
+  const missing: string[] = [];
+
+  if (matches.star) {
+    matched.push(`Zone C hums beneath ${place}`);
+  } else {
+    missing.push("Zone C inner runes");
+  }
+
+  if (matches.hour) {
+    matched.push(`${phase.hour} holds its hour`);
+  } else {
+    missing.push(`${phase.hour} Hour Gate`);
+  }
+
+  if (matches.horizon) {
+    matched.push("A^1/A^2 draw the horizon true");
+  } else {
+    missing.push("A^1/A^2 horizon");
+  }
+
+  if (matches.count === 0) {
+    return {
+      text: `${phaseName}: the lens circles ${place}; no stage has settled.`,
+      status: "0/3 riddle stages align - seek the inner runes first.",
+    };
+  }
+
+  if (matches.count === 3) {
+    return {
+      text: `${phaseName}: Zone C, ${phase.hour}, and the horizon agree; A^3 is ready to speak ${phase.target}.`,
+      status: "3/3 riddle stages align - validate A^3 to stamp the sequence.",
+    };
+  }
+
+  return {
+    text: `${phaseName}: ${matched.join("; ")}. Still resisting: ${missing.join(", ")}.`,
+    status: `${matches.count}/3 riddle stages align - continue the current phase.`,
+  };
 }
 
 function readVolvelleCompletionMemory(): VolvelleCompletionMemory | null {
@@ -476,12 +553,12 @@ export default function App() {
 
   const selectedFile = sealedFiles.find((file) => file.id === selectedFileId) ?? sealedFiles[0];
   const solvedWheel = isWheelSolved(offsets);
-  const decoded = decodedFragment(offsets);
   const volvelleSignature = detectProbeSignature(offsets);
   const ringAccuracy = progressTowardSolution(offsets);
   const solvedCount = sealedFiles.filter((file) => file.decryptedText).length + (solvedWheel ? 1 : 0);
   const progress = archiveProgress(sealedFiles);
   const activeVolvellePhase = ORIGIN_GUIDE_STEPS[originHits.length] ?? null;
+  const codedFragment = buildCodedFragment(activeVolvellePhase, volvelleSignature);
   const originNextLetter = activeVolvellePhase?.target ?? null;
   const originGuideStepIndex = Math.min(originHits.length, ORIGIN_GUIDE_STEPS.length - 1);
   const originAttemptsRemaining = ORIGIN_ATTEMPT_LIMIT - originAttemptCount;
@@ -1041,9 +1118,9 @@ export default function App() {
         </div>
 
         <div className="decoded-strip" aria-live="polite">
-          <span>Decoded Fragment</span>
-          <strong>{decoded}</strong>
-          <em>{solvedWheel ? "Truth hidden reveals" : `${ringAccuracy}/3 rings match the reliquary diagram`}</em>
+          <span>Coded Fragment</span>
+          <strong>{codedFragment.text}</strong>
+          <em>{codedFragment.status}</em>
         </div>
 
         <section className="origin-riddle" aria-label="Origin volvelle riddle">
