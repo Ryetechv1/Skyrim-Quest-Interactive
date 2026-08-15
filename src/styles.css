@@ -739,14 +739,14 @@ button:disabled {
   display: grid;
   place-items: center;
   background: transparent;
-  color: rgba(8, 6, 3, 0.94);
+  color: var(--ink);
   font-family: var(--font-daedric);
   font-size: 21px;
   line-height: 1;
   touch-action: none;
   text-shadow:
-    0 1px 0 rgba(245, 221, 176, 0.3),
-    0 0 8px rgba(14, 10, 6, 0.18);
+    0 1px 0 rgba(245, 221, 176, 0.58),
+    0 0 8px rgba(14, 10, 6, 0.12);
   transition:
     color 160ms ease,
     text-shadow 160ms ease,
@@ -757,10 +757,10 @@ button:disabled {
 .cipher-cell:focus-visible {
   outline: none;
   background: transparent;
-  color: rgba(3, 2, 1, 0.98);
+  color: var(--red);
   text-shadow:
-    0 1px 0 rgba(250, 223, 178, 0.54),
-    0 0 11px rgba(0, 0, 0, 0.34);
+    0 1px 0 rgba(250, 223, 178, 0.72),
+    0 0 11px rgba(169, 45, 30, 0.4);
 }
 
 .outer-ring .cipher-cell {
@@ -768,13 +768,15 @@ button:disabled {
   height: 48px;
   left: calc(50% - 24px);
   top: calc(50% - 24px);
-  color: rgba(4, 3, 2, 0.96);
+  color: rgba(37, 29, 18, 0.7);
   font-size: 39px;
-  -webkit-text-stroke: 0.45px rgba(235, 211, 157, 0.5);
+  -webkit-text-stroke: 0.7px rgba(255, 246, 222, 0.86);
   text-shadow:
-    0 1px 0 rgba(236, 210, 150, 0.26),
-    0 2px 3px rgba(255, 232, 176, 0.12),
-    0 0 7px rgba(0, 0, 0, 0.28);
+    1px 0 0 rgba(255, 246, 222, 0.72),
+    -1px 0 0 rgba(255, 246, 222, 0.72),
+    0 1px 0 rgba(255, 246, 222, 0.72),
+    0 -1px 0 rgba(255, 246, 222, 0.72),
+    0 2px 3px rgba(0, 0, 0, 0.72);
 }
 
 .middle-ring .cipher-cell {
@@ -782,24 +784,27 @@ button:disabled {
   height: 58px;
   left: calc(50% - 29px);
   top: calc(50% - 29px);
-  color: rgba(9, 6, 3, 0.94);
+  color: rgba(78, 27, 18, 0.92);
   font-size: 45px;
   text-shadow:
-    0 1px 0 rgba(243, 219, 174, 0.22),
-    0 0 9px rgba(8, 5, 3, 0.22);
+    0 1px 0 rgba(243, 219, 174, 0.5),
+    0 0 9px rgba(78, 27, 18, 0.14);
 }
 
 .inner-ring .cipher-cell {
-  width: 29px;
-  height: 29px;
-  left: calc(50% - 14.5px);
-  top: calc(50% - 14.5px);
-  color: rgba(5, 4, 2, 0.95);
+  width: 34px;
+  height: 34px;
+  left: calc(50% - 17px);
+  top: calc(50% - 17px);
+  color: rgba(255, 250, 232, 0.98);
   font-family: var(--font-serif);
-  font-size: 17px;
+  font-size: 20px;
+  font-weight: 900;
+  -webkit-text-stroke: 0.28px rgba(35, 24, 13, 0.86);
   text-shadow:
-    0 1px 0 rgba(241, 220, 171, 0.2),
-    0 0 7px rgba(0, 0, 0, 0.22);
+    0 1px 0 rgba(13, 9, 5, 0.96),
+    0 0 6px rgba(255, 246, 218, 0.74),
+    0 0 13px rgba(255, 240, 190, 0.34);
 }
 
 .sunburst {
