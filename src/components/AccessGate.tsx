@@ -38,7 +38,10 @@ export function AccessGate({ onGuestAccess, onArchivistAccess }: AccessGateProps
         </div>
         <header>
           <span className="access-kicker">Ancient Nordic Passage</span>
-          <h2 id="access-title">Skyrim Quest Interactive</h2>
+          <h2 id="access-title">
+            <span>Skyrim Quest</span>
+            <span>Interactive</span>
+          </h2>
           <p className="access-welcome">{ACCESS_WELCOME}</p>
         </header>
 

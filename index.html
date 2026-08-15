@@ -19,6 +19,7 @@
         var basePath = "/Skyrim-Quest-Interactive/";
         var recoveryKey = "skyrimQuestArchiveRecovery";
         var fallbackId = "static-access-fallback";
+        var fallbackTextureUrl = basePath + "assets/photo-5-B6xdMbPM.jpg";
         var meaningfulUiSelector =
           ".access-window, .app-shell, .shell-layout, .web-archive-shell, [data-app-ready='true']";
 
@@ -113,46 +114,149 @@
             "z-index:99999",
             "display:grid",
             "place-items:center",
-            "padding:24px",
+            "padding:clamp(10px,2vw,28px)",
             "overflow:auto",
             "background:radial-gradient(circle at 50% 35%,rgba(124,72,35,.22),transparent 34%),linear-gradient(135deg,rgba(9,7,5,.94),rgba(34,23,14,.94))",
             "color:#24160c",
             "font-family:Georgia,serif",
           ].join(";");
 
-          panel.innerHTML =
-            '<section style="width:min(760px,100%);max-height:calc(100dvh - 48px);overflow:auto;padding:32px;border:1px solid rgba(80,47,25,.7);outline:1px solid rgba(255,232,177,.34);outline-offset:-12px;box-shadow:0 36px 90px rgba(0,0,0,.7),inset 0 0 82px rgba(61,29,12,.46);background:linear-gradient(180deg,rgba(232,202,143,.96),rgba(180,126,69,.96));text-align:center;">' +
-            '<div style="width:62px;height:62px;margin:0 auto 14px;display:grid;place-items:center;border:1px solid rgba(70,39,19,.58);border-radius:50%;background:repeating-conic-gradient(rgba(111,52,25,.18) 0 10deg,transparent 10deg 20deg),radial-gradient(circle,rgba(238,206,148,.8),rgba(154,96,45,.88));font-size:30px;">&#x26E8;</div>' +
-            '<p style="display:inline-block;margin:0 0 12px;padding:7px 12px;border:1px solid rgba(91,47,22,.28);font:700 11px Georgia,serif;letter-spacing:.28em;text-transform:uppercase;color:#6f2f1f;">Ancient Nordic Passage</p>' +
-            '<h1 style="margin:0;font-size:clamp(32px,6vw,58px);line-height:.9;letter-spacing:.08em;text-transform:uppercase;text-shadow:0 1px 0 rgba(255,236,183,.5);">Skyrim Quest Interactive</h1>' +
-            '<p style="max-width:650px;margin:20px auto 0;font-size:clamp(16px,2vw,21px);line-height:1.45;font-weight:700;">Welcome Dragonborn! You are about to embark on a remarkable journey, discovering the keys and lore of Skyrim&rsquo;s Ancient Past! Be weary my fellow travelers, the puzzles you&rsquo;ll find that lie before you are not for the faint of hearts! Your Destiny Awaits!</p>' +
-            '<p style="max-width:620px;margin:18px auto 0;color:#5a2b18;font:700 13px monospace;">' +
-            message +
-            "</p>" +
-            '<div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:28px;">' +
-            '<button id="fallback-guest" type="button" style="min-height:42px;padding:0 20px;border:1px solid rgba(218,184,110,.62);background:linear-gradient(180deg,rgba(55,31,17,.96),rgba(25,16,10,.98));color:#ffe7ad;font:800 14px Georgia,serif;text-transform:uppercase;cursor:pointer;">Guest View</button>' +
-            '<button id="fallback-reload" type="button" style="min-height:42px;padding:0 20px;border:1px solid rgba(218,184,110,.62);background:linear-gradient(180deg,rgba(142,49,30,.95),rgba(68,22,15,.98));color:#ffe7ad;font:800 14px Georgia,serif;text-transform:uppercase;cursor:pointer;">Reload Passage</button>' +
-            '<button id="fallback-repair" type="button" style="min-height:42px;padding:0 20px;border:1px solid rgba(70,39,19,.5);background:rgba(255,231,173,.3);color:#321c10;font:800 14px Georgia,serif;text-transform:uppercase;cursor:pointer;">Repair Old Cache</button>' +
-            "</div>" +
-            "</section>";
+          var isCompactFallback =
+            window.matchMedia && window.matchMedia("(max-width: 720px)").matches;
+          var wideClip =
+            "polygon(4.6% 7.4%,8.6% 5.4%,15.9% 6.7%,24.2% 4.9%,33.8% 6.1%,42.1% 4.4%,53.2% 6.3%,62.8% 4.8%,72.9% 6.4%,82.5% 4.9%,92% 6.8%,97.2% 9.8%,98.3% 22%,97.1% 35%,98.5% 49%,97.4% 64%,98.2% 78.2%,95.2% 95.4%,88.4% 98.7%,79% 97.5%,69.8% 99.2%,59.3% 97.6%,48.8% 99.1%,39.1% 97.8%,29.2% 99.2%,20.4% 97.3%,10.1% 98.8%,5.2% 94.6%,3.7% 78%,4.8% 64.4%,3.5% 50.5%,4.6% 36.1%,3.8% 22.2%)";
+          var compactClip =
+            "polygon(4% 6.5%,11% 4.8%,18% 6.3%,28% 4.9%,39% 6.2%,51% 4.6%,63% 6.4%,76% 4.8%,90% 6.6%,97% 9.6%,98.4% 25%,97.2% 42%,98.4% 61%,97% 78%,94% 93%,83% 95.2%,71% 93.6%,59% 95.4%,47% 93.8%,34% 95.8%,22% 93.6%,9.5% 95.4%,5% 91%,3.5% 75%,4.6% 58%,3.3% 40%,4.6% 23%)";
+          var sheetStyle = [
+            isCompactFallback
+              ? "width:min(100%,calc(100vw - 12px))"
+              : "width:min(1160px,calc(100vw - clamp(28px,7vw,90px)))",
+            isCompactFallback
+              ? "max-height:calc(100dvh - 20px)"
+              : "max-height:calc(100dvh - clamp(20px,4vw,56px))",
+            "overflow:auto",
+            isCompactFallback
+              ? "padding:34px 20px 30px"
+              : "padding:clamp(32px,4vw,52px) clamp(20px,7vw,88px) clamp(28px,3.6vw,42px)",
+            "clip-path:" + (isCompactFallback ? compactClip : wideClip),
+            "box-shadow:0 46px 110px rgba(0,0,0,.78),0 4px 28px rgba(35,17,8,.64)",
+            "background:linear-gradient(90deg,rgba(55,23,9,.22),transparent 6%,transparent 94%,rgba(55,23,9,.24)),linear-gradient(180deg,rgba(44,18,7,.2),transparent 11%,transparent 88%,rgba(44,18,7,.24)),radial-gradient(circle at 18% 18%,rgba(255,239,183,.22),transparent 20%),radial-gradient(circle at 78% 80%,rgba(102,38,19,.26),transparent 25%),linear-gradient(180deg,rgba(236,208,151,.55),rgba(180,118,59,.36)),url(" +
+              fallbackTextureUrl +
+              ") center/cover",
+            "background-blend-mode:multiply,multiply,screen,multiply,soft-light,normal",
+            "text-align:center",
+          ].join(";");
+          var inputStyle = [
+            isCompactFallback ? "height:40px" : "height:clamp(40px,4vw,56px)",
+            "border:1px solid rgba(75,39,17,.46)",
+            "background:linear-gradient(180deg,rgba(255,227,169,.76),rgba(215,165,93,.76))",
+            "color:#25170d",
+            isCompactFallback ? "padding:0 10px" : "padding:0 16px",
+            isCompactFallback
+              ? "font:700 13px monospace"
+              : "font:700 clamp(13px,1.5vw,20px) monospace",
+            "min-width:0",
+          ].join(";");
+          var h1Style = [
+            "margin:0",
+            "color:#24160c",
+            isCompactFallback
+              ? "font:800 clamp(24px,7.7vw,34px)/.92 Georgia,serif"
+              : "font:800 clamp(28px,4.3vw,54px)/.95 Georgia,serif",
+            isCompactFallback ? "letter-spacing:.05em" : "letter-spacing:.08em",
+            "text-transform:uppercase",
+            "text-shadow:0 1px 0 rgba(255,236,183,.5),0 0 18px rgba(94,33,17,.16)",
+          ].join(";");
+          var labelStyle = [
+            "display:grid",
+            "grid-template-columns:" +
+              (isCompactFallback ? "18px 88px minmax(0,1fr)" : "22px 148px minmax(0,1fr)"),
+            "align-items:center",
+            isCompactFallback ? "gap:6px" : "gap:8px",
+            "color:#3f2210",
+            isCompactFallback
+              ? "font:800 12px monospace"
+              : "font:800 clamp(13px,1.25vw,17px) monospace",
+            "text-transform:uppercase",
+          ].join(";");
+          var passwordFieldStyle = [
+            "display:grid",
+            "grid-template-columns:minmax(0,1fr) " + (isCompactFallback ? "40px" : "clamp(40px,4vw,56px)"),
+            isCompactFallback ? "gap:6px" : "gap:8px",
+          ].join(";");
+          var credentialGridStyle =
+            "display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:" +
+            (isCompactFallback ? "5px" : "10px");
+          var credentialCardStyle =
+            "display:grid;gap:4px;padding:" +
+            (isCompactFallback ? "7px 5px" : "13px 14px") +
+            ";border:1px solid rgba(80,43,19,.28);background:linear-gradient(180deg,rgba(255,230,174,.32),rgba(99,45,18,.16));";
+          var credentialNameStyle =
+            "font:800 " + (isCompactFallback ? "11px" : "clamp(14px,1.35vw,18px)") + " monospace;";
+          var credentialRoleStyle =
+            "font:500 " +
+            (isCompactFallback ? "9px" : "clamp(12px,1.1vw,15px)") +
+            " Georgia,serif;color:rgba(58,31,14,.72);";
+          var credentialCodeStyle =
+            "font:800 " +
+            (isCompactFallback ? "9px" : "clamp(13px,1.25vw,17px)") +
+            " monospace;color:#6c2416;";
+          var buttonStyle =
+            "min-height:clamp(42px,4vw,52px);padding:10px 26px;border:1px solid rgba(218,184,110,.62);color:#ffe7ad;font:800 " +
+            (isCompactFallback ? "13px" : "clamp(13px,1.4vw,20px)") +
+            " Georgia,serif;text-transform:uppercase;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;" +
+            (isCompactFallback ? "width:100%;" : "");
+
+          panel.innerHTML = [
+            '<section style="' + sheetStyle + '">',
+            '<div style="position:relative;z-index:1;width:clamp(48px,5vw,62px);height:clamp(48px,5vw,62px);margin:0 auto clamp(8px,1.4vw,16px);display:grid;place-items:center;border:1px solid rgba(70,39,19,.58);border-radius:50%;color:#572113;background:repeating-conic-gradient(rgba(111,52,25,.18) 0 10deg,transparent 10deg 20deg),radial-gradient(circle,rgba(238,206,148,.8),rgba(154,96,45,.88));font-size:30px;">&#x26E8;</div>',
+            '<header style="position:relative;z-index:1;max-width:920px;margin:0 auto clamp(16px,2.2vw,26px);">',
+            '<p style="display:inline-flex;margin:0 0 clamp(10px,1.2vw,16px);padding:7px 16px;border:1px solid rgba(76,39,18,.42);background:rgba(255,231,173,.26);color:#642817;font:800 clamp(10px,1vw,14px) monospace;letter-spacing:.24em;text-transform:uppercase;">Ancient Nordic Passage</p>',
+            '<h1 style="' + h1Style + '">Skyrim Quest<br>Interactive</h1>',
+            '<p style="max-width:1000px;margin:clamp(12px,1.55vw,18px) auto 0;color:#351c0e;font:800 clamp(15px,1.65vw,22px)/1.3 Georgia,serif;text-shadow:0 1px 0 rgba(255,235,185,.22),0 0 8px rgba(241,205,137,.18);">Welcome Dragonborn! You are about to embark on a remarkable journey, discovering the keys and lore of Skyrim&rsquo;s Ancient Past! Be weary my fellow travelers, the puzzles you&rsquo;ll find that lie before you are not for the faint of hearts! Your Destiny Awaits!</p>',
+            "</header>",
+            '<div style="position:relative;z-index:1;display:grid;gap:clamp(10px,1.35vw,14px);padding:clamp(14px,1.65vw,18px) clamp(18px,3vw,32px);border:1px solid rgba(81,43,18,.24);background:linear-gradient(135deg,rgba(255,244,199,.1),transparent 36%),rgba(76,38,16,.1);box-shadow:inset 0 0 26px rgba(61,29,12,.18);text-align:left;">',
+            '<label style="' + labelStyle + '"><span>&#9906;</span><span>Username</span><select style="' +
+              inputStyle +
+              '"><option>Archivist_Z</option><option>Archivist_Y</option><option>Archivist_X</option></select></label>',
+            '<label style="' + labelStyle + '"><span>&#9919;</span><span>Password</span><span style="' +
+              passwordFieldStyle +
+              '"><input type="password" style="' +
+              inputStyle +
+              '"><button type="button" aria-label="Show password" style="border:1px solid rgba(75,39,17,.46);background:linear-gradient(180deg,rgba(92,49,23,.96),rgba(38,21,11,.98));color:#f7ddb0;font:800 18px Georgia,serif;">&#9673;</button></span></label>',
+            '<div style="' + credentialGridStyle + '">',
+            '<div style="' + credentialCardStyle + '"><strong style="' + credentialNameStyle + '">Archivist_Z</strong><span style="' + credentialRoleStyle + '">ADMIN</span><code style="' + credentialCodeStyle + '">ADMIN ONLY</code></div>',
+            '<div style="' + credentialCardStyle + '"><strong style="' + credentialNameStyle + '">Archivist_Y</strong><span style="' + credentialRoleStyle + '">MODERATOR 1</span><code style="' + credentialCodeStyle + '">ADMIN ONLY</code></div>',
+            '<div style="' + credentialCardStyle + '"><strong style="' + credentialNameStyle + '">Archivist_X</strong><span style="' + credentialRoleStyle + '">MODERATOR 2</span><code style="' + credentialCodeStyle + '">ADMIN ONLY</code></div>',
+            "</div>",
+            "</div>",
+            '<div style="position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:16px;justify-content:center;margin-top:clamp(10px,1.6vw,18px);">',
+            '<button id="fallback-guest" type="button" style="' +
+              buttonStyle +
+              'background:linear-gradient(180deg,rgba(91,48,23,.94),rgba(37,20,11,.96));">&#9906; Guest View</button>',
+            '<button id="fallback-reload" type="button" style="' +
+              buttonStyle +
+              'background:linear-gradient(180deg,rgba(142,49,30,.95),rgba(68,22,15,.98));">&#9919; Begin Quest</button>',
+            "</div>",
+            "</section>",
+          ].join("");
 
           document.body.appendChild(panel);
           document.getElementById("fallback-guest").addEventListener("click", beginGuestView);
           document.getElementById("fallback-reload").addEventListener("click", function () {
             clearServiceWorkersAndCaches().then(reloadArchive);
           });
-          document.getElementById("fallback-repair").addEventListener("click", repairArchive);
         }
 
         window.addEventListener("error", function () {
           window.setTimeout(function () {
-            showStaticAccessFallback("A cached inscription failed to wake. Choose Guest View or repair the old cache.");
+            showStaticAccessFallback("A cached inscription failed to wake. Choose Guest View or Begin Quest.");
           }, 50);
         });
 
         window.addEventListener("unhandledrejection", function () {
           window.setTimeout(function () {
-            showStaticAccessFallback("A cached inscription failed to wake. Choose Guest View or repair the old cache.");
+            showStaticAccessFallback("A cached inscription failed to wake. Choose Guest View or Begin Quest.");
           }, 50);
         });
 
@@ -169,7 +273,7 @@
             return;
           }
 
-          showStaticAccessFallback("The old archive shell is still holding this page. Use Guest View or Repair Old Cache.");
+          showStaticAccessFallback("The old archive shell is still holding this page. Use Guest View or Begin Quest.");
         }, 3500);
       })();
     </script>

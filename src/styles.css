@@ -3715,41 +3715,73 @@ button.ledger-row {
   display: grid;
   align-items: center;
   justify-items: center;
-  padding: 22px;
+  padding: clamp(10px, 2vw, 28px);
   overflow: auto;
   background:
-    radial-gradient(circle at 50% 38%, rgba(204, 142, 61, 0.18), transparent 38%),
-    radial-gradient(circle at 18% 82%, rgba(92, 31, 20, 0.28), transparent 30%),
-    linear-gradient(135deg, rgba(13, 10, 8, 0.9), rgba(31, 24, 17, 0.9)),
-    rgba(8, 6, 4, 0.91);
-  backdrop-filter: blur(5px) sepia(0.35);
+    radial-gradient(circle at 48% 40%, rgba(113, 65, 31, 0.26), transparent 42%),
+    radial-gradient(circle at 16% 84%, rgba(71, 24, 15, 0.34), transparent 28%),
+    linear-gradient(135deg, rgba(12, 8, 6, 0.95), rgba(28, 18, 12, 0.95)),
+    rgba(8, 6, 4, 0.95);
+  backdrop-filter: blur(3px) sepia(0.3);
 }
 
 .access-window {
-  width: min(760px, 100%);
+  width: min(1160px, calc(100vw - clamp(28px, 7vw, 90px)));
   position: relative;
   display: block;
-  max-height: calc(100dvh - 44px);
+  max-height: calc(100dvh - clamp(20px, 4vw, 56px));
   margin: auto;
   overflow: auto;
-  padding: 32px;
-  border: 1px solid rgba(80, 47, 25, 0.62);
+  padding: clamp(38px, 4.5vw, 60px) clamp(46px, 7vw, 88px) clamp(34px, 4.4vw, 52px);
+  border: 0;
   border-radius: 0;
-  outline: 1px solid rgba(255, 232, 177, 0.26);
-  outline-offset: -12px;
+  outline: 0;
+  clip-path: polygon(
+    4.6% 7.4%,
+    8.6% 5.4%,
+    15.9% 6.7%,
+    24.2% 4.9%,
+    33.8% 6.1%,
+    42.1% 4.4%,
+    53.2% 6.3%,
+    62.8% 4.8%,
+    72.9% 6.4%,
+    82.5% 4.9%,
+    92% 6.8%,
+    97.2% 9.8%,
+    98.3% 22%,
+    97.1% 35%,
+    98.5% 49%,
+    97.4% 64%,
+    98.2% 78.2%,
+    95.2% 95.4%,
+    88.4% 98.7%,
+    79% 97.5%,
+    69.8% 99.2%,
+    59.3% 97.6%,
+    48.8% 99.1%,
+    39.1% 97.8%,
+    29.2% 99.2%,
+    20.4% 97.3%,
+    10.1% 98.8%,
+    5.2% 94.6%,
+    3.7% 78%,
+    4.8% 64.4%,
+    3.5% 50.5%,
+    4.6% 36.1%,
+    3.8% 22.2%
+  );
   box-shadow:
-    0 36px 90px rgba(0, 0, 0, 0.7),
-    0 0 46px rgba(151, 48, 26, 0.2),
-    inset 0 0 0 1px rgba(255, 244, 205, 0.28),
-    inset 0 0 82px rgba(61, 29, 12, 0.46);
+    0 46px 110px rgba(0, 0, 0, 0.78),
+    0 4px 28px rgba(35, 17, 8, 0.64);
   background:
-    radial-gradient(circle at 14% 16%, rgba(78, 31, 17, 0.22), transparent 18%),
-    radial-gradient(circle at 78% 26%, rgba(105, 60, 26, 0.16), transparent 22%),
-    radial-gradient(circle at 88% 82%, rgba(90, 27, 18, 0.2), transparent 26%),
-    linear-gradient(90deg, rgba(50, 22, 10, 0.24), transparent 9%, transparent 91%, rgba(50, 22, 10, 0.28)),
-    linear-gradient(180deg, rgba(54, 24, 11, 0.2), transparent 13%, transparent 87%, rgba(48, 20, 10, 0.28)),
-    url("./assets/references/photo-5.jpg") center / cover,
-    linear-gradient(180deg, rgba(232, 202, 143, 0.96), rgba(180, 126, 69, 0.96));
+    linear-gradient(90deg, rgba(55, 23, 9, 0.22), transparent 6%, transparent 94%, rgba(55, 23, 9, 0.24)),
+    linear-gradient(180deg, rgba(44, 18, 7, 0.2), transparent 11%, transparent 88%, rgba(44, 18, 7, 0.24)),
+    radial-gradient(circle at 18% 18%, rgba(255, 239, 183, 0.22), transparent 20%),
+    radial-gradient(circle at 78% 80%, rgba(102, 38, 19, 0.26), transparent 25%),
+    linear-gradient(180deg, rgba(236, 208, 151, 0.55), rgba(180, 118, 59, 0.36)),
+    url("./assets/references/photo-5.jpg") center / cover;
+  background-blend-mode: multiply, multiply, screen, multiply, soft-light, normal;
   color: #25170d;
   visibility: visible;
 }
@@ -3762,27 +3794,32 @@ button.ledger-row {
 }
 
 .access-window::before {
-  inset: 16px;
-  border: 1px solid rgba(62, 35, 17, 0.42);
+  inset: clamp(14px, 2vw, 24px);
+  border: 1px solid rgba(62, 35, 17, 0.28);
   box-shadow:
-    inset 0 0 0 1px rgba(255, 232, 177, 0.22),
-    inset 0 0 24px rgba(74, 36, 15, 0.26);
+    inset 0 0 0 1px rgba(255, 232, 177, 0.16),
+    inset 0 0 52px rgba(63, 28, 11, 0.34);
+  clip-path: inherit;
 }
 
 .access-window::after {
-  inset: 24px;
-  border: 1px dashed rgba(93, 43, 21, 0.38);
+  inset: 0;
   background:
-    linear-gradient(90deg, transparent 0 11%, rgba(93, 43, 21, 0.08) 11% 11.4%, transparent 11.4% 88.6%, rgba(93, 43, 21, 0.08) 88.6% 89%, transparent 89%),
-    linear-gradient(0deg, transparent 0 12%, rgba(93, 43, 21, 0.08) 12% 12.4%, transparent 12.4% 87.6%, rgba(93, 43, 21, 0.08) 87.6% 88%, transparent 88%);
+    radial-gradient(circle at 50% 20%, rgba(255, 246, 199, 0.12), transparent 25%),
+    linear-gradient(90deg, rgba(52, 22, 9, 0.26), transparent 7%, transparent 93%, rgba(52, 22, 9, 0.28)),
+    linear-gradient(180deg, rgba(44, 18, 8, 0.24), transparent 8%, transparent 91%, rgba(44, 18, 8, 0.34));
+  mix-blend-mode: multiply;
+  clip-path: inherit;
 }
 
 .access-sigil {
-  width: 62px;
-  height: 62px;
+  position: relative;
+  z-index: 1;
+  width: clamp(54px, 5vw, 62px);
+  height: clamp(54px, 5vw, 62px);
   display: grid;
   place-items: center;
-  margin: 0 auto 14px;
+  margin: 0 auto clamp(10px, 1.4vw, 16px);
   border: 1px solid rgba(70, 39, 19, 0.58);
   border-radius: 50%;
   color: #572113;
@@ -3798,14 +3835,14 @@ button.ledger-row {
   position: relative;
   z-index: 1;
   text-align: center;
-  margin: 0 auto 22px;
-  max-width: 650px;
+  margin: 0 auto clamp(18px, 2.2vw, 26px);
+  max-width: 920px;
 }
 
 .access-window h2 {
   margin: 0;
   font-family: var(--font-serif);
-  font-size: clamp(30px, 4.7vw, 50px);
+  font-size: clamp(36px, 4.7vw, 58px);
   line-height: 0.95;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -3815,14 +3852,21 @@ button.ledger-row {
     0 0 18px rgba(94, 33, 17, 0.16);
 }
 
+.access-window h2 span {
+  display: block;
+  white-space: nowrap;
+}
+
 .access-window p {
-  margin: 14px auto 0;
-  color: #3d2312;
+  margin: clamp(14px, 1.8vw, 21px) auto 0;
+  color: #351c0e;
   font-family: var(--font-serif);
-  font-size: clamp(15px, 2vw, 20px);
-  line-height: 1.45;
-  font-weight: 700;
-  text-shadow: 0 1px 0 rgba(255, 235, 185, 0.32);
+  font-size: clamp(18px, 1.85vw, 25px);
+  line-height: 1.34;
+  font-weight: 800;
+  text-shadow:
+    0 1px 0 rgba(255, 235, 185, 0.22),
+    0 0 8px rgba(241, 205, 137, 0.18);
 }
 
 .access-kicker {
@@ -3830,20 +3874,20 @@ button.ledger-row {
   align-items: center;
   justify-content: center;
   min-height: 28px;
-  margin-bottom: 10px;
-  padding: 4px 12px;
+  margin-bottom: clamp(10px, 1.2vw, 16px);
+  padding: 7px 16px;
   border: 1px solid rgba(76, 39, 18, 0.42);
   color: #642817;
   background: rgba(255, 231, 173, 0.26);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: clamp(11px, 1vw, 14px);
   font-weight: 800;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
 }
 
 .access-welcome {
-  max-width: 640px;
+  max-width: 1000px;
 }
 
 .access-actions {
@@ -3851,25 +3895,26 @@ button.ledger-row {
   z-index: 1;
   display: flex;
   justify-content: center;
-  gap: 10px;
-  margin-top: 18px;
+  gap: 16px;
+  margin-top: clamp(10px, 1.6vw, 18px);
 }
 
 .access-actions button {
-  min-height: 38px;
+  min-height: clamp(44px, 4vw, 52px);
   border: 1px solid rgba(77, 42, 19, 0.54);
   border-radius: 3px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 8px 16px;
+  padding: 10px 26px;
   color: #f8dfaa;
   background:
     linear-gradient(180deg, rgba(91, 48, 23, 0.94), rgba(37, 20, 11, 0.96)),
     rgba(29, 20, 12, 0.9);
   font-family: var(--font-serif);
-  font-size: 13px;
+  font-size: clamp(16px, 1.4vw, 20px);
+  font-weight: 800;
   text-transform: uppercase;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.12),
@@ -3906,47 +3951,47 @@ button.ledger-row {
   position: relative;
   z-index: 1;
   display: grid;
-  gap: 12px;
-  padding: 18px;
-  border: 1px solid rgba(81, 43, 18, 0.38);
+  gap: clamp(12px, 1.6vw, 16px);
+  padding: clamp(16px, 2vw, 22px) clamp(18px, 3vw, 32px);
+  border: 1px solid rgba(81, 43, 18, 0.24);
   background:
-    linear-gradient(135deg, rgba(255, 244, 199, 0.16), transparent 36%),
-    rgba(76, 38, 16, 0.16);
+    linear-gradient(135deg, rgba(255, 244, 199, 0.1), transparent 36%),
+    rgba(76, 38, 16, 0.1);
   box-shadow: inset 0 0 26px rgba(61, 29, 12, 0.18);
 }
 
 .archivist-login-grid label {
   display: grid;
-  grid-template-columns: 20px 92px minmax(0, 1fr);
+  grid-template-columns: 22px 148px minmax(0, 1fr);
   align-items: center;
   gap: 8px;
   color: #3f2210;
   font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: clamp(13px, 1.25vw, 17px);
+  font-weight: 800;
   text-transform: uppercase;
 }
 
 .archivist-login-grid select,
 .archivist-login-grid input {
   min-width: 0;
-  height: 40px;
+  height: clamp(44px, 4vw, 56px);
   border: 1px solid rgba(75, 39, 17, 0.46);
   border-radius: 2px;
   background:
     linear-gradient(180deg, rgba(255, 227, 169, 0.76), rgba(215, 165, 93, 0.76));
   color: #25170d;
-  padding: 0 10px;
+  padding: 0 16px;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: clamp(16px, 1.5vw, 20px);
   font-weight: 700;
 }
 
 .password-field {
   min-width: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 42px;
-  gap: 6px;
+  grid-template-columns: minmax(0, 1fr) clamp(44px, 4vw, 56px);
+  gap: 8px;
 }
 
 .password-field button {
@@ -3959,14 +4004,14 @@ button.ledger-row {
 .credential-ledger {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: 10px;
 }
 
 .credential-ledger div {
   min-width: 0;
   display: grid;
   gap: 4px;
-  padding: 9px;
+  padding: 13px 14px;
   border: 1px solid rgba(80, 43, 19, 0.28);
   background:
     linear-gradient(180deg, rgba(255, 230, 174, 0.32), rgba(99, 45, 18, 0.16));
@@ -3984,18 +4029,18 @@ button.ledger-row {
 .credential-ledger strong {
   color: #2e1a0d;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: clamp(14px, 1.35vw, 18px);
 }
 
 .credential-ledger span {
   color: rgba(58, 31, 14, 0.72);
-  font-size: 11px;
+  font-size: clamp(12px, 1.1vw, 15px);
 }
 
 .credential-ledger code {
   color: #6c2416;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: clamp(13px, 1.25vw, 17px);
   font-weight: 800;
 }
 
@@ -4517,7 +4562,118 @@ button.ledger-row {
   }
 
   .access-window {
-    padding: 24px 14px 20px;
+    width: min(100%, calc(100vw - 12px));
+    max-height: calc(100dvh - 20px);
+    padding: 34px 20px 30px;
+    clip-path: polygon(
+      4% 6.5%,
+      11% 4.8%,
+      18% 6.3%,
+      28% 4.9%,
+      39% 6.2%,
+      51% 4.6%,
+      63% 6.4%,
+      76% 4.8%,
+      90% 6.6%,
+      97% 9.6%,
+      98.4% 25%,
+      97.2% 42%,
+      98.4% 61%,
+      97% 78%,
+      94% 93%,
+      83% 95.2%,
+      71% 93.6%,
+      59% 95.4%,
+      47% 93.8%,
+      34% 95.8%,
+      22% 93.6%,
+      9.5% 95.4%,
+      5% 91%,
+      3.5% 75%,
+      4.6% 58%,
+      3.3% 40%,
+      4.6% 23%
+    );
+  }
+
+  .access-sigil {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 8px;
+  }
+
+  .access-window header {
+    margin-bottom: 16px;
+  }
+
+  .access-window h2 {
+    font-size: clamp(24px, 7.7vw, 34px);
+    line-height: 0.92;
+    letter-spacing: 0.05em;
+  }
+
+  .access-window p {
+    margin-top: 12px;
+    font-size: clamp(15px, 4.15vw, 18px);
+    line-height: 1.26;
+  }
+
+  .access-kicker {
+    min-height: 24px;
+    padding-inline: 10px;
+    letter-spacing: 0.18em;
+    font-size: 10px;
+  }
+
+  .archivist-login-grid {
+    gap: 10px;
+    padding: 14px 10px;
+  }
+
+  .archivist-login-grid label {
+    grid-template-columns: 18px 92px minmax(0, 1fr);
+    gap: 6px;
+    font-size: 12px;
+  }
+
+  .archivist-login-grid select,
+  .archivist-login-grid input {
+    height: 40px;
+    padding-inline: 10px;
+    font-size: 13px;
+  }
+
+  .archivist-login-grid select,
+  .password-field {
+    grid-column: auto;
+  }
+
+  .password-field {
+    grid-template-columns: minmax(0, 1fr) 40px;
+  }
+
+  .credential-ledger {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .credential-ledger div {
+    padding: 7px 5px;
+  }
+
+  .credential-ledger strong {
+    font-size: 11px;
+  }
+
+  .credential-ledger span,
+  .credential-ledger code {
+    font-size: 9px;
+  }
+
+  .access-actions button {
+    width: 100%;
+    min-height: 42px;
+    font-size: 13px;
   }
 
   .access-actions {
