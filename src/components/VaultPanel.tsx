@@ -163,6 +163,8 @@ export function VaultPanel({
   const selectedFile = files.find((file) => file.id === selectedFileId);
   const tree = makeTree(files, folders);
   const canCreateFolder = session?.role === "admin";
+  const isGuest = session?.role === "guest";
+  const isOriginStoryRecord = selectedFile?.id === "lore-origin-premise" && Boolean(selectedFile.decryptedText);
   const noteFiles = useMemo(
     () =>
       files.filter(
@@ -171,7 +173,11 @@ export function VaultPanel({
           file.path.includes("/01_Research/01_Notes") ||
           file.id.startsWith("published-") ||
           file.id.startsWith("guest-"),
-      ),
+      ).sort((first, second) => {
+        if (first.id === "lore-origin-premise") return -1;
+        if (second.id === "lore-origin-premise") return 1;
+        return first.name.localeCompare(second.name);
+      }),
     [files],
   );
 
@@ -247,22 +253,27 @@ export function VaultPanel({
                 <h3>Encrypted Folders</h3>
                 <span>{folders.length} branch{folders.length === 1 ? "" : "es"} indexed</span>
               </div>
-              <form className="folder-branch-forge" onSubmit={handleCreateFolder}>
-                <label>
-                  <FolderPlus size={15} />
-                  <span>Branch</span>
-                  <input
-                    value={folderDraft}
-                    onChange={(event) => setFolderDraft(event.target.value)}
-                    placeholder="05_New_Vault/01_Encrypted_Branch"
-                    disabled={!canCreateFolder}
-                  />
-                </label>
-                <button type="submit" disabled={!canCreateFolder || !folderDraft.trim()}>
-                  <FolderPlus size={15} />
-                  Create
-                </button>
-              </form>
+              {canCreateFolder ? (
+                <form className="folder-branch-forge" onSubmit={handleCreateFolder}>
+                  <label>
+                    <FolderPlus size={15} />
+                    <span>Branch</span>
+                    <input
+                      value={folderDraft}
+                      onChange={(event) => setFolderDraft(event.target.value)}
+                      placeholder="05_New_Vault/01_Encrypted_Branch"
+                    />
+                  </label>
+                  <button type="submit" disabled={!folderDraft.trim()}>
+                    <FolderPlus size={15} />
+                    Create
+                  </button>
+                </form>
+              ) : isGuest ? (
+                <div className="folder-branch-readonly">
+                  Guest View can browse encrypted branches, but new Vault branches require Archivist_Z.
+                </div>
+              ) : null}
               <TreeView folder={tree} selectedFileId={selectedFileId} setSelectedFileId={setSelectedFileId} />
             </div>
           </>
@@ -307,7 +318,7 @@ export function VaultPanel({
 
         {activeTab !== "mega" && activeTab !== "archivists" && activeTab !== "places" && activeTab !== "guides" ? (
           <>
-            <article className="file-preview">
+            <article className={isOriginStoryRecord ? "file-preview origin-story-preview" : "file-preview"}>
               <header>
                 <span>File Preview</span>
                 <strong>{selectedFile?.path.split("/").slice(-2).join("/") ?? "Indexing..."}</strong>

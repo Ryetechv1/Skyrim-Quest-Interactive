@@ -1848,6 +1848,19 @@ button:disabled {
   opacity: 0.55;
 }
 
+.folder-branch-readonly {
+  margin: 10px 0 12px;
+  padding: 10px 11px;
+  border: 1px solid rgba(198, 155, 84, 0.22);
+  background:
+    linear-gradient(135deg, rgba(119, 91, 52, 0.16), transparent 62%),
+    rgba(12, 9, 7, 0.42);
+  color: rgba(238, 212, 158, 0.8);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
 .folder-branch-forge button {
   min-width: 82px;
   padding: 8px 10px;
@@ -2042,6 +2055,20 @@ button.ledger-row {
   font-family: var(--font-mono);
   font-size: 12px;
   line-height: 1.55;
+}
+
+.origin-story-preview pre {
+  min-height: 320px;
+  max-height: 620px;
+  overflow: auto;
+  padding: 18px;
+  background:
+    linear-gradient(rgba(224, 202, 161, 0.94), rgba(207, 180, 132, 0.93)),
+    url("./assets/references/photo-4.jpg") center / cover;
+  color: #24170d;
+  font-family: var(--font-serif);
+  font-size: 15px;
+  line-height: 1.72;
 }
 
 .terminal-log {

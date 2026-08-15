@@ -77,7 +77,7 @@ const ORIGIN_SYMBOL_SETS = [
   {
     label: "Hour Gate",
     detail:
-      "Middle ring. Each clue points to an hour such as Dawn, Zenith, or Midnight; the ledger maps that hour to 1-9.",
+      "Middle ring. The clue points to a meaning first; the ledger turns that omen into one of the nine gate marks.",
   },
   {
     label: "Star Ledger",
@@ -286,15 +286,15 @@ function buildCodedFragment(phase: VolvellePhase | null, current: VolvelleSignat
   const missing: string[] = [];
 
   if (matches.star) {
-    matched.push(`Zone C hums beneath ${place}`);
+    matched.push(`the inner witness hums beneath ${place}`);
   } else {
-    missing.push("Zone C inner runes");
+    missing.push("the inner witness");
   }
 
   if (matches.hour) {
-    matched.push(`${phase.hour} holds its hour`);
+    matched.push("the middle gate keeps time");
   } else {
-    missing.push(`${phase.hour} Hour Gate`);
+    missing.push("the middle gate");
   }
 
   if (matches.horizon) {
@@ -312,7 +312,7 @@ function buildCodedFragment(phase: VolvellePhase | null, current: VolvelleSignat
 
   if (matches.count === 3) {
     return {
-      text: `${phaseName}: Zone C, ${phase.hour}, and the horizon agree; the final sight is ready to speak ${phase.target}.`,
+      text: `${phaseName}: the three witnesses agree; the final sight is ready to speak ${phase.target}.`,
       status: "3/3 riddle stages align - validate the final sight to stamp the sequence.",
     };
   }
@@ -1204,7 +1204,6 @@ export default function App() {
         <div className="decoded-strip" aria-live="polite">
           <span>Coded Fragment</span>
           <strong>{codedFragment.text}</strong>
-          <em>{codedFragment.status}</em>
         </div>
 
         <section className="origin-riddle" aria-label="Origin volvelle riddle">

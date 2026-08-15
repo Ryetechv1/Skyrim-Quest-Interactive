@@ -138,6 +138,19 @@ export function MegaPanel({ session: appSession, onRequestChange }: MegaPanelPro
   const canRequestMegaChange = appSession?.role === "moderator";
   const isGuest = appSession?.role === "guest";
 
+  useEffect(() => {
+    if (!isGuest || !session) {
+      return;
+    }
+
+    void closeMega(session);
+    setSession(null);
+    setRoot(null);
+    setAccountInfo(null);
+    setSelectedNodeId("root");
+    setShareLink("");
+  }, [isGuest, session]);
+
   function pushLog(kind: MegaLog["kind"], text: string) {
     setLogs((current) => [...current.slice(-8), log(kind, text)]);
   }
@@ -219,6 +232,33 @@ export function MegaPanel({ session: appSession, onRequestChange }: MegaPanelPro
 
   function handleUploadSelection(event: ChangeEvent<HTMLInputElement>) {
     setSelectedUpload(event.target.files?.[0] ?? null);
+  }
+
+  if (isGuest) {
+    return (
+      <section className="mega-panel mega-guest-lock" aria-label="MEGA cloud integration locked for Guest View">
+        <header className="mega-header">
+          <div>
+            <h3>Live MEGA Cloud</h3>
+            <p>Archivist credentials required</p>
+          </div>
+          <Cloud size={22} />
+        </header>
+        <div className="mega-permission guest">
+          GUEST VIEW can browse Reliquary records, but MEGA cloud login and file-system access are sealed.
+        </div>
+        <section className="mega-log" aria-label="MEGA operation log">
+          <p className="warn">
+            <span>&gt;</span>
+            Cloud login removed from Guest View.
+          </p>
+          <p className="info">
+            <span>&gt;</span>
+            Enter as an Archivist to connect a MEGA account.
+          </p>
+        </section>
+      </section>
+    );
   }
 
   return (
