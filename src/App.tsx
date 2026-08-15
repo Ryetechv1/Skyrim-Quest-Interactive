@@ -36,6 +36,7 @@ import {
   VOLVELLE_HOUR_LEDGER,
   VOLVELLE_PHASES,
   VOLVELLE_SOLVE_LETTERS,
+  VOLVELLE_SOLVE_WORD,
   VOLVELLE_STAR_LEDGER,
 } from "./volvelle";
 import type {
@@ -59,6 +60,8 @@ const initialOffsets: RingOffsets = {
 
 const ORIGIN_SOLVE_LETTERS = VOLVELLE_SOLVE_LETTERS;
 const ORIGIN_ATTEMPT_LIMIT = VOLVELLE_ATTEMPT_LIMIT;
+const VOLVELLE_REMEMBRANCE_DAYS = 5;
+const VOLVELLE_REMEMBRANCE_MS = VOLVELLE_REMEMBRANCE_DAYS * 24 * 60 * 60 * 1000;
 
 const ORIGIN_SYMBOL_SETS = [
   {
@@ -97,6 +100,7 @@ const STORAGE_KEYS = {
   chatMessages: "davinci.archivists.chatMessages",
   publishedFiles: "davinci.archivists.publishedFiles",
   encryptedFolders: "davinci.archivists.encryptedFolders",
+  volvelleCompletion: "davinci.volvelle.completion",
 };
 
 const COLLABORATION_CHANNEL = "davinci-archivist-collaboration";
@@ -120,6 +124,13 @@ type CollaborationMessage =
       type: "encrypted-folders";
       payload: EncryptedFolder[];
     };
+
+type VolvelleCompletionMemory = {
+  word: string;
+  hits: string[];
+  completedAt: string;
+  expiresAt: string;
+};
 
 function event(kind: TerminalEvent["kind"], text: string): TerminalEvent {
   return {
@@ -153,6 +164,44 @@ function readSessionJson<T>(key: string, fallback: T): T {
 
 function writeStoredJson<T>(key: string, value: T) {
   localStorage.setItem(key, JSON.stringify(value));
+}
+
+function readVolvelleCompletionMemory(): VolvelleCompletionMemory | null {
+  const memory = readStoredJson<VolvelleCompletionMemory | null>(STORAGE_KEYS.volvelleCompletion, null);
+  const expiresAt = memory ? Date.parse(memory.expiresAt) : Number.NaN;
+
+  if (
+    !memory ||
+    memory.word !== VOLVELLE_SOLVE_WORD ||
+    memory.hits.join("") !== VOLVELLE_SOLVE_WORD ||
+    !Number.isFinite(expiresAt)
+  ) {
+    localStorage.removeItem(STORAGE_KEYS.volvelleCompletion);
+    return null;
+  }
+
+  if (expiresAt <= Date.now()) {
+    localStorage.removeItem(STORAGE_KEYS.volvelleCompletion);
+    return null;
+  }
+
+  return memory;
+}
+
+function writeVolvelleCompletionMemory(hits: string[]): VolvelleCompletionMemory {
+  const completedAt = new Date();
+  const memory: VolvelleCompletionMemory = {
+    word: VOLVELLE_SOLVE_WORD,
+    hits,
+    completedAt: completedAt.toISOString(),
+    expiresAt: new Date(completedAt.getTime() + VOLVELLE_REMEMBRANCE_MS).toISOString(),
+  };
+  writeStoredJson(STORAGE_KEYS.volvelleCompletion, memory);
+  return memory;
+}
+
+function clearVolvelleCompletionMemory() {
+  localStorage.removeItem(STORAGE_KEYS.volvelleCompletion);
 }
 
 function sendCollaborationMessage(message: CollaborationMessage) {
@@ -258,7 +307,10 @@ export default function App() {
     event("ok", "Vault Key accepted for Archivist-72"),
     event("info", "Directory tree contains seven sealed objects."),
   ]);
-  const [originHits, setOriginHits] = useState<string[]>([]);
+  const [volvelleMemory, setVolvelleMemory] = useState<VolvelleCompletionMemory | null>(() =>
+    readVolvelleCompletionMemory(),
+  );
+  const [originHits, setOriginHits] = useState<string[]>(() => volvelleMemory?.hits ?? []);
   const [originPremiseOpen, setOriginPremiseOpen] = useState(false);
   const [originAttemptCount, setOriginAttemptCount] = useState(0);
   const lastOriginHitRef = useRef("");
@@ -351,6 +403,14 @@ export default function App() {
     ? probeSignatureMatches(volvelleSignature, activeVolvellePhase.signature)
     : false;
   const volvelleAnswerSymbol = volvellePhaseMatched ? activeVolvellePhase?.target : null;
+  const volvelleRememberedUntil = volvelleMemory
+    ? new Intl.DateTimeFormat(undefined, {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      }).format(new Date(volvelleMemory.expiresAt))
+    : null;
 
   const knownKeys = useMemo(() => {
     const recovered = sealedFiles
@@ -393,8 +453,10 @@ export default function App() {
     setAuthSession(null);
     setOriginPremiseOpen(false);
     setOriginAttemptCount(0);
-    setOriginHits([]);
-    lastOriginHitRef.current = "";
+    const remembered = readVolvelleCompletionMemory();
+    setVolvelleMemory(remembered);
+    setOriginHits(remembered?.hits ?? []);
+    lastOriginHitRef.current = remembered ? `${VOLVELLE_SOLVE_WORD}:remembered` : "";
     if (wasGuest) {
       setSealedFiles((files) => files.filter((file) => !file.id.startsWith("guest-")));
       setOffsets(initialOffsets);
@@ -530,7 +592,11 @@ export default function App() {
     }));
   }
 
-  function resetOriginChain(message: string) {
+  function resetOriginChain(message: string, clearMemory = false) {
+    if (clearMemory) {
+      clearVolvelleCompletionMemory();
+      setVolvelleMemory(null);
+    }
     setOriginHits([]);
     setOriginAttemptCount(0);
     setOriginPremiseOpen(false);
@@ -538,10 +604,15 @@ export default function App() {
     pushEvent("warn", message);
   }
 
+  function retryVolvellePuzzle() {
+    setOffsets(initialOffsets);
+    resetOriginChain(`Retry opened. ${VOLVELLE_SOLVE_WORD} remembrance cleared and the Volvelle is ready again.`, true);
+  }
+
   function checkOriginAttempt() {
     if (!originNextLetter) {
       setOriginPremiseOpen(true);
-      pushEvent("ok", "ORIGIN is already sealed. Premise record reopened.");
+      pushEvent("ok", `${VOLVELLE_SOLVE_WORD} is already sealed. Premise record reopened.`);
       return;
     }
 
@@ -556,7 +627,12 @@ export default function App() {
       );
 
       if (nextHits.length === ORIGIN_SOLVE_LETTERS.length) {
-        pushEvent("ok", "ORIGIN sequence complete. The first point has been found.");
+        const memory = writeVolvelleCompletionMemory(nextHits);
+        setVolvelleMemory(memory);
+        pushEvent(
+          "ok",
+          `${VOLVELLE_SOLVE_WORD} sequence complete. Completion remembered for ${VOLVELLE_REMEMBRANCE_DAYS} days.`,
+        );
         setOriginPremiseOpen(true);
       }
 
@@ -567,7 +643,7 @@ export default function App() {
 
     if (nextAttemptCount >= ORIGIN_ATTEMPT_LIMIT) {
       resetOriginChain(
-        `Six false A^3 validations exhausted the chain. ORIGIN progress reset; begin again at ${ORIGIN_SOLVE_LETTERS[0]}.`,
+        `Six false A^3 validations exhausted the chain. ${VOLVELLE_SOLVE_WORD} progress reset; begin again at ${ORIGIN_SOLVE_LETTERS[0]}.`,
       );
       return;
     }
@@ -586,7 +662,11 @@ export default function App() {
 
   function resetWheel() {
     setOffsets(initialOffsets);
-    resetOriginChain("Wheel reset. ORIGIN chain and alignment cache cleared.");
+    if (volvelleMemory) {
+      pushEvent("warn", `Wheel reset. ${VOLVELLE_SOLVE_WORD} completion remains remembered; use Retry Puzzle to clear it.`);
+      return;
+    }
+    resetOriginChain(`Wheel reset. ${VOLVELLE_SOLVE_WORD} chain and alignment cache cleared.`);
   }
 
   function testWheel() {
@@ -842,23 +922,23 @@ export default function App() {
           <em>{solvedWheel ? "Truth hidden reveals" : `${ringAccuracy}/3 rings match the reliquary diagram`}</em>
         </div>
 
-        <section className="origin-riddle" aria-label="Origin riddle">
+        <section className="origin-riddle" aria-label="Dragon volvelle riddle">
           <div className="origin-guide-intro">
-            <span>Origin Method</span>
+            <span>Dragon Method</span>
             <p>
-              Discover six sequences, one for each letter of ORIGIN. A candidate does not count until Validate A^3
-              returns TRUE.
+              Discover six sequences, one for each letter of {VOLVELLE_SOLVE_WORD}. A candidate does not count until
+              Validate A^3 returns TRUE.
             </p>
             <ol className="origin-discovery-loop">
               <li>Read the current target letter.</li>
               <li>Use the Volvelle Ledger to translate the clue names into symbols.</li>
               <li>Place the Star Ledger pair in Zone C.</li>
-              <li>Set the Hour Gate and split the Horizon Atlas pair.</li>
+              <li>Match the Hour Gate and split the Horizon Atlas pair.</li>
               <li>Validate A^3, then follow the next phase clue.</li>
             </ol>
           </div>
           <div className="origin-status-panel">
-            <ol className="origin-hit-tracker" aria-label="Origin hit tracker">
+            <ol className="origin-hit-tracker" aria-label="Dragon hit tracker">
               {ORIGIN_SOLVE_LETTERS.map((letter, index) => (
                 <li
                   className={[
@@ -874,18 +954,27 @@ export default function App() {
               ))}
             </ol>
             <div className="origin-attempt-meter" aria-live="polite">
-              <strong>{originNextLetter ? `Seek ${originNextLetter}` : "ORIGIN sealed"}</strong>
+              <strong>{originNextLetter ? `Seek ${originNextLetter}` : `${VOLVELLE_SOLVE_WORD} sealed`}</strong>
               <small>
                 {originNextLetter
                   ? `${originAttemptCount}/${ORIGIN_ATTEMPT_LIMIT} false validations - ${originAttemptsRemaining} remain`
-                  : "Premise record unlocked"}
+                  : volvelleRememberedUntil
+                    ? `Remembered until ${volvelleRememberedUntil}`
+                    : "Premise record unlocked"}
               </small>
-              <button type="button" onClick={checkOriginAttempt}>
-                {originNextLetter ? "Validate A^3" : "Open Premise"}
-              </button>
+              <div className="origin-attempt-actions">
+                <button type="button" onClick={checkOriginAttempt}>
+                  {originNextLetter ? "Validate A^3" : "Open Premise"}
+                </button>
+                {!originNextLetter ? (
+                  <button type="button" className="retry-puzzle" onClick={retryVolvellePuzzle}>
+                    Retry Puzzle
+                  </button>
+                ) : null}
+              </div>
             </div>
           </div>
-          <ol className="origin-phase-rail" aria-label="Origin phase summary">
+          <ol className="origin-phase-rail" aria-label="Dragon phase summary">
             {ORIGIN_GUIDE_STEPS.map((step, index) => {
               const unlocked = originHits.length >= step.unlockAt;
               const sealed = originHits.length > step.unlockAt;
@@ -956,7 +1045,7 @@ export default function App() {
               </ol>
             </article>
           </div>
-          <ol className="origin-method-chain" aria-label="Origin chained method">
+          <ol className="origin-method-chain" aria-label="Dragon chained method">
             {ORIGIN_GUIDE_STEPS.map((step, index) => {
               const unlocked = originHits.length >= step.unlockAt;
               const active = unlocked && originGuideStepIndex === index && originHits.length < ORIGIN_SOLVE_LETTERS.length;
@@ -975,7 +1064,6 @@ export default function App() {
                         ? `Seal ${previousSeal} to reveal this phase.`
                         : "Awaiting first seal."}
                   </p>
-                  {unlocked ? <small>{step.lookupCue}</small> : null}
                   <em>{unlocked ? step.reward : "The next answer hides the next instruction."}</em>
                 </li>
               );
