@@ -66,6 +66,9 @@ import type {
 const BrokenPathPuzzle = lazy(() =>
   import("./components/BrokenPathPuzzle").then((module) => ({ default: module.BrokenPathPuzzle })),
 );
+const ReliquaryFog = lazy(() =>
+  import("./components/ReliquaryFog").then((module) => ({ default: module.ReliquaryFog })),
+);
 
 const initialOffsets: RingOffsets = {
   outer: 19,
@@ -1343,6 +1346,10 @@ export default function App() {
         .filter(Boolean)
         .join(" ")}
     >
+      <Suspense fallback={null}>
+        <ReliquaryFog />
+      </Suspense>
+
       {isWebArchiveMode ? (
         <div className="archive-publish-ribbon" role="status">
           <span>Web Archive Publish - offline cache ready after first full load</span>
