@@ -1,11 +1,10 @@
 import { Canvas, useFrame } from "@react-three/fiber";
-import { ArrowLeft, GitBranch, Lock, RefreshCcw, ShieldCheck, Sparkles } from "lucide-react";
+import { Lock, Sparkles } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import * as THREE from "three";
 import {
   BROKEN_PATH_FINAL_WORD,
-  DEFAULT_BROKEN_PATH_STATE,
   SWITCHBOARD_GROUPS,
   SWITCH_NODES,
   brokenPathSolved,
@@ -119,7 +118,6 @@ export function BrokenPathPuzzle({
   const correctCount = correctSwitchCount({ ...state, routeSelections: selections });
   const solvedRatio = correctCount / SWITCH_NODES.length;
   const routeComplete = correctCount === SWITCH_NODES.length;
-  const stageIds = solvedStageIds({ ...state, routeSelections: selections });
 
   function updateSelections(nextSelections: Record<string, string>, completedState?: Partial<BrokenPathState>) {
     onStateChange({
@@ -158,46 +156,10 @@ export function BrokenPathPuzzle({
     onLog?.("ok", `Broken Path solved. ${BROKEN_PATH_FINAL_WORD} recovered from the switchboard.`);
   }
 
-  function resetPuzzle() {
-    onStateChange(DEFAULT_BROKEN_PATH_STATE);
-    setMessage("The switchboard has been reset to its unstable pattern.");
-    onLog?.("warn", "Broken Path switchboard reset.");
-  }
-
   return (
     <main className="broken-path-page" aria-label="The Broken Path puzzle page">
       <BrokenPathAtmosphere solvedRatio={solvedRatio} />
       <div className="broken-path-scanlines" aria-hidden="true" />
-      <header className="broken-path-page-header">
-        <button type="button" className="broken-path-back" onClick={onBack}>
-          <ArrowLeft size={16} />
-          Reliquary
-        </button>
-        <div>
-          <span>Next Puzzle Phase</span>
-          <h1>The Broken Path</h1>
-          <p>
-            {unlocked
-              ? "Tap a numbered channel to flip its alignment. Gold carries the active current; ash-gray shows dormant branches."
-              : "Seal ORIGIN in Adventure Mode to wake this path, or switch to Moderation Mode for review."}
-          </p>
-        </div>
-        <div className="broken-path-page-mode" aria-label="Puzzle access mode">
-          <strong>{session?.username ?? "No Session"}</strong>
-          {canReview ? (
-            <div role="group" aria-label="Choose Broken Path review mode">
-              <button type="button" className={mode === "adventure" ? "active" : ""} onClick={() => onModeChange("adventure")}>
-                Adventure
-              </button>
-              <button type="button" className={mode === "moderation" ? "active" : ""} onClick={() => onModeChange("moderation")}>
-                Moderation
-              </button>
-            </div>
-          ) : (
-            <span>{mode === "moderation" ? "Moderation" : "Adventure"}</span>
-          )}
-        </div>
-      </header>
 
       {!unlocked ? (
         <section className="broken-path-page-lock" aria-label="Broken Path locked">
@@ -212,17 +174,8 @@ export function BrokenPathPuzzle({
           ) : null}
         </section>
       ) : (
-        <>
-          <section className="broken-path-board-shell" aria-label="Broken Path switchboard">
-            <div className="broken-path-board-status">
-              <div>
-                <span>Active current</span>
-                <strong>{completed ? BROKEN_PATH_FINAL_WORD : `${correctCount}/${SWITCH_NODES.length} channels aligned`}</strong>
-              </div>
-              <p aria-live="polite">{message}</p>
-            </div>
-
-            <svg className="broken-path-board" viewBox="0 0 1280 560" role="img" aria-labelledby="broken-path-board-title">
+        <section className="broken-path-board-shell" aria-label="Broken Path switchboard">
+            <svg className="broken-path-board" viewBox="0 0 1280 484" role="img" aria-labelledby="broken-path-board-title">
               <title id="broken-path-board-title">Interactive switchboard with twelve tappable connector channels</title>
               <defs>
                 <filter id="broken-path-glow" x="-30%" y="-30%" width="160%" height="160%">
@@ -237,49 +190,64 @@ export function BrokenPathPuzzle({
                   <stop offset="55%" stopColor="#20303d" stopOpacity="0.58" />
                   <stop offset="100%" stopColor="#0b141d" stopOpacity="0.76" />
                 </linearGradient>
+                <radialGradient id="broken-path-thruster" cx="0%" cy="50%" r="100%">
+                  <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
+                  <stop offset="34%" stopColor="#fff1a4" stopOpacity="0.58" />
+                  <stop offset="100%" stopColor="#ffe45d" stopOpacity="0" />
+                </radialGradient>
               </defs>
 
-              <rect x="22" y="20" width="1236" height="510" className="broken-path-board-frame" />
-              <rect x="48" y="48" width="1184" height="446" className="broken-path-board-glass" />
+              <rect x="4" y="0" width="1272" height="484" className="broken-path-board-backdrop" />
+              <rect x="23" y="4" width="1234" height="476" className="broken-path-board-frame" />
+              <rect x="42" y="28" width="1196" height="428" className="broken-path-board-glass" />
               <g className="broken-path-map-noise" aria-hidden="true">
-                <circle cx="216" cy="126" r="78" />
-                <circle cx="620" cy="112" r="128" />
-                <circle cx="1022" cy="328" r="116" />
-                <path d="M102 438c90-20 134-86 212-118 102-42 145 60 245 32 138-38 151-214 316-203 98 7 143 75 255 40" />
+                <circle cx="212" cy="114" r="82" />
+                <circle cx="650" cy="120" r="148" />
+                <circle cx="1030" cy="310" r="126" />
+                <path d="M92 440c88-20 128-88 208-118 106-40 152 58 258 28 132-38 148-210 312-200 96 6 154 78 262 38" />
+                <path d="M145 90c120 14 170-70 264-34 76 30 112 92 224 64 122-30 176-122 310-88 72 18 128 64 244 42" />
               </g>
 
               {SWITCHBOARD_GROUPS.map((group, index) => (
                 <g className="broken-path-column-title" key={group.id}>
-                  <text x={index === 0 ? 380 : index === 1 ? 790 : 1116} y="70">
+                  <text x={index === 0 ? 390 : index === 1 ? 804 : 1126} y="62">
                     {group.title}
-                  </text>
-                  <text x={index === 0 ? 380 : index === 1 ? 790 : 1116} y="91">
-                    {group.subtitle}
                   </text>
                 </g>
               ))}
 
               <g className="broken-path-start" aria-hidden="true">
                 {[0, 1, 2, 3].map((item) => (
-                  <rect x={64 + item * 24} y="260" width="18" height="18" key={`starter-${item}`} />
+                  <rect x={60 + item * 24} y="268" width="19" height="19" key={`starter-${item}`} />
                 ))}
-                <path d="M164 269h38" />
-                <path d="M202 269c12-18 34-18 48 0-14 18-36 18-48 0Z" />
+                <path d="M156 277h40" />
+                <path d="M196 277c12-18 34-18 48 0-14 18-36 18-48 0Z" />
+                <ellipse cx="150" cy="277" rx="35" ry="18" fill="url(#broken-path-thruster)" />
               </g>
 
               <g className="broken-path-static-lines" aria-hidden="true">
-                <path d="M505 100h92l18 18h46" />
-                <path d="M505 352h86l48-50h54" />
-                <path d="M505 418h112l32-28h54" />
-                <path d="M845 164h78l16 16h92" />
-                <path d="M885 278h86l52 37h68" />
-                <path d="M885 318h78l30 42h86" />
-                <path d="M926 170h28" />
-                <path d="M948 170v22" />
-                <path d="M960 170v22" />
-                <path d="M926 360h28" />
-                <path d="M948 360v22" />
-                <path d="M960 360v22" />
+                <path d="M292 228h143" />
+                <path d="M280 323l66 37h90" />
+                <path d="M300 420l98 36h198" />
+                <path d="M506 205h90l88 71" />
+                <path d="M506 350h91l86-74" />
+                <path d="M596 205h31" />
+                <path d="M618 190v31" />
+                <path d="M630 190v31" />
+                <path d="M594 350h32" />
+                <path d="M616 334v32" />
+                <path d="M628 334v32" />
+                <path d="M752 205h169" />
+                <path d="M752 276h170" />
+                <path d="M852 164h72" />
+                <path d="M852 276h72" />
+                <path d="M922 164h94" />
+                <path d="M922 276h94" />
+                <path d="M922 350h94" />
+                <path d="M952 164v28" />
+                <path d="M965 164v28" />
+                <path d="M952 350v28" />
+                <path d="M965 350v28" />
               </g>
 
               {SWITCH_NODES.flatMap((node) =>
@@ -318,40 +286,22 @@ export function BrokenPathPuzzle({
               })}
 
               <g className="broken-path-flags" aria-hidden="true">
-                {[170, 315, 405, 450].map((y, index) => (
+                {[164, 276, 350, 424].map((y, index) => (
                   <g className={routeComplete ? "lit" : ""} key={`flag-${y}`}>
-                    <path d={`M1204 ${y - 18}v34`} />
-                    <path d={`M1208 ${y - 16}l23 4-8 8 10 7-25-4Z`} />
-                    <text x="1130" y={y + 6}>
-                      {String(index + 1).padStart(2, "0")}
-                    </text>
+                    <path d={`M1202 ${y - 18}v34`} />
+                    <path d={`M1207 ${y - 16}l20 4-7 8 9 7-22-4Z`} />
                   </g>
                 ))}
               </g>
             </svg>
 
             <div className="broken-path-board-footer">
-              <ol aria-label="Solved switchboard stages">
-                {SWITCHBOARD_GROUPS.map((group) => (
-                  <li className={stageIds.includes(group.id) ? "solved" : ""} key={group.id}>
-                    <GitBranch size={14} />
-                    <span>{group.title}</span>
-                  </li>
-                ))}
-              </ol>
-              <div>
-                <button type="button" onClick={resetPuzzle}>
-                  <RefreshCcw size={16} />
-                  Reset
-                </button>
-                <button type="button" className="confirm" onClick={confirmPath}>
-                  <ShieldCheck size={16} />
+              <button type="button" className="confirm" onClick={confirmPath}>
                   Confirm
-                </button>
-              </div>
+              </button>
+              <p aria-live="polite">{completed ? BROKEN_PATH_FINAL_WORD : message}</p>
             </div>
           </section>
-        </>
       )}
     </main>
   );
