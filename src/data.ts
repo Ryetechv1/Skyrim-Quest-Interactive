@@ -8,7 +8,6 @@ import {
   FileKey,
   FlaskConical,
   Gem,
-  GitBranch,
   KeyRound,
   Landmark,
   ScrollText,
@@ -288,7 +287,6 @@ export const manuscriptTabs = [
   { id: "archivists", label: "Users", icon: ContactRound },
   { id: "keys", label: "Keys", icon: KeyRound },
   { id: "notes", label: "Notes", icon: BookOpen },
-  { id: "cipher", label: "Path", icon: GitBranch },
   { id: "places", label: "Places", icon: Landmark },
   { id: "guides", label: "Guides", icon: ScrollText },
 ];

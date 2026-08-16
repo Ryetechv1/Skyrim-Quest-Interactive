@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlignCenterHorizontal,
   Archive,
@@ -20,7 +20,8 @@ import {
   brokenPathProgress,
   brokenPathSolved,
   type BrokenPathState,
-} from "./components/BrokenPathPuzzle";
+  type PuzzleViewMode,
+} from "./brokenPathModel";
 import { DossierPanel } from "./components/DossierPanel";
 import { VaultPanel } from "./components/VaultPanel";
 import { NoteForge } from "./components/NoteForge";
@@ -61,6 +62,10 @@ import type {
   SealedFile,
   TerminalEvent,
 } from "./types";
+
+const BrokenPathPuzzle = lazy(() =>
+  import("./components/BrokenPathPuzzle").then((module) => ({ default: module.BrokenPathPuzzle })),
+);
 
 const initialOffsets: RingOffsets = {
   outer: 19,
@@ -170,7 +175,7 @@ type VolvelleHintWallet = {
   revealed: string[];
 };
 
-type PuzzleViewMode = "adventure" | "moderation";
+type AppPage = "reliquary" | "broken-path";
 
 function event(kind: TerminalEvent["kind"], text: string): TerminalEvent {
   return {
@@ -494,6 +499,9 @@ export default function App() {
     readSessionJson<AuthSession | null>(STORAGE_KEYS.authSession, null),
   );
   const [puzzleViewMode, setPuzzleViewMode] = useState<PuzzleViewMode>("adventure");
+  const [activePage, setActivePage] = useState<AppPage>(() =>
+    window.location.hash === "#/broken-path" ? "broken-path" : "reliquary",
+  );
   const [draft, setDraft] = useState<NoteDraft>(defaultDraft);
   const [busy, setBusy] = useState(false);
   const [changeRequests, setChangeRequests] = useState<ChangeRequest[]>(() =>
@@ -527,6 +535,21 @@ export default function App() {
     readStoredJson<BrokenPathState>(STORAGE_KEYS.brokenPath, DEFAULT_BROKEN_PATH_STATE),
   );
   const lastOriginHitRef = useRef("");
+
+  useEffect(() => {
+    const root = document.getElementById("root");
+    root?.setAttribute("data-app-ready", "true");
+
+    function removeStaticFallback() {
+      document.getElementById("static-access-fallback")?.remove();
+    }
+
+    removeStaticFallback();
+    const observer = new MutationObserver(removeStaticFallback);
+    observer.observe(document.body, { childList: true });
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -571,6 +594,15 @@ export default function App() {
     }, 60000);
 
     return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    function syncPageFromHash() {
+      setActivePage(window.location.hash === "#/broken-path" ? "broken-path" : "reliquary");
+    }
+
+    window.addEventListener("hashchange", syncPageFromHash);
+    return () => window.removeEventListener("hashchange", syncPageFromHash);
   }, []);
 
   useEffect(() => {
@@ -762,6 +794,8 @@ export default function App() {
     sessionStorage.removeItem(STORAGE_KEYS.authSession);
     setAuthSession(null);
     setPuzzleViewMode("adventure");
+    setActivePage("reliquary");
+    window.history.replaceState(null, "", window.location.pathname + window.location.search);
     setOriginPremiseOpen(false);
     setOriginAttemptCount(0);
     const remembered = readVolvelleCompletionMemory();
@@ -1207,6 +1241,10 @@ export default function App() {
   }
 
   function viewOriginPuzzle() {
+    setActivePage("reliquary");
+    if (window.location.hash) {
+      window.history.pushState(null, "", window.location.pathname + window.location.search);
+    }
     setActiveTab("vault");
     scrollIntoView(".workbench");
     pushEvent(
@@ -1223,8 +1261,8 @@ export default function App() {
       return;
     }
 
-    setActiveTab("cipher");
-    scrollIntoView(".vault-column");
+    setActivePage("broken-path");
+    window.location.hash = "/broken-path";
     pushEvent(
       "info",
       moderationMode
@@ -1251,6 +1289,48 @@ export default function App() {
     }
 
     pushEvent("warn", `${displayedDossierSteps.find((step) => step.id === stepId)?.label ?? "This dossier"} remains sealed.`);
+  }
+
+  function returnToReliquary() {
+    setActivePage("reliquary");
+    window.history.pushState(null, "", window.location.pathname + window.location.search);
+    scrollIntoView(".workbench");
+  }
+
+  if (activePage === "broken-path") {
+    return (
+      <>
+        <Suspense
+          fallback={
+            <main className="broken-path-page" aria-label="The Broken Path loading">
+              <section className="broken-path-page-lock">
+                <ShieldCheck size={42} />
+                <h2>Drawing the broken channels...</h2>
+                <p>The switchboard is waking its paths.</p>
+              </section>
+            </main>
+          }
+        >
+          <BrokenPathPuzzle
+            unlocked={Boolean(authSession) && brokenPathAccessible}
+            canReview={Boolean(canReviewPuzzles)}
+            mode={effectivePuzzleViewMode}
+            session={authSession}
+            state={brokenPathState}
+            onStateChange={updateBrokenPathState}
+            onModeChange={setPuzzleViewMode}
+            onBack={returnToReliquary}
+            onLog={pushEvent}
+          />
+        </Suspense>
+        {!authSession ? (
+          <AccessGate
+            onGuestAccess={handleGuestAccess}
+            onArchivistAccess={handleArchivistAccess}
+          />
+        ) : null}
+      </>
+    );
   }
 
   return (
@@ -1614,10 +1694,6 @@ export default function App() {
             appendChatMessage(authSession.username, authSession.role, body);
           }}
           onCreateEncryptedFolder={createEncryptedFolder}
-          brokenPathUnlocked={brokenPathAccessible}
-          brokenPathState={brokenPathState}
-          onBrokenPathStateChange={updateBrokenPathState}
-          onBrokenPathLog={pushEvent}
         />
         {activeTab !== "places" && authSession?.role !== "guest" ? (
           <NoteForge
